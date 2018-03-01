@@ -12,12 +12,13 @@ void usage(void)
 	printf(
 		"Usage: modelgen [options] [--] [files]\n"
 		"\n"
-		"    -h, --help   Show this help message\n"
-		"    --version    Show the version\n"
-		"    - --stdin    Read stdin as input data\n"
+		"    -h, --help   Print this help message and exit\n"
+		"    --version    Print ModelGen version and exit\n"
+		"    - --stdin    Read stdin as a file\n"
+		"    --tokens     Print tokens and exit\n"
 		"\n"
 		"Debugging:\n"
-		"    --debug-read Print input data and exit\n"
+		"    --debug-read Print file contents and exit\n"
 	);
 }
 
@@ -26,6 +27,7 @@ int main(int argc, char *argv[])
 {
 	int runStdin = 0;
 	int debugRead = 0;
+	int tokens = 0;
 
 	int i = 1;
 	const char *arg;
@@ -50,6 +52,8 @@ int main(int argc, char *argv[])
 		}
 		else if (!strcmp("-", arg) || !strcmp("--stdin", arg))
 			runStdin = 1;
+		else if (!strcmp("--tokens", arg))
+			tokens = 1;
 		else if (!strcmp("--debug-read", arg))
 			debugRead = 1;
 		else if (!strcmp("--", arg))
@@ -66,10 +70,10 @@ int main(int argc, char *argv[])
 			break;
 	}
 
+	int err = EXIT_SUCCESS;
+
 	if (debugRead)
 	{
-		int err = 0;
-
 		if (runStdin)
 			if (!mgDebugReadHandle(stdin, "<stdin>"))
 				err = 1;
@@ -77,9 +81,17 @@ int main(int argc, char *argv[])
 		for (; i < argc; ++i)
 			if (!mgDebugRead(argv[i]))
 				err = 1;
+	}
+	else if (tokens)
+	{
+		if (runStdin)
+			if (!mgDebugTokenizeHandle(stdin, "<stdin>"))
+				err = 1;
 
-		return err;
+		for (; i < argc; ++i)
+			if (!mgDebugTokenize(argv[i]))
+				err = 1;
 	}
 
-	return EXIT_SUCCESS;
+	return err;
 }
