@@ -40,4 +40,8 @@ char* mgReadFileHandle(FILE *file, size_t *length);
 void mgTokenReset(const char *string, MGToken *token);
 void mgTokenizeNext(MGToken *token);
 
+MGToken* mgTokenizeFile(const char *filename, size_t *tokenCount);
+MGToken* mgTokenizeFileHandle(FILE *file, size_t *tokenCount);
+MGToken* mgTokenizeString(const char *string, size_t *tokenCount);
+
 #endif

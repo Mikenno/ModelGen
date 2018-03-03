@@ -1,4 +1,5 @@
 
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -84,4 +85,70 @@ void mgTokenizeNext(MGToken *token)
 	}
 	else
 		_mgTokenNextCharacter(token);
+}
+
+
+MGToken* mgTokenizeFile(const char *filename, size_t *tokenCount)
+{
+	char *str = mgReadFile(filename, NULL);
+
+	if (!str)
+		return NULL;
+
+	MGToken *tokens = mgTokenizeString(str, tokenCount);
+
+	free(str);
+
+	return tokens;
+}
+
+
+MGToken* mgTokenizeFileHandle(FILE *file, size_t *tokenCount)
+{
+	char *str = mgReadFileHandle(file, NULL);
+
+	if (!str)
+		return NULL;
+
+	MGToken *tokens = mgTokenizeString(str, tokenCount);
+
+	free(str);
+
+	return tokens;
+}
+
+
+MGToken* mgTokenizeString(const char *string, size_t *tokenCount)
+{
+	size_t capacity = 0;
+	size_t count = 0;
+
+	MGToken *tokens = NULL;
+
+	MGToken token;
+	mgTokenReset(string, &token);
+
+	do
+	{
+		if (capacity == count)
+		{
+			// 4294967295 tokens is unlikely to be reached, but it should be noted that an integer overflow isn't handled currently
+			capacity = capacity ? capacity << 1 : 2;
+
+			// realloc returning NULL makes it impossible to free tokens
+			// Out of memory is not handled, as it is a royally screwed situation to be in
+			tokens = (MGToken*) realloc(tokens, capacity * sizeof(MGToken));
+		}
+
+		mgTokenizeNext(&token);
+		memcpy(tokens + count, &token, sizeof(MGToken));
+
+		++count;
+	}
+	while (token.type != MG_TOKEN_EOF);
+
+	if (tokenCount)
+		*tokenCount = count;
+
+	return  tokens;
 }
