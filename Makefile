@@ -16,10 +16,18 @@ DEBUG_BIN = bin/debug/modelgen
 RELEASE_OBJ = $(OBJ:%=bin/release/%)
 RELEASE_BIN = bin/release/modelgen
 
+TEST_SRC = $(wildcard tests/*.c)
+TEST_OBJ = $(TEST_SRC:%.c=bin/debug/%.o)
+TEST_BIN = $(TEST_SRC:%.c=bin/debug/%)
+
 all: release
 
 debug: $(DEBUG_BIN)
+
+release: test
 release: $(RELEASE_BIN)
+
+test: $(TEST_BIN)
 
 $(DEBUG_BIN): $(DEBUG_OBJ)
 	@printf "\e[95mCC \e[39m%s \e[90m%s\e[0m\n" $(BIN) $@
@@ -30,6 +38,11 @@ $(RELEASE_BIN): $(RELEASE_OBJ)
 	@printf "\e[95mCC \e[39m%s \e[90m%s\e[0m\n" $(BIN) $@
 	@$(CC) $^ $(LDFLAGS) -o $@
 	@cp $@ $(BIN)
+
+$(TEST_BIN): %: %.o $(filter-out bin/debug/src/modelgen.o, $(DEBUG_OBJ))
+	@printf "\e[93mCC \e[39m%s\e[0m\n" $@
+	@$(CC) $^ $(LDFLAGS) -o $@
+	@./$@
 
 bin/debug/%.o: %.c
 	@printf "\e[32mCC \e[39m%s \e[90m%s\e[0m\n" $@ $<
@@ -44,4 +57,4 @@ bin/release/%.o: %.c
 clean:
 	@rm -rfv bin
 
-.PHONY: debug release clean
+.PHONY: debug release test clean
