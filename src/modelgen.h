@@ -32,6 +32,11 @@ typedef struct MGToken {
 		unsigned int line;
 		unsigned int character;
 	} end;
+	union {
+		char *s;
+		int i;
+		float f;
+	} value;
 } MGToken;
 
 typedef struct MGTokenizer {

@@ -38,6 +38,64 @@ static inline void _mgTokenNextCharacter(MGToken *token)
 }
 
 
+void _mgParseString(MGToken *token)
+{
+	const size_t len = token->end.string - token->begin.string - 2;
+
+	if (len < 1)
+	{
+		token->value.s = NULL;
+		return;
+	}
+
+	token->value.s = (char*) malloc((len + 1) * sizeof(char));
+	token->value.s[0] = '\0';
+
+	char c, *str = token->value.s;
+
+	for (size_t i = 0; i < len; ++i)
+	{
+		c = token->begin.string[i + 1];
+
+		if (c == '\\')
+		{
+			c = token->begin.string[++i + 1];
+
+			switch (c)
+			{
+			case 'a':
+				c = '\a';
+				break;
+			case 'b':
+				c = '\b';
+				break;
+			case 'f':
+				c = '\f';
+				break;
+			case 'n':
+				c = '\n';
+				break;
+			case 'r':
+				c = '\r';
+				break;
+			case 't':
+				c = '\t';
+				break;
+			case 'v':
+				c = '\v';
+				break;
+			default:
+				break;
+			}
+		}
+
+		*str++ = c;
+	}
+
+	*str = '\0';
+}
+
+
 void mgTokenizeNext(MGToken *token)
 {
 	// TODO: Assert _mg_sizeof_field(MGToken, begin) == _mg_sizeof_field(MGToken, end)
@@ -238,7 +296,7 @@ decimal:
 	}
 	else if (c == '"')
 	{
-		token->type = MG_TOKEN_COMMENT;
+		token->type = MG_TOKEN_STRING;
 		do
 		{
 			_mgTokenNextCharacter(token);
@@ -253,7 +311,10 @@ decimal:
 		while ((*token->end.string != '"') && (*token->end.string != '\n') && *token->end.string);
 
 		if (*token->end.string == '"')
+		{
 			_mgTokenNextCharacter(token);
+			_mgParseString(token);
+		}
 		else
 			token->type = MG_TOKEN_INVALID;
 	}
@@ -308,6 +369,13 @@ void mgCreateTokenizer(MGTokenizer *tokenizer)
 
 void mgDestroyTokenizer(MGTokenizer *tokenizer)
 {
+	size_t i;
+
+	if (tokenizer->tokens)
+		for (i = 0; i < tokenizer->tokenCount; ++i)
+			if ((tokenizer->tokens[i].type == MG_TOKEN_STRING) && tokenizer->tokens[i].value.s)
+				free(tokenizer->tokens[i].value.s);
+
 	free(tokenizer->string);
 	free(tokenizer->tokens);
 }
