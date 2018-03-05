@@ -1,59 +1,151 @@
 
 #include "../src/modelgen.h"
+#include "../src/utilities.h"
+#include "../src/debug.h"
 
 #include "test.h"
 
 
-MG_TEST(testTokenTypes)
+static MGbool _mgTestTokenizer(const char *in, const char *out)
 {
-	MGTokenizer tokenizer;
+	MGTokenizer inTokenizer, outTokenizer;
+	MGToken *inToken, *outToken;
 
-	const char *str = "a b abc";
+	MGbool passed = MG_TRUE;
 
-	mgCreateTokenizer(&tokenizer);
+	mgCreateTokenizer(&inTokenizer);
+	mgCreateTokenizer(&outTokenizer);
 
-	mgTestAssert(mgTokenizeString(&tokenizer, str, NULL));
-	mgTestAssertIntEquals(tokenizer.tokenCount, 6);
+	if (!mgTokenizeFile(&inTokenizer, in, NULL))
+		goto fail;
+	if (!mgTokenizeFile(&outTokenizer, out, NULL))
+		goto fail;
 
-	mgTestAssertIntEquals(tokenizer.tokens[0].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokenizer.tokens[1].type, MG_TOKEN_WHITESPACE);
-	mgTestAssertIntEquals(tokenizer.tokens[2].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokenizer.tokens[3].type, MG_TOKEN_WHITESPACE);
-	mgTestAssertIntEquals(tokenizer.tokens[4].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokenizer.tokens[5].type, MG_TOKEN_EOF);
+#define _MG_IS_TESTABLE_TOKEN(token) \
+		((token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_WHITESPACE))
 
-	mgDestroyTokenizer(&tokenizer);
+#define _MG_FIND_NEXT_TESTABLE_TOKEN(token) \
+		for (; !_MG_IS_TESTABLE_TOKEN(token); ++token)
+
+	outToken = outTokenizer.tokens;
+
+	for (inToken = inTokenizer.tokens; inToken->type != MG_TOKEN_EOF; ++inToken)
+	{
+		if (!_MG_IS_TESTABLE_TOKEN(inToken))
+			continue;
+
+		_MG_FIND_NEXT_TESTABLE_TOKEN(outToken);
+
+		if (outToken->type == MG_TOKEN_EOF)
+		{
+			printf("Error: Unexpected token...\n");
+			mgDebugInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+			goto fail;
+		}
+		else if (outToken->type != MG_TOKEN_STRING)
+		{
+			printf("Error: Token type must be a string\n");
+			mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+			goto fail;
+		}
+
+		if (!outToken->value.s || strcmp(_MG_TOKEN_NAMES[inToken->type], outToken->value.s))
+		{
+			printf("Error: Unexpected token type...\n");
+			mgDebugInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+			printf("Expected...\n");
+			mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+			goto fail;
+		}
+
+		++outToken;
+		for (; outToken->type == MG_TOKEN_WHITESPACE; ++outToken);
+
+		if (_MG_IS_TESTABLE_TOKEN(outToken))
+		{
+			const char *outTokenString = outToken->value.s;
+			const size_t outTokenStringLength = outTokenString ? strlen(outTokenString) : 0;
+
+			const char *inTokenString = inToken->begin.string;
+			size_t inTokenStringLength = inToken->end.string - inToken->begin.string;
+
+			if (inToken->type == MG_TOKEN_STRING)
+			{
+				inTokenString = inToken->value.s ? inToken->value.s : NULL;
+				inTokenStringLength -= 2;
+			}
+
+			if ((outTokenStringLength != inTokenStringLength) || ((outTokenStringLength > 0) && strncmp(outTokenString, inTokenString, outTokenStringLength)))
+			{
+				printf("Error: Unexpected token value...\n");
+				mgDebugInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+				printf("Expected...\n");
+				mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+				goto fail;
+			}
+		}
+
+		++outToken;
+	}
+
+	_MG_FIND_NEXT_TESTABLE_TOKEN(outToken);
+
+	if (outToken->type != MG_TOKEN_EOF)
+	{
+		printf("Error: Expected token of type...\n");
+		mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+		goto fail;
+	}
+
+#undef _MG_IS_TESTABLE_TOKEN
+#undef _MG_FIND_NEXT_TESTABLE_TOKEN
+
+	goto pass;
+
+fail:
+
+	passed = MG_FALSE;
+
+pass:
+
+	mgDestroyTokenizer(&inTokenizer);
+	mgDestroyTokenizer(&outTokenizer);
+
+	return passed;
 }
 
 
-MG_TEST(testTokenStrings)
+MG_TEST(testEmpty)
 {
-	MGTokenizer tokenizer;
-	size_t i;
+	mgTestAssert(_mgTestTokenizer("tests/tokenize/empty.mg", "tests/tokenize/empty.tokens"));
+}
 
-	const char *str = "a b abc";
-	const char *tokenStrings[] = { "a", " ", "b", " ",  "abc", "" };
 
-	mgCreateTokenizer(&tokenizer);
+MG_TEST(testComments)
+{
+	mgTestAssert(_mgTestTokenizer("tests/tokenize/comments.mg", "tests/tokenize/comments.tokens"));
+}
 
-	mgTestAssert(mgTokenizeString(&tokenizer, str, NULL));
-	mgTestAssertIntEquals(tokenizer.tokenCount, 6);
 
-	for (i = 0; i < tokenizer.tokenCount; ++i)
-	{
-		mgTestAssertIntEquals(strlen(tokenStrings[i]), tokenizer.tokens[i].end.string - tokenizer.tokens[i].begin.string);
-		mgTestAssert(!strncmp(tokenStrings[i], tokenizer.tokens[i].begin.string, tokenizer.tokens[i].end.string - tokenizer.tokens[i].begin.string));
-	}
+MG_TEST(testIdentifiers)
+{
+	mgTestAssert(_mgTestTokenizer("tests/tokenize/identifiers.mg", "tests/tokenize/identifiers.tokens"));
+}
 
-	mgDestroyTokenizer(&tokenizer);
+
+MG_TEST(testNumbers)
+{
+	mgTestAssert(_mgTestTokenizer("tests/tokenize/comments.mg", "tests/tokenize/comments.tokens"));
 }
 
 
 int main(int argc, char *argv[])
 {
 	const MGUnitTest *tests[] = {
-			&testTokenTypes,
-			&testTokenStrings,
+			&testEmpty,
+			&testComments,
+			&testIdentifiers,
+			&testNumbers,
 			NULL
 	};
 

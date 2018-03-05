@@ -1,0 +1,16 @@
+"comment" "# Inline Comment"
+
+"comment" "#[ Block Comment #]"
+"comment" "#[\nBlock Comment\n#]"
+
+"comment" "##["
+"string" "Escaped Block Comment"
+"comment" "#]"
+
+"comment" "# ["
+"string" "Escaped Block Comment"
+"comment" "#]"
+
+"comment" "#[\nBlock Comment Continue\n# ]\nBlock Comment End\n#]"
+
+"comment" "#[\nUnterminated Block Comment"

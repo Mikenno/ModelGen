@@ -74,10 +74,11 @@ static void runUnitTests(const MGUnitTest **tests)
 	endTime = clock();
 	benchSeconds = (float) (endTime - startTime) / (float) CLOCKS_PER_SEC;
 
+	const char *pluralize = (_mgTestsRun == 1) ? "test" : "tests";
 	if (benchSeconds >= 5.0f)
-		printf("Ran %d tests in %.2fs\n", _mgTestsRun, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC);
+		printf("Ran %d %s in %.2fs\n", _mgTestsRun, pluralize, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC);
 	else
-		printf("Ran %d tests in %.4fms\n", _mgTestsRun, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC * 1000.0f);
+		printf("Ran %d %s in %.4fms\n", _mgTestsRun, pluralize, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC * 1000.0f);
 }
 
 
