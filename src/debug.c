@@ -8,7 +8,7 @@
 #include "utilities.h"
 
 
-#define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) abs(x))) + 1)
+#define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) x)) + 1)
 
 #define _MG_FILENAME_PADDING 4
 
@@ -62,27 +62,47 @@ void _mgDebugReadPrint(const char *filename, char *str, size_t len)
 }
 
 
-void _mgDebugTokenPrint(const char *filename, MGToken *token)
+void mgDebugInspectToken(MGToken *token, const char *filename, MGbool justify)
 {
 	const unsigned int len = token->end.string - token->begin.string;
 
 	char *string2 = NULL;
 
-	if (len)
+	if (token->type == MG_TOKEN_STRING)
+	{
+		if (token->value.s)
+		{
+			string2 = (char*) malloc((mgInlineRepresentationLength(token->value.s, NULL) + 1) * sizeof(char));
+			mgInlineRepresentation(string2, token->value.s, NULL);
+		}
+	}
+	else if (len)
 	{
 		string2 = (char*) malloc((mgInlineRepresentationLength(token->begin.string, token->end.string) + 1) * sizeof(char));
 		mgInlineRepresentation(string2, token->begin.string, token->end.string);
 	}
 
-	int padding = _MG_INT_COUNT_DIGITS(token->begin.line) + _MG_INT_COUNT_DIGITS(token->begin.character);
-	padding = (padding > _MG_FILENAME_PADDING) ? 0 : (_MG_FILENAME_PADDING + 1 - padding);
+	if (filename)
+		printf("%s:", filename);
 
-	printf("%s:%u:%u:%*s %*-s \"%s\"\n",
-	       filename,
-	       token->begin.line, token->begin.character,
-	       padding, "",
-	       _MG_LONGEST_TOKEN_NAME_LENGTH, _MG_TOKEN_NAMES[token->type],
-	       string2 ? string2 : "");
+	if (justify)
+	{
+		int padding = _MG_INT_COUNT_DIGITS(token->begin.line) + _MG_INT_COUNT_DIGITS(token->begin.character);
+		padding = (padding > _MG_FILENAME_PADDING) ? 0 : (_MG_FILENAME_PADDING + 1 - padding);
+
+		printf("%u:%u:%*s %*-s \"%s\"\n",
+		       token->begin.line, token->begin.character,
+		       padding, "",
+		       _MG_LONGEST_TOKEN_NAME_LENGTH, _MG_TOKEN_NAMES[token->type],
+		       string2 ? string2 : "");
+	}
+	else
+	{
+		printf("%u:%u: %s \"%s\"\n",
+		       token->begin.line, token->begin.character,
+		       _MG_TOKEN_NAMES[token->type],
+		       string2 ? string2 : "");
+	}
 
 	if (string2)
 		free(string2);
@@ -103,7 +123,7 @@ void _mgDebugTokenizePrint(const char *filename, char *str, size_t len)
 		do
 		{
 			mgTokenizeNext(&token);
-			_mgDebugTokenPrint(filename, &token);
+			mgDebugInspectToken(&token, filename, MG_TRUE);
 		}
 		// while (token.type > MG_TOKEN_EOF);
 		while (token.type != MG_TOKEN_EOF);
