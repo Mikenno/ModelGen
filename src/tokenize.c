@@ -44,10 +44,141 @@ void mgTokenizeNext(MGToken *token)
 	memcpy(&token->begin, &token->end, _mg_sizeof_field(MGToken, begin));
 
 	char c = *token->end.string;
-	if (c == '\0')
+
+	switch (c)
 	{
-		token->type = MG_TOKEN_EOF;
+	case '(':
+		token->type = MG_TOKEN_LPAREN;
+		_mgTokenNextCharacter(token);
 		return;
+	case ')':
+		token->type = MG_TOKEN_RPAREN;
+		_mgTokenNextCharacter(token);
+		return;
+	case '[':
+		token->type = MG_TOKEN_LSQUARE;
+		_mgTokenNextCharacter(token);
+		return;
+	case ']':
+		token->type = MG_TOKEN_RSQUARE;
+		_mgTokenNextCharacter(token);
+		return;
+	case '{':
+		token->type = MG_TOKEN_LBRACE;
+		_mgTokenNextCharacter(token);
+		return;
+	case '}':
+		token->type = MG_TOKEN_RBRACE;
+		_mgTokenNextCharacter(token);
+		return;
+	case '.':
+		if (isdigit(*(token->end.string + 1)))
+			goto decimal;
+		token->type = MG_TOKEN_DOT;
+		_mgTokenNextCharacter(token);
+		return;
+	case ',':
+		token->type = MG_TOKEN_COMMA;
+		_mgTokenNextCharacter(token);
+		return;
+	case ':':
+		token->type = MG_TOKEN_COLON;
+		_mgTokenNextCharacter(token);
+		return;
+	case '+':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_ADD_ASSIGN;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_ADD;
+			return;
+		}
+	case '-':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_SUB_ASSIGN;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_SUB;
+			return;
+		}
+	case '*':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_MUL_ASSIGN;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_MUL;
+			return;
+		}
+	case '/':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_SUB_ASSIGN;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_SUB;
+			return;
+		}
+	case '=':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_EQUAL;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_ASSIGN;
+			return;
+		}
+	case '%':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_MOD_ASSIGN;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_MOD;
+			return;
+		}
+	case '<':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_LESS_EQUAL;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_LESS;
+			return;
+		}
+	case '>':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '=':
+			token->type = MG_TOKEN_GREATER_EQUAL;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_GREATER;
+			return;
+		}
+	case '\0':
+		token->type = MG_TOKEN_EOF;
+		_mgTokenNextCharacter(token);
+		return;
+	default:
+		break;
 	}
 
 	token->type = MG_TOKEN_INVALID;
@@ -55,8 +186,40 @@ void mgTokenizeNext(MGToken *token)
 	if (isalpha(c))
 	{
 		token->type = MG_TOKEN_IDENTIFIER;
-		while (isalnum(*token->end.string))
+		while (isalnum(*token->end.string) || (*token->end.string == '_'))
 			_mgTokenNextCharacter(token);
+
+		const unsigned long int len = token->end.string - token->begin.string;
+
+		switch (len)
+		{
+		case 2:
+			if (!strncmp("in", token->begin.string, 2))
+				token->type = MG_TOKEN_IN;
+			else if (!strncmp("if", token->begin.string, 2))
+				token->type = MG_TOKEN_IF;
+			else if (!strncmp("or", token->begin.string, 2))
+				token->type = MG_TOKEN_OR;
+			break;
+		case 3:
+			if (!strncmp("for", token->begin.string, 3))
+				token->type = MG_TOKEN_FOR;
+			else if (!strncmp("and", token->begin.string, 3))
+				token->type = MG_TOKEN_AND;
+			else if (!strncmp("not", token->begin.string, 3))
+				token->type = MG_TOKEN_NOT;
+			break;
+		case 4:
+			if (!strncmp("proc", token->begin.string, 4))
+				token->type = MG_TOKEN_PROC;
+			else if (!strncmp("emit", token->begin.string, 4))
+				token->type = MG_TOKEN_EMIT;
+			else if (!strncmp("else", token->begin.string, 4))
+				token->type = MG_TOKEN_ELSE;
+			break;
+		default:
+			break;
+		}
 	}
 	else if (isdigit(c))
 	{
@@ -66,17 +229,66 @@ void mgTokenizeNext(MGToken *token)
 
 		if (*token->end.string == '.')
 		{
+decimal:
 			token->type = MG_TOKEN_FLOAT;
 			do
 				_mgTokenNextCharacter(token);
 			while (isdigit(*token->end.string));
 		}
 	}
+	else if (c == '"')
+	{
+		token->type = MG_TOKEN_COMMENT;
+		do
+		{
+			_mgTokenNextCharacter(token);
+			if (*token->end.string == '\\')
+			{
+				_mgTokenNextCharacter(token);
+				if (*token->end.string == '\0')
+					break;
+				_mgTokenNextCharacter(token);
+			}
+		}
+		while ((*token->end.string != '"') && (*token->end.string != '\n') && *token->end.string);
+
+		if (*token->end.string == '"')
+			_mgTokenNextCharacter(token);
+		else
+			token->type = MG_TOKEN_INVALID;
+	}
 	else if (c == '#')
 	{
 		token->type = MG_TOKEN_COMMENT;
-		while ((*token->end.string != '\n') && (*token->end.string != '\0'))
-			_mgTokenNextCharacter(token);
+		_mgTokenNextCharacter(token);
+
+		if (*token->end.string == '[')
+		{
+			for (;;)
+			{
+				_mgTokenNextCharacter(token);
+				c = *token->end.string;
+
+				if (c == '\0')
+					break;
+				else if (c != '#')
+					continue;
+
+				_mgTokenNextCharacter(token);
+				c = *token->end.string;
+
+				if ((c == ']') || (c == '\0'))
+					break;
+			}
+
+			if (c == ']')
+				_mgTokenNextCharacter(token);
+		}
+		else
+		{
+			while ((*token->end.string != '\n') && (*token->end.string != '\0'))
+				_mgTokenNextCharacter(token);
+		}
 	}
 	else if (isspace(c))
 	{
