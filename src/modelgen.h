@@ -34,14 +34,24 @@ typedef struct MGToken {
 	} end;
 } MGToken;
 
+typedef struct MGTokenizer {
+	const char *filename;
+	char *string;
+	MGToken *tokens;
+	size_t tokenCount;
+} MGTokenizer;
+
 char* mgReadFile(const char *filename, size_t *length);
 char* mgReadFileHandle(FILE *file, size_t *length);
 
 void mgTokenReset(const char *string, MGToken *token);
 void mgTokenizeNext(MGToken *token);
 
-MGToken* mgTokenizeFile(const char *filename, size_t *tokenCount);
-MGToken* mgTokenizeFileHandle(FILE *file, size_t *tokenCount);
-MGToken* mgTokenizeString(const char *string, size_t *tokenCount);
+void mgCreateTokenizer(MGTokenizer *tokenizer);
+void mgDestroyTokenizer(MGTokenizer *tokenizer);
+
+MGToken* mgTokenizeFile(MGTokenizer *tokenizer, const char *filename, size_t *tokenCount);
+MGToken* mgTokenizeFileHandle(MGTokenizer *tokenizer, FILE *file, size_t *tokenCount);
+MGToken* mgTokenizeString(MGTokenizer *tokenizer, const char *string, size_t *tokenCount);
 
 #endif

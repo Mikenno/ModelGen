@@ -6,46 +6,46 @@
 
 MG_TEST(testTokenTypes)
 {
-	MGToken *tokens;
-	size_t tokenCount;
+	MGTokenizer tokenizer;
 
 	const char *str = "a b abc";
 
-	mgTestAssert(tokens = mgTokenizeString(str, &tokenCount));
+	mgCreateTokenizer(&tokenizer);
 
-	mgTestAssertIntEquals(tokenCount, 6);
+	mgTestAssert(mgTokenizeString(&tokenizer, str, NULL));
+	mgTestAssertIntEquals(tokenizer.tokenCount, 6);
 
-	mgTestAssertIntEquals(tokens[0].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokens[1].type, MG_TOKEN_WHITESPACE);
-	mgTestAssertIntEquals(tokens[2].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokens[3].type, MG_TOKEN_WHITESPACE);
-	mgTestAssertIntEquals(tokens[4].type, MG_TOKEN_IDENTIFIER);
-	mgTestAssertIntEquals(tokens[5].type, MG_TOKEN_EOF);
+	mgTestAssertIntEquals(tokenizer.tokens[0].type, MG_TOKEN_IDENTIFIER);
+	mgTestAssertIntEquals(tokenizer.tokens[1].type, MG_TOKEN_WHITESPACE);
+	mgTestAssertIntEquals(tokenizer.tokens[2].type, MG_TOKEN_IDENTIFIER);
+	mgTestAssertIntEquals(tokenizer.tokens[3].type, MG_TOKEN_WHITESPACE);
+	mgTestAssertIntEquals(tokenizer.tokens[4].type, MG_TOKEN_IDENTIFIER);
+	mgTestAssertIntEquals(tokenizer.tokens[5].type, MG_TOKEN_EOF);
 
-	free(tokens);
+	mgDestroyTokenizer(&tokenizer);
 }
 
 
 MG_TEST(testTokenStrings)
 {
-	MGToken *tokens;
-	size_t tokenCount;
+	MGTokenizer tokenizer;
 	size_t i;
 
 	const char *str = "a b abc";
 	const char *tokenStrings[] = { "a", " ", "b", " ",  "abc", "" };
 
-	mgTestAssert(tokens = mgTokenizeString(str, &tokenCount));
+	mgCreateTokenizer(&tokenizer);
 
-	mgTestAssertIntEquals(tokenCount, 6);
+	mgTestAssert(mgTokenizeString(&tokenizer, str, NULL));
+	mgTestAssertIntEquals(tokenizer.tokenCount, 6);
 
-	for (i = 0; i < tokenCount; ++i)
+	for (i = 0; i < tokenizer.tokenCount; ++i)
 	{
-		mgTestAssertIntEquals(strlen(tokenStrings[i]), tokens[i].end.string - tokens[i].begin.string);
-		mgTestAssert(!strncmp(tokenStrings[i], tokens[i].begin.string, tokens[i].end.string - tokens[i].begin.string));
+		mgTestAssertIntEquals(strlen(tokenStrings[i]), tokenizer.tokens[i].end.string - tokenizer.tokens[i].begin.string);
+		mgTestAssert(!strncmp(tokenStrings[i], tokenizer.tokens[i].begin.string, tokenizer.tokens[i].end.string - tokenizer.tokens[i].begin.string));
 	}
 
-	free(tokens);
+	mgDestroyTokenizer(&tokenizer);
 }
 
 

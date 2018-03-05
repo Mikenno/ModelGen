@@ -88,37 +88,20 @@ void mgTokenizeNext(MGToken *token)
 }
 
 
-MGToken* mgTokenizeFile(const char *filename, size_t *tokenCount)
+void mgCreateTokenizer(MGTokenizer *tokenizer)
 {
-	char *str = mgReadFile(filename, NULL);
-
-	if (!str)
-		return NULL;
-
-	MGToken *tokens = mgTokenizeString(str, tokenCount);
-
-	free(str);
-
-	return tokens;
+	memset(tokenizer, 0, sizeof(MGTokenizer));
 }
 
 
-MGToken* mgTokenizeFileHandle(FILE *file, size_t *tokenCount)
+void mgDestroyTokenizer(MGTokenizer *tokenizer)
 {
-	char *str = mgReadFileHandle(file, NULL);
-
-	if (!str)
-		return NULL;
-
-	MGToken *tokens = mgTokenizeString(str, tokenCount);
-
-	free(str);
-
-	return tokens;
+	free(tokenizer->string);
+	free(tokenizer->tokens);
 }
 
 
-MGToken* mgTokenizeString(const char *string, size_t *tokenCount)
+static inline MGToken* _mgTokenizeString(MGTokenizer *tokenizer, size_t *tokenCount)
 {
 	size_t capacity = 0;
 	size_t count = 0;
@@ -126,17 +109,18 @@ MGToken* mgTokenizeString(const char *string, size_t *tokenCount)
 	MGToken *tokens = NULL;
 
 	MGToken token;
-	mgTokenReset(string, &token);
+	mgTokenReset(tokenizer->string, &token);
 
 	do
 	{
 		if (capacity == count)
 		{
-			// 4294967295 tokens is unlikely to be reached, but it should be noted that an integer overflow isn't handled currently
+			// Given SIZE_MAX matches the architecture, then reaching an integer overflow is impossible
+			// On a 32-bit system (with a SIZE_MAX accordingly) 2^31 tokens would require 50+ GB of RAM
+			// Thus memory allocation would fail a long time before any possibility of overflowing
 			capacity = capacity ? capacity << 1 : 2;
 
-			// realloc returning NULL makes it impossible to free tokens
-			// Out of memory is not handled, as it is a royally screwed situation to be in
+			// Out of memory is an unrecoverable state and will currently result in a graceless crash
 			tokens = (MGToken*) realloc(tokens, capacity * sizeof(MGToken));
 		}
 
@@ -147,8 +131,42 @@ MGToken* mgTokenizeString(const char *string, size_t *tokenCount)
 	}
 	while (token.type != MG_TOKEN_EOF);
 
+	tokenizer->tokens = tokens;
+	tokenizer->tokenCount = count;
+
 	if (tokenCount)
 		*tokenCount = count;
 
-	return  tokens;
+	return tokens;
+}
+
+
+MGToken* mgTokenizeFile(MGTokenizer *tokenizer, const char *filename, size_t *tokenCount)
+{
+	tokenizer->filename = filename;
+	tokenizer->string = mgReadFile(filename, NULL);
+
+	if (!tokenizer->string)
+		return NULL;
+
+	return _mgTokenizeString(tokenizer, tokenCount);
+}
+
+
+MGToken* mgTokenizeFileHandle(MGTokenizer *tokenizer, FILE *file, size_t *tokenCount)
+{
+	tokenizer->string = mgReadFileHandle(file, NULL);
+
+	if (!tokenizer->string)
+		return NULL;
+
+	return _mgTokenizeString(tokenizer, tokenCount);
+}
+
+
+MGToken* mgTokenizeString(MGTokenizer *tokenizer, const char *string, size_t *tokenCount)
+{
+	tokenizer->string = strcpy(malloc((strlen(string) + 1) * sizeof(char)), string);
+
+	return _mgTokenizeString(tokenizer, tokenCount);
 }
