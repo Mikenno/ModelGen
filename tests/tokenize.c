@@ -141,6 +141,8 @@ MG_TEST(testNumbers)
 
 int main(int argc, char *argv[])
 {
+	mgTestingBegin();
+
 	const MGUnitTest *tests[] = {
 			&testEmpty,
 			&testComments,
@@ -149,7 +151,9 @@ int main(int argc, char *argv[])
 			NULL
 	};
 
-	runUnitTests(tests);
+	mgRunUnitTests(tests);
 
-	return _mgFailedTests > 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+	mgTestingEnd();
+
+	return _mgTestsFailed ? EXIT_FAILURE : EXIT_SUCCESS;
 }

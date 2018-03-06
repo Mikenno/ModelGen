@@ -32,59 +32,84 @@ typedef struct MGUnitTest {
 
 
 static unsigned int _mgTestsRun = 0;
-static unsigned int _mgFailedTests = 0;
+
+static unsigned int _mgTestsPassed = 0;
+static unsigned int _mgTestsFailed = 0;
+static unsigned int _mgTestsSkipped = 0;
+
+static clock_t _mgTestTimeBegin;
+static clock_t _mgTestTimeEnd;
 
 
-static void runUnitTests(const MGUnitTest **tests)
+static void mgTestingBegin(void)
 {
-	clock_t startTime, endTime;
-	float benchSeconds;
+	_mgTestsRun = 0;
 
-	unsigned int failedTests = _mgFailedTests;
-	unsigned int testSkip = 0;
-	const MGUnitTest *test;
+	_mgTestsPassed = 0;
+	_mgTestsFailed = 0;
+	_mgTestsSkipped = 0;
 
-	startTime = clock();
+	_mgTestTimeBegin = clock();
+}
 
-	while ((test = *tests))
-	{
-		testSkip = test->name[0] == '_';
 
-		if (test->name && (test->name[0] == '_'))
-			fputs("[SKIP] ", stdout);
-		else
-		{
-			test->func(test);
+static void mgTestingEnd(void)
+{
+	_mgTestTimeEnd = clock();
 
-			if (_mgFailedTests == failedTests)
-				fputs("[PASS] ", stdout);
-			else
-				fputs("[FAIL] ", stdout);
-		}
-
-		puts(test->name + testSkip);
-		fflush(stdout);
-
-		failedTests = _mgFailedTests;
-
-		++tests;
-		++_mgTestsRun;
-	}
-
-	endTime = clock();
-	benchSeconds = (float) (endTime - startTime) / (float) CLOCKS_PER_SEC;
+	const double durationSeconds = (double) (_mgTestTimeEnd - _mgTestTimeBegin) / (double) CLOCKS_PER_SEC;
 
 	const char *pluralize = (_mgTestsRun == 1) ? "test" : "tests";
-	if (benchSeconds >= 5.0f)
-		printf("Ran %d %s in %.2fs\n", _mgTestsRun, pluralize, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC);
+
+	if (durationSeconds >= 5.0f)
+		printf("Ran %d %s in %.2fs", _mgTestsRun, pluralize, durationSeconds);
 	else
-		printf("Ran %d %s in %.4fms\n", _mgTestsRun, pluralize, (float) (endTime - startTime) / (float) CLOCKS_PER_SEC * 1000.0f);
+		printf("Ran %d %s in %.4fms", _mgTestsRun, pluralize, durationSeconds * 1000.0);
+
+	printf(" (%d passed, %d failed, %d skipped)\n", _mgTestsPassed, _mgTestsFailed, _mgTestsSkipped);
+}
+
+
+static void mgRunUnitTest(const MGUnitTest *test)
+{
+	unsigned int failedTests = _mgTestsFailed;
+	unsigned int testSkip = test->name[0] == '_';
+
+	if (test->name && (test->name[0] == '_'))
+	{
+		++_mgTestsSkipped;
+		fputs("[SKIP] ", stdout);
+	}
+	else
+	{
+		test->func(test);
+
+		if (_mgTestsFailed == failedTests)
+		{
+			++_mgTestsPassed;
+			fputs("[PASS] ", stdout);
+		}
+		else
+			fputs("[FAIL] ", stdout);
+	}
+
+	puts(test->name + testSkip);
+	fflush(stdout);
+
+	++_mgTestsRun;
+}
+
+
+static void mgRunUnitTests(const MGUnitTest **tests)
+{
+	for (; *tests; ++tests)
+		mgRunUnitTest(*tests);
 }
 
 
 #define _mgTestFail() \
 	do { \
-		++_mgFailedTests; \
+		++_mgTestsFailed; \
 		return;\
 	} while (0)
 
