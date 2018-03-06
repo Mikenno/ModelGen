@@ -17,12 +17,13 @@
 typedef struct MGUnitTest {
 	const char *name;
 	void (*func)(const struct MGUnitTest *test);
+	void *data;
 } MGUnitTest;
 
 
 #define MG_TEST_NAMED(func, name) \
 	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test); \
-	MGUnitTest func = { name, _MG_TEST_CONCATENATE(_, func) }; \
+	MGUnitTest func = { name, _MG_TEST_CONCATENATE(_, func), NULL }; \
 	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test)
 
 #define MG_TEST(func) MG_TEST_NAMED(func, _MG_TEST_STRINGIZE(func))

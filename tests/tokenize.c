@@ -1,4 +1,6 @@
 
+#include <windows.h>
+
 #include "../src/modelgen.h"
 #include "../src/utilities.h"
 #include "../src/debug.h"
@@ -17,9 +19,15 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 	mgCreateTokenizer(&outTokenizer);
 
 	if (!mgTokenizeFile(&inTokenizer, in, NULL))
+	{
+		printf("Error: Failed tokenizing \"%s\"\n", in);
 		goto fail;
-	if (!mgTokenizeFile(&outTokenizer, out, NULL))
+	}
+	else if (!mgTokenizeFile(&outTokenizer, out, NULL))
+	{
+		printf("Error: Failed tokenizing \"%s\"\n", out);
 		goto fail;
+	}
 
 #define _MG_IS_TESTABLE_TOKEN(token) \
 		((token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_WHITESPACE))
@@ -105,6 +113,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 fail:
 
 	passed = MG_FALSE;
+	++_mgTestsFailed;
 
 pass:
 
@@ -115,44 +124,78 @@ pass:
 }
 
 
-MG_TEST(testEmpty)
+static void _mgTokenizerTest(const MGUnitTest *test)
 {
-	mgTestAssert(_mgTestTokenizer("tests/tokenize/empty.mg", "tests/tokenize/empty.tokens"));
+	const char *in = ((char**) test->data)[0];
+	const char *out = ((char**) test->data)[1];
+
+	_mgTestTokenizer(in, out);
 }
 
 
-MG_TEST(testComments)
+static void _mgRunTokenizerTest(const char *in)
 {
-	mgTestAssert(_mgTestTokenizer("tests/tokenize/comments.mg", "tests/tokenize/comments.tokens"));
+	char out[MAX_PATH + 1];
+	char *extension = strrchr(in, '.');
+	const char *files[2] = { in, out };
+
+	MGUnitTest test;
+	test.name = in;
+	test.func = _mgTokenizerTest;
+	test.data = (void*) files;
+
+	strcpy(out, in);
+	strcpy(strrchr(out, '.'), ".tokens");
+
+	mgRunUnitTest(&test);
 }
 
 
-MG_TEST(testIdentifiers)
+static void _mgRunTokenizerTests(const char *directory)
 {
-	mgTestAssert(_mgTestTokenizer("tests/tokenize/identifiers.mg", "tests/tokenize/identifiers.tokens"));
-}
+	char dir[MAX_PATH + 1], filename[MAX_PATH + 1], *extension;
+	WIN32_FIND_DATAA find;
+	HANDLE hFind;
 
+	strcpy(dir, directory);
+	strcat(dir, "/*");
 
-MG_TEST(testNumbers)
-{
-	mgTestAssert(_mgTestTokenizer("tests/tokenize/comments.mg", "tests/tokenize/comments.tokens"));
+	if ((hFind = FindFirstFileA(dir, &find)) == INVALID_HANDLE_VALUE)
+	{
+		printf("No such directory \"%s\"\n", directory);
+		++_mgTestsFailed;
+		return;
+	}
+
+	do
+	{
+		if (!strcmp(find.cFileName, ".") || !strcmp(find.cFileName, ".."))
+			continue;
+
+		strcpy(filename, directory);
+		strcat(filename, "/");
+		strcat(filename, find.cFileName);
+
+		if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			_mgRunTokenizerTests(filename);
+		else
+		{
+			extension = strrchr(filename, '.');
+
+			if (extension && !strcmp(extension, ".mg"))
+				_mgRunTokenizerTest(filename);
+		}
+	}
+	while (FindNextFileA(hFind, &find) != 0);
+
+	FindClose(hFind);
 }
 
 
 int main(int argc, char *argv[])
 {
 	mgTestingBegin();
-
-	const MGUnitTest *tests[] = {
-			&testEmpty,
-			&testComments,
-			&testIdentifiers,
-			&testNumbers,
-			NULL
-	};
-
-	mgRunUnitTests(tests);
-
+	_mgRunTokenizerTests("tests/tokenize");
 	mgTestingEnd();
 
 	return _mgTestsFailed ? EXIT_FAILURE : EXIT_SUCCESS;
