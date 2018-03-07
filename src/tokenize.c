@@ -180,11 +180,11 @@ void mgTokenizeNext(MGToken *token)
 		_mgTokenNextCharacter(token);
 		switch (*token->end.string) {
 		case '=':
-			token->type = MG_TOKEN_SUB_ASSIGN;
+			token->type = MG_TOKEN_DIV_ASSIGN;
 			_mgTokenNextCharacter(token);
 			return;
 		default:
-			token->type = MG_TOKEN_SUB;
+			token->type = MG_TOKEN_DIV;
 			return;
 		}
 	case '=':

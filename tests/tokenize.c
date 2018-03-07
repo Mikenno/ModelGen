@@ -66,10 +66,11 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 			goto fail;
 		}
 
-		++outToken;
-		for (; outToken->type == MG_TOKEN_WHITESPACE; ++outToken);
+		do
+			++outToken;
+		while (outToken->type == MG_TOKEN_WHITESPACE);
 
-		if (_MG_IS_TESTABLE_TOKEN(outToken))
+		if (_MG_IS_TESTABLE_TOKEN(outToken) && (outToken->type != MG_TOKEN_EOF))
 		{
 			const char *outTokenString = outToken->value.s;
 			const size_t outTokenStringLength = outTokenString ? strlen(outTokenString) : 0;
@@ -91,9 +92,9 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 				mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
 				goto fail;
 			}
-		}
 
-		++outToken;
+			++outToken;
+		}
 	}
 
 	_MG_FIND_NEXT_TESTABLE_TOKEN(outToken);
@@ -136,7 +137,6 @@ static void _mgTokenizerTest(const MGUnitTest *test)
 static void _mgRunTokenizerTest(const char *in)
 {
 	char out[MAX_PATH + 1];
-	char *extension = strrchr(in, '.');
 	const char *files[2] = { in, out };
 
 	MGUnitTest test;
