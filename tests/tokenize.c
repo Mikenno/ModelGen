@@ -80,8 +80,15 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 			if (inToken->type == MG_TOKEN_STRING)
 			{
-				inTokenString = inToken->value.s ? inToken->value.s : NULL;
-				inTokenStringLength -= 2;
+				inTokenString = inToken->value.s;
+
+				if (inTokenString)
+					inTokenStringLength = strlen(inTokenString);
+				else
+				{
+					inTokenString = NULL;
+					inTokenStringLength = 0;
+				}
 			}
 
 			if ((outTokenStringLength != inTokenStringLength) || ((outTokenStringLength > 0) && strncmp(outTokenString, inTokenString, outTokenStringLength)))

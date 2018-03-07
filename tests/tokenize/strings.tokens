@@ -1,0 +1,13 @@
+"string" ""
+"string" " "
+"string" "\t"
+"string" "\t\t\t\t"
+"string" "Hello World"
+"string" "Escaped \" Quote"
+"string" "Escaped \n Newline"
+"string" "Escaped \\ Slash"
+
+"string" "\""
+"string" " \""
+"string" "\" "
+"string" " \" "

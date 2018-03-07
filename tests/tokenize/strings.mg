@@ -1,0 +1,13 @@
+""
+" "
+"\t"
+"\t\t\t\t"
+"Hello World"
+"Escaped \" Quote"
+"Escaped \n Newline"
+"Escaped \\ Slash"
+
+"\""
+" \""
+"\" "
+" \" "
