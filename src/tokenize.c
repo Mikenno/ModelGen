@@ -38,6 +38,26 @@ static inline void _mgTokenNextCharacter(MGToken *token)
 }
 
 
+static inline int _mgIsHexadecimal(char c)
+{
+	return ((c >= '0') && (c <= '9'))
+	       || ((c >= 'A') && (c <= 'F'))
+	       || ((c >= 'a') && (c <= 'f'));
+}
+
+
+static inline int _mgIsOctal(char c)
+{
+	return (c >= '0') && (c <= '7');
+}
+
+
+static inline int _mgIsBinary(char c)
+{
+	return (c == '0') || (c == '1');
+}
+
+
 void _mgParseString(MGToken *token)
 {
 	const size_t len = token->end.string - token->begin.string - 2;
@@ -282,6 +302,40 @@ void mgTokenizeNext(MGToken *token)
 	else if (isdigit(c))
 	{
 		token->type = MG_TOKEN_INTEGER;
+
+		if (c == '0')
+		{
+			_mgTokenNextCharacter(token);
+
+			if ((*token->end.string == 'x') || (*token->end.string == 'X'))
+			{
+				_mgTokenNextCharacter(token);
+
+				while (_mgIsHexadecimal(*token->end.string))
+					_mgTokenNextCharacter(token);
+
+				return;
+			}
+			else if ((*token->end.string == 'b') || (*token->end.string == 'B'))
+			{
+				_mgTokenNextCharacter(token);
+
+				while (_mgIsBinary(*token->end.string))
+					_mgTokenNextCharacter(token);
+
+				return;
+			}
+			else if ((*token->end.string == 'o') || (*token->end.string == 'O'))
+			{
+				_mgTokenNextCharacter(token);
+
+				while (_mgIsOctal(*token->end.string))
+					_mgTokenNextCharacter(token);
+
+				return;
+			}
+		}
+
 		while (isdigit(*token->end.string))
 			_mgTokenNextCharacter(token);
 
@@ -292,6 +346,17 @@ decimal:
 			do
 				_mgTokenNextCharacter(token);
 			while (isdigit(*token->end.string));
+		}
+
+		if ((*token->end.string == 'E') || (*token->end.string == 'e'))
+		{
+			_mgTokenNextCharacter(token);
+
+			if ((*token->end.string == '+') || (*token->end.string == '-'))
+				_mgTokenNextCharacter(token);
+
+			while (isdigit(*token->end.string))
+				_mgTokenNextCharacter(token);
 		}
 	}
 	else if (c == '"')

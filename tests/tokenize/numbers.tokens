@@ -1,4 +1,22 @@
 "integer" "255"
+
 "float" "3.1415"
 "float" ".5"
 "float" "10."
+
+"integer" "10E2"
+"integer" "10E+2"
+"integer" "1000E-2"
+
+"float" "10.24E2"
+"float" "10.24E+2"
+"float" "10.24E-2"
+
+"integer" "0x7B"
+"integer" "0X7B"
+
+"integer" "0b1111011"
+"integer" "0B1111011"
+
+"integer" "0o173"
+"integer" "0O173"
