@@ -37,7 +37,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 	outToken = outTokenizer.tokens;
 
-	for (inToken = inTokenizer.tokens; inToken->type != MG_TOKEN_EOF; ++inToken)
+	for (inToken = inTokenizer.tokens;; ++inToken)
 	{
 		if (!_MG_IS_TESTABLE_TOKEN(inToken))
 			continue;
@@ -102,6 +102,9 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 			++outToken;
 		}
+
+		if (inToken->type == MG_TOKEN_EOF)
+			break;
 	}
 
 	_MG_FIND_NEXT_TESTABLE_TOKEN(outToken);
