@@ -264,7 +264,6 @@ void mgTokenizeNext(MGToken *token)
 		}
 	case '\0':
 		token->type = MG_TOKEN_EOF;
-		_mgTokenNextCharacter(token);
 		return;
 	default:
 		break;
