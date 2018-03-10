@@ -1,16 +1,18 @@
-"comment" "# Inline Comment"
+"comment" "# Inline Comment" 1:1 1:17
 
-"comment" "#[ Block Comment #]"
-"comment" "#[\nBlock Comment\n#]"
+"comment" "#[ Block Comment #]"   3:1 3:20
+"comment" "#[\nBlock Comment\n#]" 5:1 7:3
 
-"comment" "##["
-"string" "Escaped Block Comment"
-"comment" "#]"
+"comment" "##["                  9:1 9:4
+"string" "Escaped Block Comment" 10:1 10:24
+"comment" "#]"                   11:1 11:3
 
-"comment" "# ["
-"string" "Escaped Block Comment"
-"comment" "#]"
+"comment" "# ["                  13:1 13:4
+"string" "Escaped Block Comment" 14:1 14:24
+"comment" "#]"                   15:1 15:3
 
-"comment" "#[\nBlock Comment Continue\n# ]\nBlock Comment End\n#]"
+"comment" "#[\nBlock Comment Continue\n# ]\nBlock Comment End\n#]" 17:1 21:3
 
-"comment" "#[\nUnterminated Block Comment"
+"comment" "#[\nUnterminated Block Comment" 23:1 24:27
+
+"end-of-file" 24:27 24:27

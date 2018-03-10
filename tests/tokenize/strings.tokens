@@ -1,13 +1,15 @@
-"string" ""
-"string" " "
-"string" "\t"
-"string" "\t\t\t\t"
-"string" "Hello World"
-"string" "Escaped \" Quote"
-"string" "Escaped \n Newline"
-"string" "Escaped \\ Slash"
+"string" ""   1:1 1:3
+"string" " "  2:1 2:4
+"string" "\t" 3:1 3:5
+"string" "\t\t\t\t"           4:1 4:11
+"string" "Hello World"        5:1 5:14
+"string" "Escaped \" Quote"   6:1 6:19
+"string" "Escaped \n Newline" 7:1 7:21
+"string" "Escaped \\ Slash"   8:1 8:19
 
-"string" "\""
-"string" " \""
-"string" "\" "
-"string" " \" "
+"string" "\""   10:1 10:5
+"string" " \""  11:1 11:6
+"string" "\" "  12:1 12:6
+"string" " \" " 13:1 13:7
+
+"end-of-file" 13:7 13:7
