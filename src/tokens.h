@@ -12,32 +12,33 @@
 	_MG_T(NEWLINE, "newline") \
 	_MG_T(WHITESPACE, "whitespace") \
 	_MG_T(PROC, "proc") \
-    _MG_T(EMIT, "emit") \
-    _MG_T(FOR, "for") \
-    _MG_T(IN, "in") \
-    _MG_T(IF, "if") \
-    _MG_T(ELSE, "else") \
+	_MG_T(EMIT, "emit") \
+	_MG_T(FOR, "for") \
+	_MG_T(IN, "in") \
+	_MG_T(IF, "if") \
+	_MG_T(ELSE, "else") \
 	_MG_T(LPAREN, "(") \
-    _MG_T(RPAREN, ")") \
+	_MG_T(RPAREN, ")") \
 	_MG_T(LSQUARE, "[") \
-    _MG_T(RSQUARE, "]") \
+	_MG_T(RSQUARE, "]") \
 	_MG_T(LBRACE, "{") \
-    _MG_T(RBRACE, "}") \
+	_MG_T(RBRACE, "}") \
 	_MG_T(DOT, ".") \
-    _MG_T(COMMA, ",") \
-    _MG_T(COLON, ":") \
-    _MG_T(ADD, "+") \
-    _MG_T(SUB, "-") \
-    _MG_T(MUL, "*") \
-    _MG_T(DIV, "/") \
-    _MG_T(MOD, "%") \
-    _MG_T(ASSIGN, "=") \
+	_MG_T(COMMA, ",") \
+	_MG_T(COLON, ":") \
+	_MG_T(ADD, "+") \
+	_MG_T(SUB, "-") \
+	_MG_T(MUL, "*") \
+	_MG_T(DIV, "/") \
+	_MG_T(MOD, "%") \
+	_MG_T(ASSIGN, "=") \
 	_MG_T(ADD_ASSIGN, "+=") \
 	_MG_T(SUB_ASSIGN, "-=") \
 	_MG_T(MUL_ASSIGN, "*=") \
 	_MG_T(DIV_ASSIGN, "/=") \
 	_MG_T(MOD_ASSIGN, "%=") \
 	_MG_T(EQUAL, "==") \
+	_MG_T(NOT_EQUAL, "!=") \
 	_MG_T(LESS, "<") \
 	_MG_T(GREATER, ">") \
 	_MG_T(LESS_EQUAL, "<=") \
