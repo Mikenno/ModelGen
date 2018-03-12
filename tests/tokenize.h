@@ -1,11 +1,19 @@
-
-#include <windows.h>
+#ifndef MODELGEN_TEST_TOKENIZE_H
+#define MODELGEN_TEST_TOKENIZE_H
 
 #include "../src/modelgen.h"
-#include "../src/utilities.h"
 #include "../src/debug.h"
 
 #include "test.h"
+#include "file.h"
+
+
+#define _MG_IS_TESTABLE_TOKEN(token) ((token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_WHITESPACE))
+#define _MG_FIND_NEXT_TESTABLE_TOKEN(token) for (; !_MG_IS_TESTABLE_TOKEN(token); ++token)
+
+#define _MG_TOKEN_SCAN_LINE(token) for (; token->type == MG_TOKEN_WHITESPACE; ++token)
+
+#define _MG_VALUE_BUFFER_LENGTH 32
 
 
 static MGbool _mgTestTokenizer(const char *in, const char *out)
@@ -13,9 +21,8 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 	MGTokenizer inTokenizer, outTokenizer;
 	MGToken *inToken, *outToken;
 
-#define _MG_BUFFER_LENGTH 32
 	// Warning: This could overflow, but is highly unlikely
-	char buffer[_MG_BUFFER_LENGTH];
+	char buffer[_MG_VALUE_BUFFER_LENGTH];
 
 	MGbool passed = MG_TRUE;
 
@@ -32,14 +39,6 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 		printf("Error: Failed tokenizing \"%s\"\n", out);
 		goto fail;
 	}
-
-#define _MG_IS_TESTABLE_TOKEN(token) \
-		((token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_WHITESPACE))
-
-#define _MG_FIND_NEXT_TESTABLE_TOKEN(token) \
-		for (; !_MG_IS_TESTABLE_TOKEN(token); ++token)
-
-#define _MG_TOKEN_SCAN_LINE(token) for (; token->type == MG_TOKEN_WHITESPACE; ++token)
 
 	outToken = outTokenizer.tokens;
 
@@ -114,7 +113,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 		if (outToken->type == MG_TOKEN_INTEGER)
 		{
-			snprintf(buffer, _MG_BUFFER_LENGTH, "%u", inToken->begin.line);
+			snprintf(buffer, _MG_VALUE_BUFFER_LENGTH, "%u", inToken->begin.line);
 
 			if (strncmp(buffer, outToken->begin.string, outToken->end.string - outToken->begin.string))
 			{
@@ -135,7 +134,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 			if (outToken->type == MG_TOKEN_INTEGER)
 			{
-				snprintf(buffer, _MG_BUFFER_LENGTH, "%u", inToken->begin.character);
+				snprintf(buffer, _MG_VALUE_BUFFER_LENGTH, "%u", inToken->begin.character);
 
 				if (strncmp(buffer, outToken->begin.string, outToken->end.string - outToken->begin.string))
 				{
@@ -152,7 +151,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 		if (outToken->type == MG_TOKEN_INTEGER)
 		{
-			snprintf(buffer, _MG_BUFFER_LENGTH, "%u", inToken->end.line);
+			snprintf(buffer, _MG_VALUE_BUFFER_LENGTH, "%u", inToken->end.line);
 
 			if (strncmp(buffer, outToken->begin.string, outToken->end.string - outToken->begin.string))
 			{
@@ -173,7 +172,7 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 			if (outToken->type == MG_TOKEN_INTEGER)
 			{
-				snprintf(buffer, _MG_BUFFER_LENGTH, "%u", inToken->end.character);
+				snprintf(buffer, _MG_VALUE_BUFFER_LENGTH, "%u", inToken->end.character);
 
 				if (strncmp(buffer, outToken->begin.string, outToken->end.string - outToken->begin.string))
 				{
@@ -202,11 +201,6 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 		goto fail;
 	}
 
-#undef _MG_BUFFER_LENGTH
-#undef _MG_IS_TESTABLE_TOKEN
-#undef _MG_FIND_NEXT_TESTABLE_TOKEN
-#undef _MG_TOKEN_SCAN_LINE
-
 	goto pass;
 
 fail:
@@ -232,69 +226,30 @@ static void _mgTokenizerTest(const MGUnitTest *test)
 }
 
 
-static void _mgRunTokenizerTest(const char *in)
+static void mgRunTokenizerTest(const char *in)
 {
 	char out[MAX_PATH + 1];
 	const char *files[2] = { in, out };
 
+	if (!mgStringEndsWith(in, ".mg"))
+		return;
+
 	MGUnitTest test;
-	test.name = in;
+	test.name = out;
 	test.func = _mgTokenizerTest;
 	test.data = (void*) files;
 
 	strcpy(out, in);
 	strcpy(strrchr(out, '.'), ".tokens");
 
-	mgRunUnitTest(&test);
+	if (mgFileExists(out))
+		mgRunUnitTest(&test);
 }
 
 
-static void _mgRunTokenizerTests(const char *directory)
+static inline void mgRunTokenizerTests(void)
 {
-	char dir[MAX_PATH + 1], filename[MAX_PATH + 1], *extension;
-	WIN32_FIND_DATAA find;
-	HANDLE hFind;
-
-	strcpy(dir, directory);
-	strcat(dir, "/*");
-
-	if ((hFind = FindFirstFileA(dir, &find)) == INVALID_HANDLE_VALUE)
-	{
-		printf("No such directory \"%s\"\n", directory);
-		++_mgTestsFailed;
-		return;
-	}
-
-	do
-	{
-		if (!strcmp(find.cFileName, ".") || !strcmp(find.cFileName, ".."))
-			continue;
-
-		strcpy(filename, directory);
-		strcat(filename, "/");
-		strcat(filename, find.cFileName);
-
-		if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			_mgRunTokenizerTests(filename);
-		else
-		{
-			extension = strrchr(filename, '.');
-
-			if (extension && !strcmp(extension, ".mg"))
-				_mgRunTokenizerTest(filename);
-		}
-	}
-	while (FindNextFileA(hFind, &find) != 0);
-
-	FindClose(hFind);
+	mgWalkFiles("tests/fixtures/", mgRunTokenizerTest);
 }
 
-
-int main(int argc, char *argv[])
-{
-	mgTestingBegin();
-	_mgRunTokenizerTests("tests/tokenize");
-	mgTestingEnd();
-
-	return _mgTestsFailed ? EXIT_FAILURE : EXIT_SUCCESS;
-}
+#endif

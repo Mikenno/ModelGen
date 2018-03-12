@@ -1,5 +1,5 @@
-#ifndef MODELGEN_TEST_H
-#define MODELGEN_TEST_H
+#ifndef MODELGEN_TEST_TEST_H
+#define MODELGEN_TEST_TEST_H
 
 #include <stdlib.h>
 #include <stdio.h>
