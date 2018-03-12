@@ -2,6 +2,7 @@
 #define MODELGEN_H
 
 #include "tokens.h"
+#include "ast.h"
 
 #include <stdio.h>
 
@@ -46,6 +47,24 @@ typedef struct MGTokenizer {
 	size_t tokenCount;
 } MGTokenizer;
 
+typedef struct MGNode MGNode;
+
+typedef struct MGNode {
+	MGNodeType type;
+	MGToken *token;
+	MGToken *tokenBegin;
+	MGToken *tokenEnd;
+	MGNode **children;
+	size_t childCount;
+	size_t childCapacity;
+	MGNode *parent;
+} MGNode;
+
+typedef struct MGParser {
+	MGTokenizer tokenizer;
+	MGNode *root;
+} MGParser;
+
 char* mgReadFile(const char *filename, size_t *length);
 char* mgReadFileHandle(FILE *file, size_t *length);
 
@@ -58,5 +77,15 @@ void mgDestroyTokenizer(MGTokenizer *tokenizer);
 MGToken* mgTokenizeFile(MGTokenizer *tokenizer, const char *filename, size_t *tokenCount);
 MGToken* mgTokenizeFileHandle(MGTokenizer *tokenizer, FILE *file, size_t *tokenCount);
 MGToken* mgTokenizeString(MGTokenizer *tokenizer, const char *string, size_t *tokenCount);
+
+void mgCreateParser(MGParser *parser);
+void mgDestroyParser(MGParser *parser);
+
+MGNode* mgCreateNode(MGToken *token);
+void mgDestroyNode(MGNode *node);
+
+MGNode* mgParseFile(MGParser *parser, const char *filename);
+MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
+MGNode* mgParseString(MGParser *parser, const char *string);
 
 #endif
