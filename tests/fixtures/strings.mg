@@ -6,7 +6,6 @@
 "Escaped \" Quote"
 "Escaped \n Newline"
 "Escaped \\ Slash"
-
 "\""
 " \""
 "\" "

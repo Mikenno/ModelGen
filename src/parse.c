@@ -8,7 +8,7 @@
 
 static inline void _mgAssert(const char *expression, const char *file, int line)
 {
-	fprintf(stderr, "%s:%d: Assertion Failed: %s", file, line, expression);
+	fprintf(stderr, "%s:%d: Assertion Failed: %s\n", file, line, expression);
 	exit(1);
 }
 

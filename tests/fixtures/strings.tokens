@@ -6,10 +6,8 @@
 "string" "Escaped \" Quote"   6:1 6:19
 "string" "Escaped \n Newline" 7:1 7:21
 "string" "Escaped \\ Slash"   8:1 8:19
-
-"string" "\""   10:1 10:5
-"string" " \""  11:1 11:6
-"string" "\" "  12:1 12:6
-"string" " \" " 13:1 13:7
-
-"end-of-file" 13:7 13:7
+"string" "\""   9:1 9:5
+"string" " \""  10:1 10:6
+"string" "\" "  11:1 11:6
+"string" " \" " 12:1 12:7
+"end-of-file" 12:7 12:7

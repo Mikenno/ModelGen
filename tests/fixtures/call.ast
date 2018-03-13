@@ -1,0 +1,13 @@
+Module
+- Call
+-- Identifier test
+-- Integer 1
+-- Integer 2
+- Call
+-- Identifier test
+-- BinOp +
+--- Integer 1
+--- Integer 2
+-- BinOp *
+--- Integer 3
+--- Integer 4

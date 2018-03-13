@@ -1,0 +1,23 @@
+Module
+- Integer 255
+
+- Float 3.1415
+- Float .5
+- Float 10.
+
+- Integer 10E2
+- Integer 10E+2
+- Integer 1000E-2
+
+- Float 10.24E2
+- Float 10.24E+2
+- Float 10.24E-2
+
+- Integer 0x7B
+- Integer 0X7B
+
+- Integer 0b1111011
+- Integer 0B1111011
+
+- Integer 0o173
+- Integer 0O173

@@ -1,0 +1,25 @@
+Module
+
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3
+
+- BinOp +
+-- BinOp *
+--- Integer 1
+--- Integer 2
+-- Integer 3
+
+- BinOp -
+-- BinOp +
+--- Integer 1
+--- Integer 2
+-- BinOp %
+--- BinOp /
+---- BinOp *
+----- Integer 3
+----- Integer 4
+---- Integer 5
+--- Integer 6
