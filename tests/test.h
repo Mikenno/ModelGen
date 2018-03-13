@@ -79,7 +79,12 @@ static void mgRunUnitTest(const MGUnitTest *test)
 	if (test->name && (test->name[0] == '_'))
 	{
 		++_mgTestsSkipped;
+
+#if MG_ANSI_COLORS
+		fputs("\e[33m[SKIP]\e[0m ", stdout);
+#else
 		fputs("[SKIP] ", stdout);
+#endif
 	}
 	else
 	{
@@ -88,10 +93,21 @@ static void mgRunUnitTest(const MGUnitTest *test)
 		if (_mgTestsFailed == failedTests)
 		{
 			++_mgTestsPassed;
+
+#if MG_ANSI_COLORS
+			fputs("\e[32m[PASS]\e[0m ", stdout);
+#else
 			fputs("[PASS] ", stdout);
+#endif
 		}
 		else
+		{
+#if MG_ANSI_COLORS
+			fputs("\e[31m[FAIL]\e[0m ", stdout);
+#else
 			fputs("[FAIL] ", stdout);
+#endif
+		}
 	}
 
 	puts(test->name + testSkip);
