@@ -16,15 +16,13 @@
 #define _MG_VALUE_BUFFER_LENGTH 32
 
 
-static MGbool _mgTestTokenizer(const char *in, const char *out)
+static void _mgTestTokenizer(const char *in, const char *out)
 {
 	MGTokenizer inTokenizer, outTokenizer;
 	MGToken *inToken, *outToken;
 
 	// Warning: This could overflow, but is highly unlikely
 	char buffer[_MG_VALUE_BUFFER_LENGTH];
-
-	MGbool passed = MG_TRUE;
 
 	mgCreateTokenizer(&inTokenizer);
 	mgCreateTokenizer(&outTokenizer);
@@ -205,15 +203,12 @@ static MGbool _mgTestTokenizer(const char *in, const char *out)
 
 fail:
 
-	passed = MG_FALSE;
 	++_mgTestsFailed;
 
 pass:
 
 	mgDestroyTokenizer(&inTokenizer);
 	mgDestroyTokenizer(&outTokenizer);
-
-	return passed;
 }
 
 

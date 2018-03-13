@@ -8,7 +8,7 @@
 #include "utilities.h"
 
 
-#define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) x)) + 1)
+#define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) (x))) + 1)
 
 #define _MG_FILENAME_PADDING 4
 #define _MG_NODE_PADDING 40
@@ -58,7 +58,7 @@ static void _mgDebugInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGb
 		case MG_TOKEN_NOT:
 		case MG_TOKEN_AND:
 		case MG_TOKEN_OR:
-			width += printf(" [%.*s]", (int) (node->token->end.string - node->token->begin.string), node->token->begin.string);
+			width += printf(" %.*s", (int) (node->token->end.string - node->token->begin.string), node->token->begin.string);
 			break;
 		default:
 			break;
@@ -127,7 +127,7 @@ void _mgDebugReadPrint(const char *filename, char *str, size_t len)
 	{
 		printf("Reading: %s\n", filename);
 
-		int lineCount = 0;
+		unsigned int lineCount = 0;
 
 		if (len)
 		{
@@ -139,12 +139,12 @@ void _mgDebugReadPrint(const char *filename, char *str, size_t len)
 		}
 
 		printf("Length: %zu\n", len);
-		printf("Lines: %d\n", lineCount);
+		printf("Lines: %u\n", lineCount);
 
 		if (lineCount > 0)
 		{
 			char *currentLine = str;
-			int line = 1;
+			unsigned int line = 1;
 
 			while (currentLine)
 			{
@@ -153,7 +153,7 @@ void _mgDebugReadPrint(const char *filename, char *str, size_t len)
 				if (nextLine)
 					*nextLine = '\0';
 
-				printf("%d: %s\n", line, currentLine);
+				printf("%*u: %s\n", _MG_INT_COUNT_DIGITS(lineCount), line, currentLine);
 
 				if (nextLine)
 					*nextLine = '\n';
