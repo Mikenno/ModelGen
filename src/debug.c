@@ -198,7 +198,7 @@ void mgDebugInspectToken(MGToken *token, const char *filename, MGbool justify)
 		int padding = _MG_INT_COUNT_DIGITS(token->begin.line) + _MG_INT_COUNT_DIGITS(token->begin.character);
 		padding = (padding > _MG_FILENAME_PADDING) ? 0 : (_MG_FILENAME_PADDING + 1 - padding);
 
-		printf("%u:%u:%*s %*s \"%s\"\n",
+		printf("%u:%u:%*s %-*s \"%s\"\n",
 		       token->begin.line, token->begin.character,
 		       padding, "",
 		       _MG_LONGEST_TOKEN_NAME_LENGTH, _MG_TOKEN_NAMES[token->type],

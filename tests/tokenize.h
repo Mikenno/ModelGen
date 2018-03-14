@@ -2,6 +2,7 @@
 #define MODELGEN_TEST_TOKENIZE_H
 
 #include "../src/modelgen.h"
+#include "../src/utilities.h"
 #include "../src/debug.h"
 
 #include "test.h"
@@ -202,6 +203,19 @@ static void _mgTestTokenizer(const char *in, const char *out)
 	goto pass;
 
 fail:
+
+	puts("Token Dump:");
+
+	for (inToken = inTokenizer.tokens;; ++inToken)
+	{
+		if (!_MG_IS_TESTABLE_TOKEN(inToken))
+			continue;
+
+		mgDebugInspectToken(inToken, mgBasename(inTokenizer.filename), MG_TRUE);
+
+		if (inToken->type == MG_TOKEN_EOF)
+			break;
+	}
 
 	++_mgTestsFailed;
 
