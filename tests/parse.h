@@ -231,13 +231,22 @@ static void mgRunParserTest(const char *in)
 	if (!mgStringEndsWith(in, ".mg"))
 		return;
 
-	MGUnitTest test;
-	test.name = out;
-	test.func = _mgParserTest;
-	test.data = (void*) files;
-
 	strcpy(out, in);
 	strcpy(strrchr(out, '.'), ".ast");
+
+	if (!mgFileExists(out))
+	{
+		mgDirname(out, in);
+		strcat(out, "/_");
+		strcat(out, mgBasename(in));
+		strcpy(strrchr(out, '.'), ".ast");
+	}
+
+	MGUnitTest test;
+	test.name = out;
+	test.skip = mgBasename(out)[0] == '_';
+	test.func = _mgParserTest;
+	test.data = (void*) files;
 
 	if (mgFileExists(out))
 		mgRunUnitTest(&test);

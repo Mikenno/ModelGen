@@ -16,6 +16,7 @@
 
 typedef struct MGUnitTest {
 	const char *name;
+	int skip;
 	void (*func)(const struct MGUnitTest *test);
 	void *data;
 } MGUnitTest;
@@ -23,7 +24,7 @@ typedef struct MGUnitTest {
 
 #define MG_TEST_NAMED(func, name) \
 	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test); \
-	MGUnitTest func = { name, _MG_TEST_CONCATENATE(_, func), NULL }; \
+	MGUnitTest func = { name, 0, _MG_TEST_CONCATENATE(_, func), NULL }; \
 	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test)
 
 #define MG_TEST(func) MG_TEST_NAMED(func, _MG_TEST_STRINGIZE(func))
@@ -74,9 +75,9 @@ static void mgTestingEnd(void)
 static void mgRunUnitTest(const MGUnitTest *test)
 {
 	unsigned int failedTests = _mgTestsFailed;
-	unsigned int testSkip = test->name[0] == '_';
+	unsigned int skipTest = (test->skip || (test->name[0] == '_')) ? 1 : 0;
 
-	if (test->name && (test->name[0] == '_'))
+	if (skipTest)
 	{
 		++_mgTestsSkipped;
 
@@ -110,7 +111,9 @@ static void mgRunUnitTest(const MGUnitTest *test)
 		}
 	}
 
-	puts(test->name + testSkip);
+	if (test->name)
+		puts(test->name + ((test->name[0] == '_') ? 1 : 0));
+
 	fflush(stdout);
 
 	++_mgTestsRun;

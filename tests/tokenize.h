@@ -243,13 +243,22 @@ static void mgRunTokenizerTest(const char *in)
 	if (!mgStringEndsWith(in, ".mg"))
 		return;
 
-	MGUnitTest test;
-	test.name = out;
-	test.func = _mgTokenizerTest;
-	test.data = (void*) files;
-
 	strcpy(out, in);
 	strcpy(strrchr(out, '.'), ".tokens");
+
+	if (!mgFileExists(out))
+	{
+		mgDirname(out, in);
+		strcat(out, "/_");
+		strcat(out, mgBasename(in));
+		strcpy(strrchr(out, '.'), ".tokens");
+	}
+
+	MGUnitTest test;
+	test.name = out;
+	test.skip = mgBasename(out)[0] == '_';
+	test.func = _mgTokenizerTest;
+	test.data = (void*) files;
 
 	if (mgFileExists(out))
 		mgRunUnitTest(&test);

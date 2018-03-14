@@ -25,6 +25,33 @@ static inline int mgFileExists(const char *filename)
 }
 
 
+static size_t mgDirnameEnd(const char *filename)
+{
+	const char *slash = strrchr(filename, '/');
+	const char *backslash = strrchr(filename, '\\');
+
+	if (slash && backslash && (backslash > slash))
+		slash = backslash;
+	else if (!slash)
+		slash = backslash;
+
+	return slash ? (slash - filename) : 0;
+}
+
+
+static char* mgDirname(char *dirname, const char *filename)
+{
+	const size_t end = mgDirnameEnd(filename);
+
+	if (end)
+		strncpy(dirname, filename, end);
+
+	dirname[end] = '\0';
+
+	return dirname;
+}
+
+
 static int mgWalkFiles(const char *directory, MGWalkFilesCallback callback)
 {
 	char dir[MAX_PATH + 1], filename[MAX_PATH + 1];
