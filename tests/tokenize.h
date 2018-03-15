@@ -22,6 +22,9 @@ static void _mgTestTokenizer(const char *in, const char *out)
 	MGTokenizer inTokenizer, outTokenizer;
 	MGToken *inToken, *outToken;
 
+	char *inTokenValueBuffer = NULL;
+	char *outTokenValueBuffer = NULL;
+
 	// Warning: This could overflow, but is highly unlikely
 	char buffer[_MG_VALUE_BUFFER_LENGTH];
 
@@ -78,31 +81,45 @@ static void _mgTestTokenizer(const char *in, const char *out)
 
 		if (outToken->type == MG_TOKEN_STRING)
 		{
-			const char *outTokenString = outToken->value.s;
-			const size_t outTokenStringLength = outTokenString ? strlen(outTokenString) : 0;
+			const size_t inTokenValueLength = inToken->end.string - inToken->begin.string;
+			const size_t outTokenValueLength = outToken->end.string - outToken->begin.string;
 
-			const char *inTokenString = inToken->begin.string;
-			size_t inTokenStringLength = inToken->end.string - inToken->begin.string;
+			inTokenValueBuffer = (char*) realloc(inTokenValueBuffer, (inTokenValueLength + 1) * sizeof(char));
+			outTokenValueBuffer = (char*) realloc(outTokenValueBuffer, (outTokenValueLength + 1) * sizeof(char));
 
-			if (inToken->type == MG_TOKEN_STRING)
+			const char *inTokenValue = inTokenValueBuffer;
+			const char *outTokenValue = outTokenValueBuffer;
+
+			strncpy(inTokenValueBuffer, inToken->begin.string, inTokenValueLength);
+			inTokenValueBuffer[inTokenValueLength] = '\0';
+
+			if ((outToken->type == MG_TOKEN_STRING) && outToken->value.s)
 			{
-				inTokenString = inToken->value.s;
+				outTokenValue = outToken->value.s;
 
-				if (inTokenString)
-					inTokenStringLength = strlen(inTokenString);
-				else
-				{
-					inTokenString = NULL;
-					inTokenStringLength = 0;
-				}
+				if (inToken->type == MG_TOKEN_STRING)
+					if (inTokenValue[0] == '"')
+						*strrchr(++inTokenValue, '"') = '\0';
+			}
+			else
+			{
+				strncpy(outTokenValueBuffer, outToken->begin.string, outTokenValueLength);
+				outTokenValueBuffer[outTokenValueLength] = '\0';
+
+				if (inToken->type != MG_TOKEN_STRING)
+					if (outTokenValue[0] == '"')
+						*strrchr(++outTokenValue, '"') = '\0';
 			}
 
-			if ((outTokenStringLength != inTokenStringLength) || ((outTokenStringLength > 0) && strncmp(outTokenString, inTokenString, outTokenStringLength)))
+			if ((inToken->type == MG_TOKEN_STRING) && inToken->value.s)
+				inTokenValue = inToken->value.s;
+
+			if (strcmp(inTokenValue, outTokenValue))
 			{
 				printf("Error: Unexpected token value...\n");
-				mgDebugInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+				mgDebugInspectToken(inToken, mgBasename(inTokenizer.filename), MG_FALSE);
 				printf("Expected...\n");
-				mgDebugInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+				mgDebugInspectToken(outToken, mgBasename(outTokenizer.filename), MG_FALSE);
 				goto fail;
 			}
 
@@ -220,6 +237,9 @@ fail:
 	++_mgTestsFailed;
 
 pass:
+
+	free(inTokenValueBuffer);
+	free(outTokenValueBuffer);
 
 	mgDestroyTokenizer(&inTokenizer);
 	mgDestroyTokenizer(&outTokenizer);

@@ -41,8 +41,8 @@ static inline void _mgTokenNextCharacter(MGToken *token)
 static inline int _mgIsHexadecimal(char c)
 {
 	return ((c >= '0') && (c <= '9'))
-	       || ((c >= 'A') && (c <= 'F'))
-	       || ((c >= 'a') && (c <= 'f'));
+	    || ((c >= 'A') && (c <= 'F'))
+	    || ((c >= 'a') && (c <= 'f'));
 }
 
 
@@ -104,7 +104,12 @@ void _mgParseString(MGToken *token)
 			case 'v':
 				c = '\v';
 				break;
+			case '\\':
+			case '"':
+				break;
 			default:
+				c = '\\';
+				--i;
 				break;
 			}
 		}
@@ -372,18 +377,19 @@ decimal:
 	else if (c == '"')
 	{
 		token->type = MG_TOKEN_STRING;
-		do
+
+		for (;;)
 		{
 			_mgTokenNextCharacter(token);
+
 			if (*token->end.string == '\\')
-			{
 				_mgTokenNextCharacter(token);
-				if (*token->end.string == '\0')
-					break;
-				_mgTokenNextCharacter(token);
-			}
+			else if ((*token->end.string == '"') || (*token->end.string == '\n'))
+				break;
+
+			if (*token->end.string == '\0')
+				break;
 		}
-		while ((*token->end.string != '"') && (*token->end.string != '\n') && *token->end.string);
 
 		if (*token->end.string == '"')
 		{

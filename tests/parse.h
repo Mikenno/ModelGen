@@ -57,6 +57,7 @@ static void _mgTestParser(const char *in, const char *out)
 	size_t expectedDepth;
 	const char *expectedType;
 	const char *expectedValue;
+	char *expectedValueBuffer = NULL;
 
 	size_t currentNodeIndex = 0;
 	MGNode *currentNode;
@@ -119,7 +120,15 @@ static void _mgTestParser(const char *in, const char *out)
 			}
 
 			if (*expectedLine)
-				expectedValue = expectedLine;
+			{
+				expectedValueBuffer = (char*) realloc(expectedValueBuffer, (strlen(expectedLine) + 1) * sizeof(char));
+				strcpy(expectedValueBuffer, expectedLine);
+
+				expectedValue = expectedValueBuffer;
+
+				if (expectedValue[0] == '"')
+					*strrchr(++expectedValue, '"') = '\0';
+			}
 
 			if (currentNodeIndex == nodeCount)
 			{
@@ -157,8 +166,24 @@ static void _mgTestParser(const char *in, const char *out)
 			{
 				if (currentNode->token)
 				{
-					currentValue = (char*) realloc(currentValue, (mgInlineRepresentationLength(currentNode->token->begin.string, currentNode->token->end.string) + 1) * sizeof(char));
-					mgInlineRepresentation(currentValue, currentNode->token->begin.string, currentNode->token->end.string);
+					if (currentNode->token->type == MG_TOKEN_STRING)
+					{
+						if (currentNode->token->value.s)
+						{
+							currentValue = (char*) realloc(currentValue, (mgInlineRepresentationLength(currentNode->token->value.s, NULL) + 1) * sizeof(char));
+							mgInlineRepresentation(currentValue, currentNode->token->value.s, NULL);
+						}
+						else
+						{
+							currentValue = (char*) realloc(currentValue, 1 * sizeof(char));
+							currentValue[0] = '\0';
+						}
+					}
+					else
+					{
+						currentValue = (char*) realloc(currentValue, (mgInlineRepresentationLength(currentNode->token->begin.string, currentNode->token->end.string) + 1) * sizeof(char));
+						mgInlineRepresentation(currentValue, currentNode->token->begin.string, currentNode->token->end.string);
+					}
 				}
 				else if (currentNode->tokenBegin && currentNode->tokenEnd)
 				{
@@ -207,7 +232,9 @@ fail:
 
 pass:
 
+	free(expectedValueBuffer);
 	free(currentValue);
+
 	free(nodes);
 
 	mgDestroyParser(&parser);

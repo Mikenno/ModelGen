@@ -34,6 +34,8 @@ unsigned int mgInlineRepresentationLength(const char *str, const char *end)
 		case '\v':
 		case '\f':
 		case '\r':
+		case '\\':
+		case '"':
 			len += 2;
 			break;
 		default:
@@ -68,6 +70,14 @@ char* mgInlineRepresentation(char *destination, const char *source, const char *
 		case '\r':
 			*destination++ = '\\';
 			*destination++ = escapes[*source - 7];
+			break;
+		case '\\':
+			*destination++ = '\\';
+			*destination++ = '\\';
+			break;
+		case '"':
+			*destination++ = '\\';
+			*destination++ = '"';
 			break;
 		default:
 			*destination++ = *source;
