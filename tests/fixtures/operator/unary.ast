@@ -1,0 +1,32 @@
+Module
+- UnaryOp -
+-- Integer 1
+- UnaryOp +
+-- Integer 2
+- UnaryOp -
+-- UnaryOp -
+--- Integer 3
+
+- UnaryOp -
+-- Call
+--- Identifier test
+
+- BinOp +
+-- UnaryOp -
+--- Integer 1
+-- Integer 2
+- UnaryOp -
+-- Tuple
+--- BinOp +
+---- Integer 1
+---- Integer 2
+
+- BinOp +
+-- Integer 1
+-- UnaryOp -
+--- Integer 2
+
+- Integer 1
+- UnaryOp +
+-- UnaryOp -
+--- Integer 2
