@@ -102,11 +102,27 @@ static inline MGNode* _mgWrapNode(MGToken *token, MGNode *node)
 }
 
 
+static inline MGNode* _mgDestroyNodeExtractFirst(MGNode *node)
+{
+	MGNode *child = node->children[0];
+	node->children[0] = NULL;
+
+	child->tokenBegin = node->tokenBegin;
+	child->tokenEnd = node->tokenEnd;
+
+	mgDestroyNode(node);
+
+	return child;
+}
+
+
 static MGNode* _mgParseExpression(MGParser *parser, MGToken *token);
 
 
-static MGNode* _mgParseExpressionList(MGParser *parser, MGToken *token, MGNode *node, MGTokenType end)
+static MGbool _mgParseExpressionList(MGParser *parser, MGToken *token, MGNode *node, MGTokenType end)
 {
+	MGbool isTuple = MG_TRUE;
+
 	do
 	{
 		_MG_TOKEN_SCAN_LINES(token);
@@ -115,6 +131,7 @@ static MGNode* _mgParseExpressionList(MGParser *parser, MGToken *token, MGNode *
 			break;
 
 		MG_ASSERT(token->type != MG_TOKEN_EOF);
+		isTuple = MG_FALSE;
 
 		MGNode *child = _mgParseExpression(parser, token);
 		MG_ASSERT(child);
@@ -128,6 +145,7 @@ static MGNode* _mgParseExpressionList(MGParser *parser, MGToken *token, MGNode *
 			break;
 
 		MG_ASSERT(token->type == MG_TOKEN_COMMA);
+		isTuple = MG_TRUE;
 
 		node->tokenEnd = ++token;
 	}
@@ -137,7 +155,7 @@ static MGNode* _mgParseExpressionList(MGParser *parser, MGToken *token, MGNode *
 
 	node->tokenEnd = token;
 
-	return node;
+	return isTuple;
 }
 
 
@@ -186,7 +204,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		node->type = MG_NODE_TUPLE;
 		++token;
 
-		_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN);
+		if (!_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN) && (node->childCount == 1))
+			node = _mgDestroyNodeExtractFirst(node);
 
 		token = node->tokenEnd + 1;
 	}

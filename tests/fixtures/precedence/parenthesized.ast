@@ -1,7 +1,34 @@
 Module
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3
+
 - BinOp *
--- Tuple
---- BinOp +
----- Integer 1
----- Integer 2
+-- BinOp +
+--- Integer 1
+--- Integer 2
 -- Integer 3
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3
+
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3
+
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3
+- BinOp +
+-- Integer 1
+-- BinOp *
+--- Integer 2
+--- Integer 3

@@ -16,10 +16,9 @@ Module
 --- Integer 1
 -- Integer 2
 - UnaryOp -
--- Tuple
---- BinOp +
----- Integer 1
----- Integer 2
+-- BinOp +
+--- Integer 1
+--- Integer 2
 
 - BinOp +
 -- Integer 1

@@ -87,7 +87,7 @@ static int mgWalkFiles(const char *directory, MGWalkFilesCallback callback)
 		else
 			callback(filename);
 	}
-	while (FindNextFileA(hFind, &find) != 0);
+	while (FindNextFileA(hFind, &find));
 
 	FindClose(hFind);
 
