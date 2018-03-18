@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "modelgen.h"
-#include "debug.h"
+#include "inspect.h"
 
 #ifdef _WIN32
 #   include <stdint.h>
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 			mgCreateParser(&parser);
 
 			if ((root = mgParseFileHandle(&parser, stdin)))
-				mgDebugInspectNode(root);
+				mgInspectNode(root);
 			else
 				err = 1;
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 			mgCreateParser(&parser);
 
 			if ((root = mgParseFile(&parser, filename)))
-				mgDebugInspectNode(root);
+				mgInspectNode(root);
 			else
 				err = 1;
 

@@ -5,8 +5,8 @@
 
 #include "modelgen.h"
 
-void mgDebugInspectToken(MGToken *token, const char *filename, MGbool justify);
-void mgDebugInspectNode(MGNode *node);
+void mgInspectToken(MGToken *token, const char *filename, MGbool justify);
+void mgInspectNode(MGNode *node);
 
 MGbool mgDebugRead(const char *filename);
 MGbool mgDebugReadHandle(FILE *file, const char *filename);

@@ -2,13 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
-#include "debug.h"
+#include "inspect.h"
 #include "utilities.h"
 
-
-#define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) (x))) + 1)
 
 #define _MG_FILENAME_PADDING 4
 #define _MG_NODE_PADDING 40
@@ -20,7 +17,53 @@
 #define _MG_NODE_INDENT_LENGTH     3
 
 
-static void _mgDebugInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGbool isLast)
+void mgInspectToken(MGToken *token, const char *filename, MGbool justify)
+{
+	const unsigned int len = token->end.string - token->begin.string;
+
+	char *string2 = NULL;
+
+	if (token->type == MG_TOKEN_STRING)
+	{
+		if (token->value.s)
+		{
+			string2 = (char*) malloc((mgInlineRepresentationLength(token->value.s, NULL) + 1) * sizeof(char));
+			mgInlineRepresentation(string2, token->value.s, NULL);
+		}
+	}
+	else if (len)
+	{
+		string2 = (char*) malloc((mgInlineRepresentationLength(token->begin.string, token->end.string) + 1) * sizeof(char));
+		mgInlineRepresentation(string2, token->begin.string, token->end.string);
+	}
+
+	if (filename)
+		printf("%s:", filename);
+
+	if (justify)
+	{
+		int padding = _MG_INT_COUNT_DIGITS(token->begin.line) + _MG_INT_COUNT_DIGITS(token->begin.character);
+		padding = (padding > _MG_FILENAME_PADDING) ? 0 : (_MG_FILENAME_PADDING + 1 - padding);
+
+		printf("%u:%u:%*s %-*s \"%s\"\n",
+		       token->begin.line, token->begin.character,
+		       padding, "",
+		       _MG_LONGEST_TOKEN_NAME_LENGTH, _MG_TOKEN_NAMES[token->type],
+		       string2 ? string2 : "");
+	}
+	else
+	{
+		printf("%u:%u: %s \"%s\"\n",
+		       token->begin.line, token->begin.character,
+		       _MG_TOKEN_NAMES[token->type],
+		       string2 ? string2 : "");
+	}
+
+	free(string2);
+}
+
+
+static void _mgInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGbool isLast)
 {
 	int width = 0;
 
@@ -78,7 +121,7 @@ static void _mgDebugInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGb
 		printf("%*s", _MG_NODE_PADDING - width, "");
 
 	if (node->token && (node->tokenBegin == node->tokenEnd))
-		mgDebugInspectToken(node->token, NULL, MG_FALSE);
+		mgInspectToken(node->token, NULL, MG_FALSE);
 	else
 		printf("%u:%u->%u:%u\n",
 		       node->tokenBegin->begin.line, node->tokenBegin->begin.character,
@@ -105,19 +148,19 @@ static void _mgDebugInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGb
 		else
 			strcpy(prefixEnd, _MG_NODE_CHILD_INDENT);
 
-		_mgDebugInspectNode(node->children[i], prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, (MGbool) (i == (node->childCount - 1)));
+		_mgInspectNode(node->children[i], prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, (MGbool) (i == (node->childCount - 1)));
 	}
 }
 
 
-void mgDebugInspectNode(MGNode *node)
+void mgInspectNode(MGNode *node)
 {
 	// Warning: If the height exceeds 341 nodes then we're in a world of trouble
 	// TODO: Check the node's height and allocate ((height * _MG_NODE_INDENT_LENGTH + 1) * sizeof(char))
 	char prefix[1024];
 	prefix[0] = '\0';
 
-	_mgDebugInspectNode(node, prefix, prefix, MG_TRUE);
+	_mgInspectNode(node, prefix, prefix, MG_TRUE);
 }
 
 
@@ -170,53 +213,6 @@ void _mgDebugReadPrint(const char *filename, char *str, size_t len)
 }
 
 
-void mgDebugInspectToken(MGToken *token, const char *filename, MGbool justify)
-{
-	const unsigned int len = token->end.string - token->begin.string;
-
-	char *string2 = NULL;
-
-	if (token->type == MG_TOKEN_STRING)
-	{
-		if (token->value.s)
-		{
-			string2 = (char*) malloc((mgInlineRepresentationLength(token->value.s, NULL) + 1) * sizeof(char));
-			mgInlineRepresentation(string2, token->value.s, NULL);
-		}
-	}
-	else if (len)
-	{
-		string2 = (char*) malloc((mgInlineRepresentationLength(token->begin.string, token->end.string) + 1) * sizeof(char));
-		mgInlineRepresentation(string2, token->begin.string, token->end.string);
-	}
-
-	if (filename)
-		printf("%s:", filename);
-
-	if (justify)
-	{
-		int padding = _MG_INT_COUNT_DIGITS(token->begin.line) + _MG_INT_COUNT_DIGITS(token->begin.character);
-		padding = (padding > _MG_FILENAME_PADDING) ? 0 : (_MG_FILENAME_PADDING + 1 - padding);
-
-		printf("%u:%u:%*s %-*s \"%s\"\n",
-		       token->begin.line, token->begin.character,
-		       padding, "",
-		       _MG_LONGEST_TOKEN_NAME_LENGTH, _MG_TOKEN_NAMES[token->type],
-		       string2 ? string2 : "");
-	}
-	else
-	{
-		printf("%u:%u: %s \"%s\"\n",
-		       token->begin.line, token->begin.character,
-		       _MG_TOKEN_NAMES[token->type],
-		       string2 ? string2 : "");
-	}
-
-	if (string2)
-		free(string2);
-}
-
-
 void _mgDebugTokenizePrint(const char *filename, char *str, size_t len)
 {
 	if (str)
@@ -231,7 +227,7 @@ void _mgDebugTokenizePrint(const char *filename, char *str, size_t len)
 		do
 		{
 			mgTokenizeNext(&token);
-			mgDebugInspectToken(&token, filename, MG_TRUE);
+			mgInspectToken(&token, filename, MG_TRUE);
 		}
 		while (token.type != MG_TOKEN_EOF);
 	}

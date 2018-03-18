@@ -3,7 +3,7 @@
 
 #include "../src/modelgen.h"
 #include "../src/utilities.h"
-#include "../src/debug.h"
+#include "../src/inspect.h"
 
 #include "test.h"
 #include "file.h"
@@ -226,7 +226,7 @@ static void _mgTestParser(const char *in, const char *out)
 fail:
 
 	puts("AST Dump:");
-	mgDebugInspectNode(parser.root);
+	mgInspectNode(parser.root);
 
 	++_mgTestsFailed;
 

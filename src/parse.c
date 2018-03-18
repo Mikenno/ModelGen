@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "modelgen.h"
-#include "debug.h"
+#include "inspect.h"
 
 
 static inline void _mgAssert(const char *expression, const char *file, int line)
@@ -332,7 +332,7 @@ static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 #endif
 
 		printf("Error: Unexpected token, expected %s\n", _MG_TOKEN_NAMES[MG_TOKEN_EOF]);
-		mgDebugInspectToken(token, parser->tokenizer.filename, MG_FALSE);
+		mgInspectToken(token, parser->tokenizer.filename, MG_FALSE);
 
 #if MG_ANSI_COLORS
 		fputs("\e[0m", stdout);
