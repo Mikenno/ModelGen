@@ -276,7 +276,7 @@ void mgTokenizeNext(MGToken *token)
 
 	token->type = MG_TOKEN_INVALID;
 
-	if (isalpha(c))
+	if (isalpha(c) || (c == '_'))
 	{
 		token->type = MG_TOKEN_IDENTIFIER;
 		while (isalnum(*token->end.string) || (*token->end.string == '_'))

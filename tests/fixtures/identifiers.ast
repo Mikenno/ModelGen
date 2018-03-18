@@ -2,3 +2,7 @@ Module
 - Identifier a
 - Identifier b
 - Identifier abc
+- Identifier _
+- Identifier _a
+- Identifier __abc
+- Identifier _a_b_abc_
