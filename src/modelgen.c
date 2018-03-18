@@ -12,6 +12,30 @@
 #endif
 
 
+static MGValue* _mg_print(size_t argc, MGValue **argv)
+{
+	for (size_t i = 0; i < argc; ++i)
+	{
+		if (i > 0)
+			putchar(' ');
+
+		MGValue *value = argv[i];
+
+		if (value->type != MG_VALUE_STRING)
+			_mgInspectValue(argv[i]);
+		else if (value->data.s)
+			fputs(value->data.s, stdout);
+	}
+
+	putchar('\n');
+
+	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
+	value->data.i = 0;
+
+	return value;
+}
+
+
 void usage(void)
 {
 	printf(
@@ -21,11 +45,13 @@ void usage(void)
 		"    --version    Print ModelGen version and exit\n"
 		"    - --stdin    Read stdin as a file\n"
 		"    --tokens     Print tokens and exit\n"
+		"    --ast        Print ast and exit\n"
 		"\n"
 		"Debugging:\n"
 		"\n"
-		"    --debug-read Print file contents and exit\n"
-		"    --profile    Print elapsed time\n"
+		"    --debug-read  Print file contents and exit\n"
+		"    --profile     Print elapsed time\n"
+		"    --dump-module Print module contents on exit\n"
 	);
 }
 
@@ -35,7 +61,9 @@ int main(int argc, char *argv[])
 	MGbool runStdin = MG_FALSE;
 	MGbool debugRead = MG_FALSE;
 	MGbool debugTokens = MG_FALSE;
+	MGbool debugAST = MG_FALSE;
 	MGbool profileTime = MG_FALSE;
+	MGbool dumpModule = MG_FALSE;
 
 	int i = 1;
 	const char *arg;
@@ -71,10 +99,14 @@ int main(int argc, char *argv[])
 			runStdin = MG_TRUE;
 		else if (!strcmp("--tokens", arg))
 			debugTokens = MG_TRUE;
+		else if (!strcmp("--ast", arg))
+			debugAST = MG_TRUE;
 		else if (!strcmp("--debug-read", arg))
 			debugRead = MG_TRUE;
 		else if (!strcmp("--profile", arg))
 			profileTime = MG_TRUE;
+		else if (!strcmp("--dump-module", arg))
+			dumpModule = MG_TRUE;
 		else if (!strcmp("--", arg))
 		{
 			++i;
@@ -90,6 +122,14 @@ int main(int argc, char *argv[])
 	}
 
 	int err = EXIT_SUCCESS;
+
+#ifdef _WIN32
+	LARGE_INTEGER timeStart, timeStop;
+	LARGE_INTEGER timerResolution;
+
+	if (profileTime)
+		QueryPerformanceCounter(&timeStart);
+#endif
 
 	if (debugRead)
 	{
@@ -111,16 +151,8 @@ int main(int argc, char *argv[])
 			if (!mgDebugTokenize(argv[i]))
 				err = 1;
 	}
-	else
+	else if (debugAST)
 	{
-#ifdef _WIN32
-		LARGE_INTEGER timeStart, timeStop;
-		LARGE_INTEGER timerResolution;
-
-		if (profileTime)
-			QueryPerformanceCounter(&timeStart);
-#endif
-
 		MGParser parser;
 		MGNode *root;
 
@@ -149,29 +181,76 @@ int main(int argc, char *argv[])
 
 			mgDestroyParser(&parser);
 		}
+	}
+	else
+	{
+		MGModule module;
+		MGValue *result;
+
+		if (runStdin)
+		{
+			mgCreateModule(&module);
+			module.filename = "<stdin>";
+
+			mgSetValueInteger(&module, "false", 0);
+			mgSetValueInteger(&module, "true", 1);
+			mgSetValueCFunction(&module, "print", _mg_print);
+
+			if ((result = mgRunFileHandle(&module, stdin)))
+				mgDestroyValue(result);
+			else
+				err = 1;
+
+			if (dumpModule)
+				mgInspectModule(&module);
+
+			mgDestroyModule(&module);
+		}
+
+		for (; i < argc; ++i)
+		{
+			const char *filename = argv[i];
+
+			mgCreateModule(&module);
+			module.filename = filename;
+
+			mgSetValueInteger(&module, "false", 0);
+			mgSetValueInteger(&module, "true", 1);
+			mgSetValueCFunction(&module, "print", _mg_print);
+
+			if ((result = mgRunFile(&module, filename)))
+				mgDestroyValue(result);
+			else
+				err = 1;
+
+			if (dumpModule)
+				mgInspectModule(&module);
+
+			mgDestroyModule(&module);
+		}
+	}
 
 #ifdef _WIN32
-		if (profileTime)
-		{
-			QueryPerformanceCounter(&timeStop);
-			QueryPerformanceFrequency(&timerResolution);
+	if (profileTime)
+	{
+		QueryPerformanceCounter(&timeStop);
+		QueryPerformanceFrequency(&timerResolution);
 
-			const int64_t timeInterval = timeStop.QuadPart - timeStart.QuadPart;
-			const double timeSeconds = (double) timeInterval / (double) timerResolution.QuadPart;
-
-#if MG_ANSI_COLORS
-			fputs("\e[90m", stdout);
-#endif
-
-			putchar('\n');
-			printf("Time Elapsed: %.6fms\n", timeSeconds * 1000.0);
+		const int64_t timeInterval = timeStop.QuadPart - timeStart.QuadPart;
+		const double timeSeconds = (double) timeInterval / (double) timerResolution.QuadPart;
 
 #if MG_ANSI_COLORS
-			fputs("\e[0m", stdout);
+		fputs("\e[90m", stdout);
 #endif
-		}
+
+		putchar('\n');
+		printf("Time Elapsed: %.6fms\n", timeSeconds * 1000.0);
+
+#if MG_ANSI_COLORS
+		fputs("\e[0m", stdout);
 #endif
 	}
+#endif
 
 	return err;
 }

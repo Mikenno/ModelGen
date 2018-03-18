@@ -77,6 +77,11 @@ typedef struct MGValue {
 		float f;
 		char *s;
 		MGCFunction cfunc;
+		struct {
+			MGValue **items;
+			size_t length;
+			size_t capacity;
+		} a;
 	} data;
 } MGValue;
 
@@ -132,5 +137,9 @@ void mgSetValueCFunction(MGModule *module, const char *name, MGCFunction cfunc);
 int mgGetValueInteger(MGModule *module, const char *name, int defaultValue);
 float mgGetValueFloat(MGModule *module, const char *name, float defaultValue);
 const char* mgGetValueString(MGModule *module, const char *name, const char *defaultValue);
+
+MGValue* mgRunFile(MGModule *module, const char *filename);
+MGValue* mgRunFileHandle(MGModule *module, FILE *file);
+MGValue* mgRunString(MGModule *module, const char *string);
 
 #endif

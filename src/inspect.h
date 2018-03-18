@@ -7,6 +7,7 @@
 
 void mgInspectToken(const MGToken *token, const char *filename, MGbool justify);
 void mgInspectNode(const MGNode *node);
+void _mgInspectValue(const MGValue *value);
 void mgInspectValue(const MGValue *value);
 void mgInspectModule(const MGModule *module);
 

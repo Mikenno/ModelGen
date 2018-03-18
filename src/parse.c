@@ -12,7 +12,6 @@ static inline void _mgAssert(const char *expression, const char *file, int line)
 	exit(1);
 }
 
-
 #define MG_ASSERT(expression) ((expression) ? ((void)0) : _mgAssert(#expression, __FILE__, __LINE__))
 
 
@@ -82,7 +81,7 @@ static void _mgAddChild(MGNode *parent, MGNode *child)
 	if (parent->childCapacity == parent->childCount)
 	{
 		parent->childCapacity = parent->childCapacity ? parent->childCapacity << 1 : 2;
-		parent->children = (MGNode**) realloc(parent->children, parent->childCapacity * sizeof(MGNode**));
+		parent->children = (MGNode**) realloc(parent->children, parent->childCapacity * sizeof(MGNode*));
 	}
 
 	parent->tokenEnd = child->tokenEnd;
@@ -212,7 +211,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 	else if (token->type == MG_TOKEN_LSQUARE)
 	{
 		node = mgCreateNode(token);
-		node->type = MG_NODE_TUPLE;
+		node->type = MG_NODE_LIST;
 		++token;
 
 		_mgParseExpressionList(parser, token, node, MG_TOKEN_RSQUARE);

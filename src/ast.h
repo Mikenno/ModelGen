@@ -11,6 +11,7 @@
 	_MG_N(BIN_OP, "BinOp") \
 	_MG_N(UNARY_OP, "UnaryOp") \
 	_MG_N(TUPLE, "Tuple") \
+	_MG_N(LIST, "List") \
 	_MG_N(CALL, "Call") \
 	_MG_N(ASSIGN, "Assign") \
 	_MG_N(INDEX, "Index")

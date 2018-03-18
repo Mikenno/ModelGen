@@ -66,6 +66,11 @@ void mgDestroyValue(MGValue *value)
 	case MG_VALUE_STRING:
 		free(value->data.s);
 		break;
+	case MG_VALUE_TUPLE:
+		for (size_t i = 0; i < value->data.a.length; ++i)
+			mgDestroyValue(value->data.a.items[i]);
+		free(value->data.a.items);
+		break;
 	default:
 		break;
 	}

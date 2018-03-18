@@ -164,7 +164,7 @@ void mgInspectNode(const MGNode *node)
 }
 
 
-void mgInspectValue(const MGValue *value)
+void _mgInspectValue(const MGValue *value)
 {
 	switch (value->type)
 	{
@@ -182,21 +182,37 @@ void mgInspectValue(const MGValue *value)
 		free(str);
 		break;
 	}
+	case MG_VALUE_TUPLE:
+		putchar('(');
+		for (size_t i = 0; i < value->data.a.length; ++i)
+		{
+			if (i > 0)
+				fputs(", ", stdout);
+			_mgInspectValue(value->data.a.items[i]);
+		}
+		if (value->data.a.length == 1)
+			putchar(',');
+		putchar(')');
+		break;
 	case MG_VALUE_CFUNCTION:
 		printf("%p", value->data.cfunc);
 		break;
 	default:
 		break;
 	}
+}
 
+
+void mgInspectValue(const MGValue *value)
+{
+	_mgInspectValue(value);
 	putchar('\n');
 }
 
 
 static void _mgInspectName(MGName *name)
 {
-	printf("%s: %s = ",
-	       name->name, _MG_VALUE_TYPE_NAMES[name->value->type]);
+	printf("%s: %s = ", name->name, _MG_VALUE_TYPE_NAMES[name->value->type]);
 	mgInspectValue(name->value);
 }
 
