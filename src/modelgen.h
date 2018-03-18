@@ -3,6 +3,7 @@
 
 #include "tokens.h"
 #include "ast.h"
+#include "value.h"
 
 #include <stdio.h>
 
@@ -34,9 +35,9 @@ typedef struct MGToken {
 		unsigned int character;
 	} end;
 	union {
-		char *s;
 		int i;
 		float f;
+		char *s;
 	} value;
 } MGToken;
 
@@ -65,6 +66,32 @@ typedef struct MGParser {
 	MGNode *root;
 } MGParser;
 
+typedef struct MGValue MGValue;
+
+typedef MGValue* (*MGCFunction)(size_t argc, MGValue **argv);
+
+typedef struct MGValue {
+	MGValueType type;
+	union {
+		int i;
+		float f;
+		char *s;
+		MGCFunction cfunc;
+	} data;
+} MGValue;
+
+typedef struct MGName {
+	char *name;
+	MGValue *value;
+} MGName;
+
+typedef struct MGModule {
+	const char *filename;
+	MGName *names;
+	size_t length;
+	size_t capacity;
+} MGModule;
+
 char* mgReadFile(const char *filename, size_t *length);
 char* mgReadFileHandle(FILE *file, size_t *length);
 
@@ -87,5 +114,23 @@ void mgDestroyNode(MGNode *node);
 MGNode* mgParseFile(MGParser *parser, const char *filename);
 MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
 MGNode* mgParseString(MGParser *parser, const char *string);
+
+void mgCreateModule(MGModule *module);
+void mgDestroyModule(MGModule *module);
+
+MGValue* mgCreateValue(MGValueType type);
+void mgDestroyValue(MGValue *value);
+
+void mgSetValue(MGModule *module, const char *name, MGValue *value);
+MGValue* mgGetValue(MGModule *module, const char *name);
+
+void mgSetValueInteger(MGModule *module, const char *name, int i);
+void mgSetValueFloat(MGModule *module, const char *name, float f);
+void mgSetValueString(MGModule *module, const char *name, const char *s);
+void mgSetValueCFunction(MGModule *module, const char *name, MGCFunction cfunc);
+
+int mgGetValueInteger(MGModule *module, const char *name, int defaultValue);
+float mgGetValueFloat(MGModule *module, const char *name, float defaultValue);
+const char* mgGetValueString(MGModule *module, const char *name, const char *defaultValue);
 
 #endif

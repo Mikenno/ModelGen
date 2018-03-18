@@ -17,7 +17,7 @@
 #define _MG_NODE_INDENT_LENGTH     3
 
 
-void mgInspectToken(MGToken *token, const char *filename, MGbool justify)
+void mgInspectToken(const MGToken *token, const char *filename, MGbool justify)
 {
 	const unsigned int len = token->end.string - token->begin.string;
 
@@ -63,7 +63,7 @@ void mgInspectToken(MGToken *token, const char *filename, MGbool justify)
 }
 
 
-static void _mgInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGbool isLast)
+static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MGbool isLast)
 {
 	int width = 0;
 
@@ -153,7 +153,7 @@ static void _mgInspectNode(MGNode *node, char *prefix, char *prefixEnd, MGbool i
 }
 
 
-void mgInspectNode(MGNode *node)
+void mgInspectNode(const MGNode *node)
 {
 	// Warning: If the height exceeds 341 nodes then we're in a world of trouble
 	// TODO: Check the node's height and allocate ((height * _MG_NODE_INDENT_LENGTH + 1) * sizeof(char))
@@ -161,6 +161,57 @@ void mgInspectNode(MGNode *node)
 	prefix[0] = '\0';
 
 	_mgInspectNode(node, prefix, prefix, MG_TRUE);
+}
+
+
+void mgInspectValue(const MGValue *value)
+{
+	switch (value->type)
+	{
+	case MG_VALUE_INTEGER:
+		printf("%d", value->data.i);
+		break;
+	case MG_VALUE_FLOAT:
+		printf("%f", value->data.f);
+		break;
+	case MG_VALUE_STRING:
+	{
+		char *str = (char*) malloc((mgInlineRepresentationLength(value->data.s, NULL) + 1) * sizeof(char));
+		mgInlineRepresentation(str, value->data.s, NULL);
+		printf("\"%s\"", str);
+		free(str);
+		break;
+	}
+	case MG_VALUE_CFUNCTION:
+		printf("%p", value->data.cfunc);
+		break;
+	default:
+		break;
+	}
+
+	putchar('\n');
+}
+
+
+static void _mgInspectName(MGName *name)
+{
+	printf("%s: %s = ",
+	       name->name, _MG_VALUE_TYPE_NAMES[name->value->type]);
+	mgInspectValue(name->value);
+}
+
+
+void mgInspectModule(const MGModule *module)
+{
+	if (module->filename)
+		printf("Module [%zu:%zu] \"%s\"\n",
+		       module->length, module->capacity, mgBasename(module->filename));
+	else
+		printf("Module [%zu:%zu]\n",
+		       module->length, module->capacity);
+
+	for (size_t i = 0; i < module->length; ++i)
+		_mgInspectName(&module->names[i]);
 }
 
 
