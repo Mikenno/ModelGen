@@ -122,10 +122,12 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 
 	if (node->token && (node->tokenBegin == node->tokenEnd))
 		mgInspectToken(node->token, NULL, MG_FALSE);
-	else
+	else if (node->tokenBegin && node->tokenEnd)
 		printf("%u:%u->%u:%u\n",
 		       node->tokenBegin->begin.line, node->tokenBegin->begin.character,
 		       node->tokenEnd->end.line, node->tokenEnd->end.character);
+	else
+		putchar('\n');
 
 #if MG_DEBUG_SHOW_RANGE
 	if (node->tokenBegin != node->tokenEnd)

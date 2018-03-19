@@ -283,6 +283,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 	{
 	case MG_NODE_MODULE:
 		return _mgVisitModule(module, node);
+	case MG_NODE_BLOCK:
+		return _mgVisitChildren(module, node);
 	case MG_NODE_IDENTIFIER:
 		return _mgVisitIdentifier(module, node);
 	case MG_NODE_INTEGER:
