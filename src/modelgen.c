@@ -12,6 +12,24 @@
 #endif
 
 
+static inline void _mgFail(const char *format, ...)
+{
+	fflush(stdout);
+
+	va_list args;
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+
+	putc('\n', stderr);
+	fflush(stderr);
+
+	exit(1);
+}
+
+#define MG_FAIL(...) _mgFail(__VA_ARGS__)
+
+
 static MGValue* _mg_print(size_t argc, MGValue **argv)
 {
 	for (size_t i = 0; i < argc; ++i)
@@ -36,6 +54,37 @@ static MGValue* _mg_print(size_t argc, MGValue **argv)
 }
 
 
+static MGValue* _mg_range(size_t argc, MGValue **argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: range expected 1 argument, received %zu", argc);
+
+	MGValue *_stop = argv[0];
+
+	if (_stop->type != MG_VALUE_INTEGER)
+		MG_FAIL("Error: range expected argument 1 as \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[_stop->type]);
+
+	int stop = _stop->data.i;
+	stop = (stop > 0) ? stop : 0;
+
+	MGValue *value = mgCreateValue(MG_VALUE_TUPLE);
+	value->data.a.items = (stop > 0) ? ((MGValue**) malloc(stop * sizeof(MGValue*))) : NULL;
+	value->data.a.length = (size_t) stop;
+	value->data.a.capacity = (size_t) stop;
+
+	for (int i = 0; i < stop; ++i)
+	{
+		MGValue *item = mgCreateValue(MG_VALUE_INTEGER);
+		item->data.i = i;
+
+		value->data.a.items[i] = item;
+	}
+
+	return value;
+}
+
+
 void usage(void)
 {
 	printf(
@@ -47,11 +96,14 @@ void usage(void)
 		"    --tokens     Print tokens and exit\n"
 		"    --ast        Print ast and exit\n"
 		"\n"
+		"Introspection:\n"
+		"\n"
+		"    --profile     Print elapsed time\n"
+		"    --dump-module Print module contents on exit\n"
+		"\n"
 		"Debugging:\n"
 		"\n"
 		"    --debug-read  Print file contents and exit\n"
-		"    --profile     Print elapsed time\n"
-		"    --dump-module Print module contents on exit\n"
 	);
 }
 
@@ -195,6 +247,7 @@ int main(int argc, char *argv[])
 			mgSetValueInteger(&module, "false", 0);
 			mgSetValueInteger(&module, "true", 1);
 			mgSetValueCFunction(&module, "print", _mg_print);
+			mgSetValueCFunction(&module, "range", _mg_range);
 
 			if ((result = mgRunFileHandle(&module, stdin)))
 				mgDestroyValue(result);
@@ -202,7 +255,10 @@ int main(int argc, char *argv[])
 				err = 1;
 
 			if (dumpModule)
+			{
+				putchar('\n');
 				mgInspectModule(&module);
+			}
 
 			mgDestroyModule(&module);
 		}
@@ -217,6 +273,7 @@ int main(int argc, char *argv[])
 			mgSetValueInteger(&module, "false", 0);
 			mgSetValueInteger(&module, "true", 1);
 			mgSetValueCFunction(&module, "print", _mg_print);
+			mgSetValueCFunction(&module, "range", _mg_range);
 
 			if ((result = mgRunFile(&module, filename)))
 				mgDestroyValue(result);
@@ -224,7 +281,10 @@ int main(int argc, char *argv[])
 				err = 1;
 
 			if (dumpModule)
+			{
+				putchar('\n');
 				mgInspectModule(&module);
+			}
 
 			mgDestroyModule(&module);
 		}

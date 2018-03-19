@@ -1,0 +1,75 @@
+Module
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 5
+-- Block
+--- Call
+---- Identifier print
+---- Identifier i
+--- Call
+---- Identifier print
+---- Identifier i
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 5
+-- Block
+--- Call
+---- Identifier print
+---- Identifier i
+--- For
+---- Identifier j
+---- Call
+----- Identifier range
+----- Integer 5
+---- Call
+----- Identifier print
+----- Identifier i
+----- Identifier j
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 5
+-- Call
+--- Identifier print
+--- Identifier i
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 5
+-- For
+--- Identifier j
+--- Call
+---- Identifier range
+---- Integer 5
+--- Call
+---- Identifier print
+---- Identifier i
+---- Identifier j
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 5
+-- Block
+--- Call
+---- Identifier print
+---- Identifier i
+--- For
+---- Identifier j
+---- Call
+----- Identifier range
+----- Integer 5
+---- Call
+----- Identifier print
+----- Identifier i
+----- Identifier j

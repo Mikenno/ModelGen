@@ -149,6 +149,53 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount >= 2);
+
+	MGNode *nameNode = node->children[0];
+	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(nameNode->token);
+
+	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+	MG_ASSERT(nameLength > 0);
+	char *name = _mgStrndup(nameNode->token->begin.string, nameLength);
+	MG_ASSERT(name);
+
+	MGValue *test = _mgVisitNode(module, node->children[1]);
+	MG_ASSERT(test);
+	MG_ASSERT(test->type == MG_VALUE_TUPLE);
+
+	int iterations = 0;
+
+	for (size_t i = 0; i < test->data.a.length; ++i, ++iterations)
+	{
+		MGValue *value = test->data.a.items[i];
+		MG_ASSERT(value);
+
+		mgSetValue(module, name, _mgDeepCopyValue(value));
+
+		for (size_t j = 2; j < node->childCount; ++j)
+		{
+			MGValue *result = _mgVisitNode(module, node->children[j]);
+			MG_ASSERT(result);
+			mgDestroyValue(result);
+		}
+	}
+
+	mgSetValue(module, name, NULL);
+
+	mgDestroyValue(test);
+
+	free(name);
+
+	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
+	value->data.i = iterations;
+
+	return value;
+}
+
+
 static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
@@ -299,6 +346,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_CALL:
 		return _mgVisitCall(module, node);
+	case MG_NODE_FOR:
+		return _mgVisitFor(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}

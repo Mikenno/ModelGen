@@ -260,6 +260,42 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		token = node->tokenEnd + 1;
 	}
+	else if (token->type == MG_TOKEN_FOR)
+	{
+		node = mgCreateNode(token);
+		node->type = MG_NODE_FOR;
+
+		MGNode *name = _mgParseSubexpression(parser, token + 1);
+		MG_ASSERT(name);
+		_mgAddChild(node, name);
+
+		token = name->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINE(token);
+
+		MG_ASSERT(token->type == MG_TOKEN_IN);
+		++token;
+
+		MGNode *test = _mgParseSubexpression(parser, token);
+		MG_ASSERT(test);
+		_mgAddChild(node, test);
+
+		token = test->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		MGNode *block = mgCreateNode(token);
+		block->type = MG_NODE_BLOCK;
+		block->token = NULL;
+		MG_ASSERT(block);
+
+		_mgParseBlock(parser, token, block, token->begin.character);
+
+		if (block->childCount == 1)
+			_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
+		else
+			_mgAddChild(node, block);
+
+		token = node->tokenEnd + 1;
+	}
 
 	MG_ASSERT(node);
 
