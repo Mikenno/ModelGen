@@ -18,6 +18,8 @@ static inline void _mgAssert(const char *expression, const char *file, int line)
 
 static inline void _mgFail(MGModule *module, MGNode *node, const char *format, ...)
 {
+	fflush(stdout);
+
 	if (module->filename)
 		fprintf(stderr, "%s:", module->filename);
 	if (node && node->tokenBegin)
@@ -121,10 +123,10 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MGValue *func = mgGetValue(module, name);
 
 	if (!func)
-		MG_FAIL("Error: Undefined name \"%s\"\n", name);
+		MG_FAIL("Error: Undefined name \"%s\"", name);
 
 	if (func->type != MG_VALUE_CFUNCTION)
-		MG_FAIL("Error: \"%s\" is not callable\n", _MG_VALUE_TYPE_NAMES[func->type]);
+		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
 
 	size_t argc = node->childCount - 1;
 	MGValue **argv = (MGValue**) malloc(argc * sizeof(MGValue*));
@@ -159,7 +161,7 @@ static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 	MGValue *value = mgGetValue(module, name);
 
 	if (!value)
-		MG_FAIL("Error: Undefined name \"%s\"\n", name);
+		MG_FAIL("Error: Undefined name \"%s\"", name);
 
 	free(name);
 
@@ -230,6 +232,51 @@ static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 }
 
 
+static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount == 2);
+
+	MGNode *nameNode = node->children[0];
+	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(nameNode->token);
+
+	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+	MG_ASSERT(nameLength > 0);
+	char *name = _mgStrndup(nameNode->token->begin.string, nameLength);
+	MG_ASSERT(name);
+
+	MGValue *value = _mgVisitNode(module, node->children[1]);
+	mgSetValue(module, name, value);
+
+	free(name);
+
+	return _mgDeepCopyValue(value);
+}
+
+
+static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount == 2);
+	MG_ASSERT(node->token);
+
+	const size_t opLength = node->token->end.string - node->token->begin.string;
+	MG_ASSERT(opLength > 0);
+	char *op = _mgStrndup(node->token->begin.string, opLength);
+	MG_ASSERT(op);
+
+	MGValue *value = NULL;
+
+	if (strcmp(op, "=") == 0)
+		value = _mgVisitAssignment(module, node);
+	else
+		MG_FAIL("Error: Unknown BinOp \"%s\"", op);
+
+	free(op);
+
+	return value;
+}
+
+
 static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 {
 	switch (node->type)
@@ -246,10 +293,12 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitString(module, node);
 	case MG_NODE_TUPLE:
 		return _mgVisitTuple(module, node);
+	case MG_NODE_BIN_OP:
+		return _mgVisitBinOp(module, node);
 	case MG_NODE_CALL:
 		return _mgVisitCall(module, node);
 	default:
-		MG_FAIL("Error: Unknown node \"%s\"\n", _MG_NODE_NAMES[node->type]);
+		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
 
 	return NULL;
