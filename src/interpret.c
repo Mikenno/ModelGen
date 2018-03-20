@@ -279,6 +279,62 @@ static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
+{
+	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
+
+	int range[3] = { 0, 0, 1 };
+
+	for (size_t i = 0; i < node->childCount; ++i)
+	{
+		MGNode *child = node->children[i];
+
+		MG_ASSERT(child);
+		MG_ASSERT(child->type == MG_NODE_INTEGER);
+
+		MG_ASSERT(child->token);
+
+		const size_t _valueLength = child->token->end.string - child->token->begin.string;
+		MG_ASSERT(_valueLength > 0);
+		char *_value = _mgStrndup(child->token->begin.string, _valueLength);
+		MG_ASSERT(_value);
+
+		range[i] = strtol(_value, NULL, 10);
+
+		free(_value);
+	}
+
+	MG_ASSERT(range[2] > 0);
+
+	int length = (range[1] - range[0]) / range[2] + (((range[1] - range[0]) % range[2]) != 0);
+
+	MGValue *value = mgCreateValue(MG_VALUE_TUPLE);
+
+	if (length > 0)
+	{
+		value->data.a.items = (MGValue**) malloc(length * sizeof(MGValue*));
+		value->data.a.length = (size_t) length;
+		value->data.a.capacity = (size_t) length;
+
+		for (int i = 0; i < length; ++i)
+		{
+			MGValue *item = mgCreateValue(MG_VALUE_INTEGER);
+			item->data.i = range[0] + range[2] * i;
+
+			value->data.a.items[i] = item;
+		}
+	}
+	else
+	{
+		value->data.a.items = NULL;
+		value->data.a.length = 0;
+		value->data.a.capacity = 0;
+	}
+
+	return value;
+}
+
+
 static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->childCount == 2);
@@ -342,6 +398,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitString(module, node);
 	case MG_NODE_TUPLE:
 		return _mgVisitTuple(module, node);
+	case MG_NODE_RANGE:
+		return _mgVisitRange(module, node);
 	case MG_NODE_BIN_OP:
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_CALL:

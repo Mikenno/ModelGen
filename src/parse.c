@@ -60,6 +60,7 @@ MGNode* mgCreateNode(MGToken *token)
 
 	node->token = token;
 	node->tokenBegin = token;
+	node->tokenEnd = token;
 
 	return node;
 }
@@ -96,7 +97,8 @@ static void _mgAddChild(MGNode *parent, MGNode *child)
 static inline MGNode* _mgWrapNode(MGToken *token, MGNode *node)
 {
 	MGNode *parent = mgCreateNode(node->tokenBegin);
-	parent->token = token;
+	parent->tokenBegin = node->tokenBegin;
+	parent->token = NULL;
 
 	_mgAddChild(parent, node);
 
@@ -301,6 +303,38 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 	MG_ASSERT(node);
 
+	_MG_TOKEN_SCAN_LINE(token);
+
+	if (token->type == MG_TOKEN_COLON)
+	{
+		node = _mgWrapNode(token, node);
+		node->type = MG_NODE_RANGE;
+
+		++token;
+		_MG_TOKEN_SCAN_LINE(token);
+
+		MG_ASSERT(token->type == MG_TOKEN_INTEGER);
+		MGNode *child = mgCreateNode(token);
+		child->type = MG_NODE_INTEGER;
+		_mgAddChild(node, child);
+
+		++token;
+		_MG_TOKEN_SCAN_LINE(token);
+
+		if (token->type == MG_TOKEN_COLON)
+		{
+			++token;
+			_MG_TOKEN_SCAN_LINE(token);
+
+			MG_ASSERT(token->type == MG_TOKEN_INTEGER);
+			child = mgCreateNode(token);
+			child->type = MG_NODE_INTEGER;
+			_mgAddChild(node, child);
+		}
+	}
+
+	token = node->tokenEnd + 1;
+
 	for (;;)
 	{
 		_MG_TOKEN_SCAN_LINE(token);
@@ -361,6 +395,7 @@ static MGNode* _mgParseBinaryOperation(MGParser *parser, MGToken *token, int lev
 
 		node = _mgWrapNode(token, node);
 		node->type = MG_NODE_BIN_OP;
+		node->token = token;
 		node->tokenEnd = token;
 
 		++token;

@@ -1,0 +1,75 @@
+Module
+- Call
+-- Identifier
+-- Range
+--- Integer 10
+--- Integer 20
+
+- Call
+-- Identifier
+-- Range
+--- Integer 10
+--- Integer 20
+--- Integer 2
+
+- For
+-- Identifier i
+-- Range
+--- Integer 10
+--- Integer 20
+-- Call
+--- Identifier print
+--- Identifier i
+
+- For
+-- Identifier i
+-- Range
+--- Integer 10
+--- Integer 20
+--- Integer 2
+-- Call
+--- Identifier print
+--- Identifier i
+
+- For
+-- Identifier i
+-- Range
+--- Integer 10
+--- Integer 20
+--- Integer 2
+-- Call
+--- Identifier print
+--- Identifier i
+
+- BinOp =
+-- Identifier x
+-- Range
+--- Integer 10
+--- Integer 20
+
+- BinOp =
+-- Identifier y
+-- Range
+--- Integer 10
+--- Integer 20
+--- Integer 2
+
+- BinOp =
+-- Identifier z
+-- Range
+--- Integer 10
+--- Integer 20
+
+- BinOp =
+-- Identifier w
+-- Range
+--- Integer 10
+--- Integer 20
+--- Integer 2
+
+- For
+-- Identifier i
+-- Identifier x
+-- Call
+--- Identifier print
+--- Identifier i
