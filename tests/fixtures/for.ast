@@ -73,3 +73,52 @@ Module
 ----- Identifier print
 ----- Identifier i
 ----- Identifier j
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 3
+-- Call
+--- Identifier print
+--- String "Inside"
+- Call
+-- Identifier print
+-- String "Outside"
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 3
+- Call
+-- Identifier print
+-- String "Outside"
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 3
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 3
+-- For
+--- Identifier j
+--- Call
+---- Identifier range
+---- Integer 3
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 3
+-- For
+--- Identifier j
+--- Call
+---- Identifier range
+---- Integer 3
