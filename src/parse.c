@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "modelgen.h"
 #include "inspect.h"
@@ -13,6 +14,30 @@ static inline void _mgAssert(const char *expression, const char *file, int line)
 }
 
 #define MG_ASSERT(expression) ((expression) ? ((void)0) : _mgAssert(#expression, __FILE__, __LINE__))
+
+
+static inline void _mgFail(MGParser *parser, MGToken *token, const char *format, ...)
+{
+	fflush(stdout);
+
+	if (parser->tokenizer.filename)
+		fprintf(stderr, "%s:", parser->tokenizer.filename);
+
+	if (token)
+		fprintf(stderr, "%u:%u: ", token->begin.line, token->begin.character);
+
+	va_list args;
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+
+	putc('\n', stderr);
+	fflush(stderr);
+
+	exit(1);
+}
+
+#define MG_FAIL(...) _mgFail(parser, token, __VA_ARGS__)
 
 
 #define _MG_TOKEN_SCAN_LINE(token)  for (; (token->type == MG_TOKEN_WHITESPACE) || (token->type == MG_TOKEN_COMMENT); ++token)
@@ -299,6 +324,97 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 			token = node->tokenEnd + 1;
 		}
+	}
+	else if (token->type == MG_TOKEN_IF)
+	{
+		MGToken *start = token;
+
+		node = mgCreateNode(token);
+		node->type = MG_NODE_IF;
+
+		MGNode *condition = _mgParseExpression(parser, token + 1);
+		MG_ASSERT(condition);
+		_mgAddChild(node, condition);
+
+		token = node->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		if (start->begin.character >= token->begin.character)
+			MG_FAIL("Error: Expected indentation");
+
+		MGNode *block = mgCreateNode(token);
+		block->type = MG_NODE_BLOCK;
+		block->token = NULL;
+
+		_mgParseBlock(parser, token, block, token->begin.character);
+
+		if (block->childCount == 1)
+			_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
+		else
+			_mgAddChild(node, block);
+
+		token = node->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		MGNode *_node = node;
+
+		MGbool end = MG_FALSE;
+
+		while (token->type == MG_TOKEN_ELSE)
+		{
+			if (end)
+				MG_FAIL("Error: Cannot have consecutive else");
+
+			end = MG_TRUE;
+
+			start = token;
+
+			++token;
+			_MG_TOKEN_SCAN_LINE(token);
+
+			if (token->type == MG_TOKEN_IF)
+			{
+				MGNode *parent = _node;
+
+				_node = mgCreateNode(token);
+				_node->type = MG_NODE_IF;
+
+				condition = _mgParseExpression(parser, token + 1);
+				MG_ASSERT(condition);
+				_mgAddChild(_node, condition);
+
+				_mgAddChild(parent, _node);
+
+				token = _node->tokenEnd + 1;
+
+				end = MG_FALSE;
+			}
+
+			_MG_TOKEN_SCAN_LINES(token);
+
+			if (start->begin.character >= token->begin.character)
+				MG_FAIL("Error: Expected indentation");
+
+			block = mgCreateNode(token);
+			block->type = MG_NODE_BLOCK;
+			block->token = NULL;
+
+			_mgParseBlock(parser, token, block, token->begin.character);
+
+			if (block->childCount == 1)
+				_mgAddChild(_node, _mgDestroyNodeExtractFirst(block));
+			else
+				_mgAddChild(_node, block);
+
+			token = _node->tokenEnd + 1;
+
+			_MG_TOKEN_SCAN_LINES(token);
+		}
+
+		for (; _node->parent; _node = _node->parent)
+			_node->parent->tokenEnd = _node->tokenEnd;
+
+		token = node->tokenEnd;
 	}
 
 	MG_ASSERT(node);

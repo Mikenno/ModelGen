@@ -16,6 +16,7 @@
 	_MG_N(LIST, "List") \
 	_MG_N(CALL, "Call") \
 	_MG_N(FOR, "For") \
+	_MG_N(IF, "If") \
 	_MG_N(ASSIGN, "Assign") \
 	_MG_N(INDEX, "Index")
 

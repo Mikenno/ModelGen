@@ -196,6 +196,50 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount >= 2);
+
+	MGValue *condition = _mgVisitNode(module, node->children[0]);
+	MG_ASSERT(condition);
+
+	int _condition = 0;
+
+	switch (condition->type)
+	{
+	case MG_VALUE_INTEGER:
+		_condition = condition->data.i != 0;
+		break;
+	case MG_VALUE_FLOAT:
+#define _MG_EPSILON 1E-6f
+#define _MG_FEQUAL(x, y) ((((y) - _MG_EPSILON) < (x)) && ((x) < ((y) + _MG_EPSILON)))
+		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
+		break;
+#undef _MG_EPSILON
+#undef _MG_FEQUAL
+	case MG_VALUE_STRING:
+		_condition = condition->data.s ? (int) strlen(condition->data.s) : 0;
+		break;
+	case MG_VALUE_TUPLE:
+		_condition = condition->data.a.length > 0;
+		break;
+	default:
+		_condition = 1;
+		break;
+	}
+
+	if (_condition)
+		return _mgVisitNode(module, node->children[1]);
+	else if (node->childCount > 2)
+		return _mgVisitNode(module, node->children[2]);
+
+	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
+	value->data.i = _condition ? MG_TRUE : MG_FALSE;
+
+	return value;
+}
+
+
 static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
@@ -406,6 +450,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitCall(module, node);
 	case MG_NODE_FOR:
 		return _mgVisitFor(module, node);
+	case MG_NODE_IF:
+		return _mgVisitIf(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
