@@ -1,0 +1,114 @@
+Module
+- Call
+-- Identifier print
+-- String "begin"
+- If
+-- Identifier true
+-- Call
+--- Identifier print
+--- String "true"
+- If
+-- Identifier true
+-- Call
+--- Identifier print
+--- String "true"
+- Call
+-- Identifier print
+-- String "end"
+
+- Call
+-- Identifier print
+-- String "begin"
+- If
+-- Identifier true
+-- Call
+--- Identifier print
+--- String "true"
+-- Call
+--- Identifier print
+--- String "false"
+- Call
+-- Identifier print
+-- String "end"
+
+- Call
+-- Identifier print
+-- String "begin"
+- If
+-- Identifier true
+-- Block
+--- Call
+---- Identifier print
+---- Integer 1
+--- Call
+---- Identifier print
+---- Integer 2
+-- Block
+--- Call
+---- Identifier print
+---- Integer 3
+--- Call
+---- Identifier print
+---- Integer 4
+- Call
+-- Identifier print
+-- String "end"
+
+- Call
+-- Identifier print
+-- String "begin"
+- If
+-- BinOp ==
+--- Identifier x
+--- Identifier y
+-- Call
+--- Identifier print
+--- String "true"
+-- Call
+--- Identifier print
+--- String "false"
+- Call
+-- Identifier print
+-- String "end"
+
+- Call
+-- Identifier print
+-- String "begin"
+- If
+-- BinOp ==
+--- Identifier x
+--- Identifier y
+-- Block
+--- Call
+---- Identifier print
+---- String "true"
+--- If
+---- BinOp ==
+----- Identifier x
+----- Identifier y
+---- Call
+----- Identifier print
+----- String "true true"
+--- Call
+---- Identifier print
+---- String "true"
+-- Block
+--- Call
+---- Identifier print
+---- String "false"
+--- If
+---- BinOp ==
+----- Identifier x
+----- Identifier y
+---- Call
+----- Identifier print
+----- String "false true"
+---- Call
+----- Identifier print
+----- String "false false"
+--- Call
+---- Identifier print
+---- String "false"
+- Call
+-- Identifier print
+-- String "end"
