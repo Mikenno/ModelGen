@@ -12,8 +12,8 @@
 	_MG_N(BIN_OP, "BinOp") \
 	_MG_N(UNARY_OP, "UnaryOp") \
 	_MG_N(TUPLE, "Tuple") \
-	_MG_N(RANGE, "Range") \
 	_MG_N(LIST, "List") \
+	_MG_N(RANGE, "Range") \
 	_MG_N(CALL, "Call") \
 	_MG_N(FOR, "For") \
 	_MG_N(IF, "If") \

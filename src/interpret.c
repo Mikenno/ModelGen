@@ -44,6 +44,7 @@ static MGValue* _mgDeepCopyValue(MGValue *value)
 		copy->data.s = mgDuplicateString(value->data.s);
 		break;
 	case MG_VALUE_TUPLE:
+	case MG_VALUE_LIST:
 		if (value->data.a.length)
 		{
 			copy->data.a.items = (MGValue**) malloc(value->data.a.length * sizeof(MGValue*));
@@ -420,8 +421,9 @@ static MGValue* _mgVisitString(MGModule *module, MGNode *node)
 static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
+	MG_ASSERT((node->type == MG_NODE_TUPLE) || (node->type == MG_NODE_LIST));
 
-	MGValue *value = mgCreateValue(MG_VALUE_TUPLE);
+	MGValue *value = mgCreateValue((node->type == MG_NODE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST);
 	value->data.a.items = (MGValue**) malloc(node->childCount * sizeof(MGValue*));
 	value->data.a.length = node->childCount;
 	value->data.a.capacity = node->childCount;
@@ -551,6 +553,7 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 	case MG_NODE_STRING:
 		return _mgVisitString(module, node);
 	case MG_NODE_TUPLE:
+	case MG_NODE_LIST:
 		return _mgVisitTuple(module, node);
 	case MG_NODE_RANGE:
 		return _mgVisitRange(module, node);

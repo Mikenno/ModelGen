@@ -1,0 +1,90 @@
+Module
+- List
+
+- List
+-- Integer 1
+
+- List
+-- Integer 1
+-- Integer 2
+-- Integer 3
+
+- List
+-- Integer 1
+-- Integer 2
+-- Integer 3
+
+- List
+-- Tuple
+--- Integer 1
+--- Integer 2
+-- Tuple
+--- Integer 3
+--- Integer 4
+-- Tuple
+--- Integer 5
+--- Integer 6
+
+- List
+-- Tuple
+--- Integer 1
+--- Integer 2
+-- Tuple
+--- Integer 3
+--- Integer 4
+-- Tuple
+--- Integer 5
+--- Integer 6
+
+- Index
+-- List
+--- Integer 1
+--- Integer 2
+--- Integer 3
+-- Integer 1
+
+- Index
+-- Index
+--- List
+---- Tuple
+----- Integer 1
+----- Integer 2
+---- Tuple
+----- Integer 3
+----- Integer 4
+---- Tuple
+----- Integer 5
+----- Integer 6
+--- Integer 1
+-- Integer 0
+
+- Tuple
+-- Index
+--- List
+---- Integer 1
+---- Integer 2
+---- Integer 3
+--- Integer 1
+-- Index
+--- Index
+---- List
+----- Tuple
+------ Integer 1
+------ Integer 2
+------ Integer 3
+----- Tuple
+------ Integer 4
+------ Integer 5
+------ Integer 6
+----- Tuple
+------ Integer 7
+------ Integer 8
+------ Integer 9
+---- Integer 1
+--- Integer 1
+-- Index
+--- List
+---- Integer 3
+---- Integer 2
+---- Integer 1
+--- Integer 1
