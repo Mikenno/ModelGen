@@ -121,24 +121,6 @@ MGNode* mgParseFile(MGParser *parser, const char *filename);
 MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
 MGNode* mgParseString(MGParser *parser, const char *string);
 
-void mgCreateModule(MGModule *module);
-void mgDestroyModule(MGModule *module);
-
-MGValue* mgCreateValue(MGValueType type);
-void mgDestroyValue(MGValue *value);
-
-void mgSetValue(MGModule *module, const char *name, MGValue *value);
-MGValue* mgGetValue(MGModule *module, const char *name);
-
-void mgSetValueInteger(MGModule *module, const char *name, int i);
-void mgSetValueFloat(MGModule *module, const char *name, float f);
-void mgSetValueString(MGModule *module, const char *name, const char *s);
-void mgSetValueCFunction(MGModule *module, const char *name, MGCFunction cfunc);
-
-int mgGetValueInteger(MGModule *module, const char *name, int defaultValue);
-float mgGetValueFloat(MGModule *module, const char *name, float defaultValue);
-const char* mgGetValueString(MGModule *module, const char *name, const char *defaultValue);
-
 MGValue* mgRunFile(MGModule *module, const char *filename);
 MGValue* mgRunFileHandle(MGModule *module, FILE *file);
 MGValue* mgRunString(MGModule *module, const char *string);

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "modelgen.h"
+#include "module.h"
 #include "inspect.h"
 #include "baselib.h"
 

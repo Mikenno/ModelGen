@@ -3,12 +3,15 @@
 #include <string.h>
 
 #include "modelgen.h"
+#include "module.h"
 #include "utilities.h"
 
 
 static void _mgDestroyName(MGName *name)
 {
 	MG_ASSERT(name);
+	MG_ASSERT(name->name);
+	MG_ASSERT(name->value);
 
 	free(name->name);
 	mgDestroyValue(name->value);
@@ -33,7 +36,7 @@ void mgDestroyModule(MGModule *module)
 }
 
 
-MGValue* mgCreateValue(MGValueType type)
+inline MGValue* mgCreateValue(MGValueType type)
 {
 	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
 	value->type = type;
@@ -71,7 +74,7 @@ static inline void _mgSetValue(MGName *names, size_t i, const char *name, MGValu
 }
 
 
-static void _mgAddValue(MGModule *module, const char *name, MGValue *value)
+static inline void _mgAddValue(MGModule *module, const char *name, MGValue *value)
 {
 	if (module->capacity == module->length)
 	{
@@ -83,7 +86,7 @@ static void _mgAddValue(MGModule *module, const char *name, MGValue *value)
 }
 
 
-static void _mgSwapNames(MGName *names, size_t i, size_t i2)
+static inline void _mgSwapNames(MGName *names, size_t i, size_t i2)
 {
 	MGName temp;
 	memcpy(&temp, &names[i], sizeof(MGName));
@@ -92,7 +95,7 @@ static void _mgSwapNames(MGName *names, size_t i, size_t i2)
 }
 
 
-void mgSetValue(MGModule *module, const char *name, MGValue *value)
+void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(name);
@@ -125,7 +128,7 @@ void mgSetValue(MGModule *module, const char *name, MGValue *value)
 }
 
 
-MGValue* mgGetValue(MGModule *module, const char *name)
+inline MGValue* mgModuleGet(MGModule *module, const char *name)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(name);
@@ -133,81 +136,200 @@ MGValue* mgGetValue(MGModule *module, const char *name)
 	for (size_t i = 0; i < module->length; ++i)
 		if (strcmp(module->names[i].name, name) == 0)
 			return module->names[i].value;
+
 	return NULL;
 }
 
 
-void mgSetValueInteger(MGModule *module, const char *name, int i)
+inline int mgModuleGetInteger(MGModule *module, const char *name, int defaultValue)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-
-	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
-	value->data.i = i;
-	mgSetValue(module, name, value);
-}
-
-
-void mgSetValueFloat(MGModule *module, const char *name, float f)
-{
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-
-	MGValue *value = mgCreateValue(MG_VALUE_FLOAT);
-	value->data.f = f;
-	mgSetValue(module, name, value);
-}
-
-
-void mgSetValueString(MGModule *module, const char *name, const char *s)
-{
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-	MG_ASSERT(s);
-
-	MGValue *value = mgCreateValue(MG_VALUE_STRING);
-	value->data.s = mgDuplicateString(s);
-	mgSetValue(module, name, value);
-}
-
-
-void mgSetValueCFunction(MGModule *module, const char *name, MGCFunction cfunc)
-{
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-	MG_ASSERT(cfunc);
-
-	MGValue *value = mgCreateValue(MG_VALUE_CFUNCTION);
-	value->data.cfunc = cfunc;
-	mgSetValue(module, name, value);
-}
-
-
-int mgGetValueInteger(MGModule *module, const char *name, int defaultValue)
-{
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-
-	MGValue *value = mgGetValue(module, name);
+	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_INTEGER)) ? value->data.i : defaultValue;
 }
 
 
-float mgGetValueFloat(MGModule *module, const char *name, float defaultValue)
+inline float mgModuleGetFloat(MGModule *module, const char *name, float defaultValue)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-
-	MGValue *value = mgGetValue(module, name);
+	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_FLOAT)) ? value->data.f : defaultValue;
 }
 
 
-const char* mgGetValueString(MGModule *module, const char *name, const char *defaultValue)
+inline const char* mgModuleGetString(MGModule *module, const char *name, const char *defaultValue)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(name);
-
-	MGValue *value = mgGetValue(module, name);
+	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_STRING)) ? value->data.s : defaultValue;
+}
+
+
+inline MGValue* mgCreateValueInteger(int i)
+{
+	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
+	value->data.i = i;
+	return value;
+}
+
+
+inline MGValue* mgCreateValueFloat(float f)
+{
+	MGValue *value = mgCreateValue(MG_VALUE_FLOAT);
+	value->data.f = f;
+	return value;
+}
+
+
+inline MGValue* mgCreateValueString(const char *s)
+{
+	MGValue *value = mgCreateValue(MG_VALUE_STRING);
+	value->data.s = mgDuplicateString(s ? s : "");
+	return value;
+}
+
+
+inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
+{
+	MG_ASSERT(cfunc);
+
+	MGValue *value = mgCreateValue(MG_VALUE_CFUNCTION);
+	value->data.cfunc = cfunc;
+	return value;
+}
+
+
+inline void mgStringSet(MGValue *value, const char *s)
+{
+	free(value->data.s);
+	value->data.s = mgDuplicateString(s ? s : "");
+}
+
+
+inline const char* mgStringGet(MGValue *value)
+{
+	return value->data.s;
+}
+
+
+inline MGValue* mgCreateValueTuple(size_t capacity)
+{
+	MGValue *value = mgCreateValueList(capacity);
+	value->type = MG_VALUE_TUPLE;
+	return value;
+}
+
+
+MGValue* mgCreateValueList(size_t capacity)
+{
+	MGValue *value = mgCreateValue(MG_VALUE_LIST);
+
+	if (capacity > 0)
+	{
+		value->data.a.items = (MGValue**) malloc(capacity * sizeof(MGValue*));
+		value->data.a.capacity = capacity;
+	}
+	else
+	{
+		value->data.a.items = NULL;
+		value->data.a.capacity = 0;
+	}
+
+	value->data.a.length = 0;
+
+	return value;
+}
+
+
+void mgListAdd(MGValue *list, MGValue *value)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT(value);
+
+	if (list->data.a.capacity == list->data.a.length)
+	{
+		list->data.a.capacity = list->data.a.capacity ? list->data.a.capacity << 1 : 2;
+		list->data.a.items = (MGValue**) realloc(list->data.a.items, list->data.a.capacity * sizeof(MGValue*));
+	}
+
+	list->data.a.items[list->data.a.length++] = value;
+}
+
+
+void mgListInsert(MGValue *list, intmax_t index, MGValue *value)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT(value);
+
+	index = mgRelativeToAbsolute(list, index);
+	MG_ASSERT((index >= 0) && (index <= mgListGetLength(list)));
+
+	if (mgListGetLength(list) == 0)
+	{
+		mgListAdd(list, value);
+		return;
+	}
+
+	mgListAdd(list, mgListGet(list, -1));
+
+	for (intmax_t i = mgListGetLength(list) - 2; i > index; --i)
+		mgListSet(list, i, mgListGet(list, i - 1));
+
+	mgListSet(list, index, value);
+}
+
+
+void mgListRemove(MGValue *list, intmax_t index)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+
+	index = mgRelativeToAbsolute(list, index);
+	MG_ASSERT((index >= 0) && (index < mgListGetLength(list)));
+
+	mgDestroyValue(list->data.a.items[index]);
+
+	for (intmax_t i = index + 1; i < mgListGetLength(list); ++i)
+		mgListSet(list, i - 1, mgListGet(list, i));
+
+	--list->data.a.length;
+}
+
+
+void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+
+	begin = mgRelativeToAbsolute(list, begin);
+	end = mgRelativeToAbsolute(list, end);
+	MG_ASSERT(begin <= end);
+	MG_ASSERT((begin >= 0) && (end < mgListGetLength(list)));
+
+	if ((begin == 0) && (end == (mgListGetLength(list) - 1)))
+	{
+		mgListClear(list);
+		return;
+	}
+
+	intmax_t move = end - begin + 1;
+
+	for (intmax_t i = begin; i <= end; ++i)
+		mgDestroyValue(mgListGet(list, i));
+
+	for (intmax_t i = end + 1; i < mgListGetLength(list); ++i)
+		mgListSet(list, i - move, mgListGet(list, i));
+
+	list->data.a.length -= move;
+}
+
+
+inline void mgListClear(MGValue *list)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+
+	for (size_t i = 0; i < list->data.a.length; ++i)
+		mgDestroyValue(list->data.a.items[i]);
+
+	list->data.a.length = 0;
 }
