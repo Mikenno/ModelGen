@@ -4,6 +4,7 @@
 
 #include "modelgen.h"
 #include "inspect.h"
+#include "utilities.h"
 
 
 static inline void _mgFail(const char *format, ...)
@@ -100,6 +101,18 @@ static MGValue* mg_range(size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_type(size_t argc, MGValue **argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: type expects exactly 1 argument, received %zu", argc);
+
+	MGValue *value = mgCreateValue(MG_VALUE_STRING);
+	value->data.s = mgDuplicateString(_MG_VALUE_TYPE_NAMES[argv[0]->type]);
+
+	return value;
+}
+
+
 void mgLoadBaseLib(MGModule *module)
 {
 	mgSetValueInteger(module, "false", 0);
@@ -107,4 +120,5 @@ void mgLoadBaseLib(MGModule *module)
 
 	mgSetValueCFunction(module, "print", mg_print);
 	mgSetValueCFunction(module, "range", mg_range);
+	mgSetValueCFunction(module, "type", mg_type);
 }
