@@ -95,6 +95,12 @@ void mgLoadBaseLib(MGModule *module)
 	mgModuleSetInteger(module, "false", 0);
 	mgModuleSetInteger(module, "true", 1);
 
+	MGValue *version = mgCreateValueTuple(3);
+	mgTupleAdd(version, mgCreateValueInteger(MG_MAJOR_VERSION));
+	mgTupleAdd(version, mgCreateValueInteger(MG_MINOR_VERSION));
+	mgTupleAdd(version, mgCreateValueInteger(MG_PATCH_VERSION));
+	mgModuleSet(module, "version", version);
+
 	mgModuleSetCFunction(module, "print", mg_print);
 	mgModuleSetCFunction(module, "range", mg_range);
 	mgModuleSetCFunction(module, "type", mg_type);
