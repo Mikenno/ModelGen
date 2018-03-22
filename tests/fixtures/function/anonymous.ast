@@ -1,0 +1,201 @@
+ Module
+- Procedure
+-- Invalid
+-- Tuple
+-- Call
+--- Identifier print
+--- String Anonymous
+
+- Call
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- String Anonymous
+
+- Call
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- String Anonymous
+
+- Call
+-- Procedure
+--- Invalid
+--- Tuple
+---- Identifier x
+---- Identifier y
+--- Call
+---- Identifier print
+---- String Anonymous
+---- Identifier x
+---- Identifier y
+-- Integer 1
+-- Integer 2
+
+- BinOp =
+-- Identifier test1
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- String Anonymous
+
+- BinOp =
+-- Identifier test2
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- String Anonymous
+
+- BinOp =
+-- Identifier test3
+-- Procedure
+--- Invalid
+--- Tuple
+--- Block
+---- Call
+----- Identifier print
+----- String Anonymous
+---- Call
+----- Identifier print
+----- String Anonymous
+
+- BinOp =
+-- Identifier test4
+-- Procedure
+--- Invalid
+--- Tuple
+--- Block
+---- Call
+----- Identifier print
+----- String Anonymous
+---- Call
+----- Identifier print
+----- String Anonymous
+
+- Tuple
+-- Procedure
+--- Invalid
+--- Tuple
+-- Procedure
+--- Invalid
+--- Tuple
+-- Procedure
+--- Invalid
+--- Tuple
+
+- Tuple
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 1
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 2
+-- Procedure
+--- Invalid
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 3
+
+- Tuple
+-- Procedure
+--- Identifier test1
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 1
+-- Procedure
+--- Identifier test2
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 2
+-- Procedure
+--- Identifier test3
+--- Tuple
+--- Call
+---- Identifier print
+---- Integer 3
+
+- BinOp =
+-- Identifier x
+-- Tuple
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 1
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 2
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 3
+
+- BinOp =
+-- Identifier y
+-- Tuple
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 1
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 2
+--- Procedure
+---- Invalid
+---- Tuple
+---- Call
+----- Identifier print
+----- String Anonymous 3
+
+- BinOp =
+-- Identifier z
+-- Tuple
+--- Call
+---- Procedure
+----- Invalid
+----- Tuple
+----- Call
+------ Identifier print
+------ String Anonymous 1
+--- Call
+---- Procedure
+----- Invalid
+----- Tuple
+----- Call
+------ Identifier print
+------ String Anonymous 2
+--- Call
+---- Procedure
+----- Invalid
+----- Tuple
+----- Call
+------ Identifier print
+------ String Anonymous 3

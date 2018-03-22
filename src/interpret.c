@@ -112,18 +112,31 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MG_ASSERT(node->childCount > 0);
 
 	MGNode *nameNode = node->children[0];
-	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
-	MG_ASSERT(nameNode->token);
 
-	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-	MG_ASSERT(nameLength > 0);
-	char *name = _mgStrndup(nameNode->token->begin.string, nameLength);
-	MG_ASSERT(name);
+	MGValue *func = NULL;
+	char *name;
 
-	MGValue *func = mgGetValue(module, name);
+	if (nameNode->type == MG_NODE_PROCEDURE)
+	{
+		func = _mgVisitNode(module, nameNode);
+		MG_ASSERT(func);
 
-	if (!func)
-		MG_FAIL("Error: Undefined name \"%s\"", name);
+		name = _mgStrdup("<anonymous>");
+	}
+	else
+	{
+		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(nameNode->token);
+
+		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		name = _mgStrndup(nameNode->token->begin.string, nameLength);
+
+		func = mgGetValue(module, name);
+
+		if (!func)
+			MG_FAIL("Error: Undefined name \"%s\"", name);
+	}
 
 	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE))
 		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
@@ -338,6 +351,14 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
 
 	MGNode *nameNode = node->children[0];
+	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
+
+	MGValue *proc = mgCreateValue(MG_VALUE_PROCEDURE);
+	proc->data.func = node;
+
+	if (nameNode->type == MG_NODE_INVALID)
+		return proc;
+
 	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 	MG_ASSERT(nameNode->token);
 
@@ -345,9 +366,6 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	MG_ASSERT(nameLength > 0);
 	char *name = _mgStrndup(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
-
-	MGValue *proc = mgCreateValue(MG_VALUE_PROCEDURE);
-	proc->data.func = node;
 
 	mgSetValue(module, name, proc);
 
