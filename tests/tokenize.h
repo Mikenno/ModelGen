@@ -6,7 +6,6 @@
 #include "../src/inspect.h"
 
 #include "test.h"
-#include "file.h"
 
 
 #define _MG_IS_TESTABLE_TOKEN(token) ((token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_WHITESPACE))

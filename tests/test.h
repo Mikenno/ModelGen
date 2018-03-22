@@ -6,6 +6,10 @@
 #include <string.h>
 #include <time.h>
 
+#include "../src/utilities.h"
+
+#include "file.h"
+
 
 #define _MG_TEST_STRINGIZE_(x) #x
 #define _MG_TEST_STRINGIZE(x) _MG_TEST_STRINGIZE_(x)
@@ -76,6 +80,7 @@ static void mgRunUnitTest(const MGUnitTest *test)
 {
 	unsigned int failedTests = _mgTestsFailed;
 	unsigned int skipTest = (test->skip || (test->name[0] == '_')) ? 1 : 0;
+	const char *name;
 
 	if (skipTest)
 	{
@@ -112,7 +117,18 @@ static void mgRunUnitTest(const MGUnitTest *test)
 	}
 
 	if (test->name)
-		puts(test->name + ((test->name[0] == '_') ? 1 : 0));
+	{
+		name = test->name + ((test->name[0] == '_') ? 1 : 0);
+
+#if MG_ANSI_COLORS
+		if (mgDirnameEnd(name) > 0)
+			printf("\e[2m%.*s\e[0m%s\n", (int) mgDirnameEnd(name) + 1, name, mgBasename(name));
+		else
+			puts(name);
+#else
+		puts(name);
+#endif
+	}
 
 	fflush(stdout);
 

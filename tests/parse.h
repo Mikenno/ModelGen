@@ -6,7 +6,6 @@
 #include "../src/inspect.h"
 
 #include "test.h"
-#include "file.h"
 
 
 static size_t _mgCountNodes(MGNode *node)
