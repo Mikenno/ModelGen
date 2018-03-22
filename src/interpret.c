@@ -349,6 +349,35 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount == 2);
+
+	MGValue *value = _mgVisitNode(module, node->children[0]);
+	MGValue *index = _mgVisitNode(module, node->children[1]);
+
+	MG_ASSERT(value);
+	MG_ASSERT(index);
+
+	if ((value->type != MG_VALUE_TUPLE) && (value->type != MG_VALUE_LIST))
+		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[value->type]);
+
+	if (index->type != MG_VALUE_INTEGER)
+		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
+
+	if ((mgIntegerGet(index) < 0) || (mgIntegerGet(index) >= mgListGetLength(value)))
+		MG_FAIL("Error: \"%s\" index out of range", _MG_VALUE_TYPE_NAMES[value->type]);
+
+	MGValue *result = _mgDeepCopyValue(mgTupleGet(value, mgIntegerGet(index)));
+
+	mgDestroyValue(value);
+	mgDestroyValue(index);
+
+	return result;
+}
+
+
 static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
@@ -540,6 +569,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitIf(module, node);
 	case MG_NODE_PROCEDURE:
 		return _mgVisitProcedure(module, node);
+	case MG_NODE_SUBSCRIPT:
+		return _mgVisitSubscript(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}

@@ -1,0 +1,81 @@
+Module
+- Call
+-- Identifier print
+-- Subscript
+--- Tuple
+---- Integer 1
+---- Integer 2
+---- Integer 3
+--- Integer 0
+
+- Call
+-- Identifier print
+-- Subscript
+--- Tuple
+---- Integer 1
+---- Integer 2
+---- Integer 3
+--- Integer 1
+
+- Call
+-- Identifier print
+-- Subscript
+--- Tuple
+---- Integer 1
+---- Integer 2
+---- Integer 3
+--- Integer 2
+
+- Call
+-- Identifier print
+-- List
+--- Tuple
+---- Integer 1
+---- Integer 2
+---- Integer 3
+--- Tuple
+---- Integer 4
+---- Integer 5
+---- Integer 6
+--- Tuple
+---- Integer 7
+---- Integer 8
+---- Integer 9
+
+- Call
+-- Identifier print
+-- Subscript
+--- List
+---- Tuple
+----- Integer 1
+----- Integer 2
+----- Integer 3
+---- Tuple
+----- Integer 4
+----- Integer 5
+----- Integer 6
+---- Tuple
+----- Integer 7
+----- Integer 8
+----- Integer 9
+--- Integer 1
+
+- Call
+-- Identifier print
+-- Subscript
+--- Subscript
+---- List
+----- Tuple
+------ Integer 1
+------ Integer 2
+------ Integer 3
+----- Tuple
+------ Integer 4
+------ Integer 5
+------ Integer 6
+----- Tuple
+------ Integer 7
+------ Integer 8
+------ Integer 9
+---- Integer 1
+--- Integer 1

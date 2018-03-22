@@ -19,7 +19,7 @@
 	_MG_N(IF, "If") \
 	_MG_N(PROCEDURE, "Procedure") \
 	_MG_N(ASSIGN, "Assign") \
-	_MG_N(INDEX, "Index")
+	_MG_N(SUBSCRIPT, "Subscript")
 
 
 #define _MG_LONGEST_NODE_NAME_LENGTH 10

@@ -515,7 +515,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		else if (token->type == MG_TOKEN_LSQUARE)
 		{
 			node = _mgWrapNode(token, node);
-			node->type = MG_NODE_INDEX;
+			node->type = MG_NODE_SUBSCRIPT;
 			++token;
 
 			_mgParseExpressionList(parser, token, node, MG_TOKEN_RSQUARE);
