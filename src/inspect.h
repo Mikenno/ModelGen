@@ -1,5 +1,5 @@
-#ifndef MODELGEN_DEBUG_H
-#define MODELGEN_DEBUG_H
+#ifndef MODELGEN_INSPECT_H
+#define MODELGEN_INSPECT_H
 
 #include <stdio.h>
 

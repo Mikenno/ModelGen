@@ -7,48 +7,11 @@
 typedef void (*MGWalkFilesCallback)(const char *filename);
 
 
-static inline int mgStringEndsWith(const char *string, const char *suffix)
-{
-	size_t stringLength = strlen(string);
-	size_t suffixLength = strlen(suffix);
-
-	return (stringLength >= suffixLength)
-	    && (memcmp(suffix, string + (stringLength - suffixLength), suffixLength) == 0);
-}
-
-
 static inline int mgFileExists(const char *filename)
 {
 	DWORD dwAttrib = GetFileAttributesA(filename);
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES)
 	   && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
-}
-
-
-static size_t mgDirnameEnd(const char *filename)
-{
-	const char *slash = strrchr(filename, '/');
-	const char *backslash = strrchr(filename, '\\');
-
-	if (slash && backslash && (backslash > slash))
-		slash = backslash;
-	else if (!slash)
-		slash = backslash;
-
-	return slash ? (slash - filename) : 0;
-}
-
-
-static char* mgDirname(char *dirname, const char *filename)
-{
-	const size_t end = mgDirnameEnd(filename);
-
-	if (end)
-		strncpy(dirname, filename, end);
-
-	dirname[end] = '\0';
-
-	return dirname;
 }
 
 

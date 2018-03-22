@@ -3,23 +3,7 @@
 #include <string.h>
 
 #include "modelgen.h"
-
-
-static inline void _mgAssert(const char *expression, const char *file, int line)
-{
-	fprintf(stderr, "%s:%d: Assertion Failed: %s\n", file, line, expression);
-	exit(1);
-}
-
-#define MG_ASSERT(expression) ((expression) ? ((void)0) : _mgAssert(#expression, __FILE__, __LINE__))
-
-
-static inline char* _mgStrdup(const char *str)
-{
-	char *s = (char*) malloc((strlen(str) + 1) * sizeof(char));
-	strcpy(s, str);
-	return s;
-}
+#include "utilities.h"
 
 
 static void _mgDestroyName(MGName *name)
@@ -81,7 +65,7 @@ void mgDestroyValue(MGValue *value)
 
 static inline void _mgSetValue(MGName *names, size_t i, const char *name, MGValue *value)
 {
-	names[i].name = _mgStrdup(name);
+	names[i].name = mgDuplicateString(name);
 	names[i].value = value;
 }
 
@@ -181,7 +165,7 @@ void mgSetValueString(MGModule *module, const char *name, const char *s)
 	MG_ASSERT(s);
 
 	MGValue *value = mgCreateValue(MG_VALUE_STRING);
-	value->data.s = _mgStrdup(s);
+	value->data.s = mgDuplicateString(s);
 	mgSetValue(module, name, value);
 }
 

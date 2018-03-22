@@ -7,15 +7,6 @@
 #include "inspect.h"
 
 
-static inline void _mgAssert(const char *expression, const char *file, int line)
-{
-	fprintf(stderr, "%s:%d: Assertion Failed: %s\n", file, line, expression);
-	exit(1);
-}
-
-#define MG_ASSERT(expression) ((expression) ? ((void)0) : _mgAssert(#expression, __FILE__, __LINE__))
-
-
 static inline void _mgFail(MGParser *parser, MGToken *token, const char *format, ...)
 {
 	fflush(stdout);
