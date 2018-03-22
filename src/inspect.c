@@ -199,6 +199,9 @@ void _mgInspectValue(const MGValue *value)
 	case MG_VALUE_CFUNCTION:
 		printf("%p", value->data.cfunc);
 		break;
+	case MG_VALUE_PROCEDURE:
+		printf("%p", value->data.func);
+		break;
 	default:
 		break;
 	}

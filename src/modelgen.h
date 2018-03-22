@@ -82,6 +82,7 @@ typedef struct MGValue {
 			size_t length;
 			size_t capacity;
 		} a;
+		MGNode *func;
 	} data;
 } MGValue;
 

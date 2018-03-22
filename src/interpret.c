@@ -125,7 +125,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	if (!func)
 		MG_FAIL("Error: Undefined name \"%s\"", name);
 
-	if (func->type != MG_VALUE_CFUNCTION)
+	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE))
 		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
 
 	size_t argc = node->childCount - 1;
@@ -137,7 +137,100 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		MG_ASSERT(argv[i]);
 	}
 
-	MGValue *value = func->data.cfunc(argc, argv);
+	MGValue *value = NULL;
+
+	if (func->type == MG_VALUE_CFUNCTION)
+	{
+		value = func->data.cfunc(argc, argv);
+	}
+	else
+	{
+		MGNode *procNode = func->data.func;
+
+		if (procNode)
+		{
+			MG_ASSERT(procNode->type == MG_NODE_PROCEDURE);
+			MG_ASSERT((procNode->childCount == 2) || (procNode->childCount == 3));
+
+			MGNode *procParametersNode = procNode->children[1];
+			MG_ASSERT(procParametersNode->type == MG_NODE_TUPLE);
+
+			if (procParametersNode->childCount < argc)
+			{
+				MGNode *procNameNode = procNode->children[0];
+				MG_ASSERT(procNameNode->type == MG_NODE_IDENTIFIER);
+				MG_ASSERT(procNameNode->token);
+
+				const size_t procNameLength = procNameNode->token->end.string - procNameNode->token->begin.string;
+				MG_ASSERT(procNameLength > 0);
+				char *procName = _mgStrndup(procNameNode->token->begin.string, procNameLength);
+				MG_ASSERT(procName);
+
+				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", procName, procParametersNode->childCount, argc);
+
+				free(procName);
+			}
+
+			for (size_t i = 0; i < procParametersNode->childCount; ++i)
+			{
+				MGNode *procParameterNode = procParametersNode->children[i];
+				MG_ASSERT((procParameterNode->type == MG_NODE_IDENTIFIER) || (procParameterNode->type == MG_NODE_BIN_OP));
+
+				char *procParameterName = NULL;
+
+				if (procParameterNode->type == MG_NODE_IDENTIFIER)
+				{
+					const size_t procParameterNameLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
+					MG_ASSERT(procParameterNameLength > 0);
+					procParameterName = _mgStrndup(procParameterNode->token->begin.string, procParameterNameLength);
+				}
+				else if (procParameterNode->type == MG_NODE_BIN_OP)
+				{
+					MG_ASSERT(procParameterNode->childCount == 2);
+					MG_ASSERT(procParameterNode->token);
+
+					const size_t opLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
+					MG_ASSERT(opLength > 0);
+					char *op = _mgStrndup(procParameterNode->token->begin.string, opLength);
+					MG_ASSERT(op);
+
+					MG_ASSERT(strcmp(op, "=") == 0);
+
+					free(op);
+
+					MGNode *procParameterNameNode = procParameterNode->children[0];
+					MG_ASSERT(procParameterNameNode->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT(procParameterNameNode->token);
+
+					const size_t procParameterNameLength = procParameterNameNode->token->end.string - procParameterNameNode->token->begin.string;
+					MG_ASSERT(procParameterNameLength > 0);
+					procParameterName = _mgStrndup(procParameterNameNode->token->begin.string, procParameterNameLength);
+				}
+
+				MG_ASSERT(procParameterName);
+
+				if (i < argc)
+					mgSetValue(module, procParameterName, _mgDeepCopyValue(argv[i]));
+				else
+				{
+					if (procParameterNode->type != MG_NODE_BIN_OP)
+						MG_FAIL("Error: Expected argument \"%s\"", procParameterName);
+
+					mgSetValue(module, procParameterName, _mgVisitNode(module, procParameterNode->children[1]));
+				}
+
+				free(procParameterName);
+			}
+
+			if (procNode->childCount == 3)
+				value = _mgVisitNode(module, procNode->children[2]);
+		}
+		else
+		{
+			value = mgCreateValue(MG_VALUE_INTEGER);
+			value->data.i = 0;
+		}
+	}
 
 	for (size_t i = 0; i < argc; ++i)
 		mgDestroyValue(argv[i]);
@@ -237,6 +330,30 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 	value->data.i = _condition ? MG_TRUE : MG_FALSE;
 
 	return value;
+}
+
+
+static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
+{
+	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
+
+	MGNode *nameNode = node->children[0];
+	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(nameNode->token);
+
+	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+	MG_ASSERT(nameLength > 0);
+	char *name = _mgStrndup(nameNode->token->begin.string, nameLength);
+	MG_ASSERT(name);
+
+	MGValue *proc = mgCreateValue(MG_VALUE_PROCEDURE);
+	proc->data.func = node;
+
+	mgSetValue(module, name, proc);
+
+	free(name);
+
+	return _mgDeepCopyValue(proc);
 }
 
 
@@ -452,6 +569,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitFor(module, node);
 	case MG_NODE_IF:
 		return _mgVisitIf(module, node);
+	case MG_NODE_PROCEDURE:
+		return _mgVisitProcedure(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}

@@ -22,7 +22,6 @@ static inline void _mgFail(MGParser *parser, MGToken *token, const char *format,
 
 	if (parser->tokenizer.filename)
 		fprintf(stderr, "%s:", parser->tokenizer.filename);
-
 	if (token)
 		fprintf(stderr, "%u:%u: ", token->begin.line, token->begin.character);
 
@@ -415,6 +414,48 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			_node->parent->tokenEnd = _node->tokenEnd;
 
 		token = node->tokenEnd;
+	}
+	else if (token->type == MG_TOKEN_PROC)
+	{
+		node = mgCreateNode(token);
+		node->type = MG_NODE_PROCEDURE;
+
+		++token;
+		_MG_TOKEN_SCAN_LINE(token);
+		MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+
+		MGNode *name = mgCreateNode(token);
+		name->type = MG_NODE_IDENTIFIER;
+		_mgAddChild(node, name);
+
+		++token;
+		_MG_TOKEN_SCAN_LINE(token);
+		MG_ASSERT(token->type == MG_TOKEN_LPAREN);
+
+		MGNode *parameters = mgCreateNode(token);
+		parameters->type = MG_NODE_TUPLE;
+		++token;
+		_mgParseExpressionList(parser, token, parameters, MG_TOKEN_RPAREN);
+		_mgAddChild(node, parameters);
+
+		token = parameters->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		if (node->token->begin.character < token->begin.character)
+		{
+			MGNode *block = mgCreateNode(token);
+			block->type = MG_NODE_BLOCK;
+			block->token = NULL;
+
+			_mgParseBlock(parser, token, block, token->begin.character);
+
+			if (block->childCount == 1)
+				_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
+			else
+				_mgAddChild(node, block);
+
+			token = node->tokenEnd + 1;
+		}
 	}
 
 	MG_ASSERT(node);

@@ -1,0 +1,76 @@
+Module
+- Procedure
+-- Identifier test1
+-- Tuple
+- Call
+-- Identifier print
+-- String "Outside"
+
+- Procedure
+-- Identifier test2
+-- Tuple
+-- Block
+--- Call
+---- Identifier print
+---- String "test2"
+--- Call
+---- Identifier print
+---- String "test2"
+- Call
+-- Identifier print
+-- String "Outside"
+
+- Procedure
+-- Identifier test3
+-- Tuple
+-- Block
+--- Call
+---- Identifier print
+---- String "test3"
+--- Call
+---- Identifier print
+---- String "test3"
+- Call
+-- Identifier print
+-- String "Outside"
+
+- Procedure
+-- Identifier test4
+-- Tuple
+--- Identifier x
+-- Call
+--- Identifier print
+--- String "test4"
+--- Identifier x
+
+- Procedure
+-- Identifier test5
+-- Tuple
+--- Identifier x
+--- Identifier y
+--- Identifier z
+-- Call
+--- Identifier print
+--- String "test5"
+--- Identifier x
+--- Identifier y
+--- Identifier z
+
+- Procedure
+-- Identifier test6
+-- Tuple
+--- Identifier x
+--- BinOp =
+---- Identifier y
+---- Integer 1
+--- BinOp =
+---- Identifier z
+---- BinOp +
+----- Integer 1
+----- Integer 2
+-- Call
+--- Identifier print
+--- String "test6"
+--- Identifier x
+--- Identifier y
+--- Identifier z
