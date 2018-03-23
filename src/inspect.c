@@ -113,12 +113,14 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 	else
 		strcpy(prefixEnd, _MG_NODE_CHILD_INDENT);
 
+	if (width < _MG_NODE_PADDING)
+		printf("%*s", _MG_NODE_PADDING - width, "");
+	else
+		putchar(' ');
+
 #if MG_ANSI_COLORS
 	fputs("\e[90m", stdout);
 #endif
-
-	if (width < _MG_NODE_PADDING)
-		printf("%*s", _MG_NODE_PADDING - width, "");
 
 	if (node->token && (node->tokenBegin == node->tokenEnd))
 		mgInspectToken(node->token, NULL, MG_FALSE);
