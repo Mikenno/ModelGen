@@ -300,7 +300,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		token = test->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINES(token);
 
-		if (node->tokenBegin->begin.character < token->begin.character)
+		if ((node->tokenBegin->begin.character < token->begin.character) &&
+			((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA)))
 		{
 			MGNode *block = mgCreateNode(token);
 			block->type = MG_NODE_BLOCK;

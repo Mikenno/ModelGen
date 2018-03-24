@@ -312,11 +312,7 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 		return _mgVisitNode(module, node->children[1]);
 	else if (node->childCount > 2)
 		return _mgVisitNode(module, node->children[2]);
-
-	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
-	value->data.i = _condition ? MG_TRUE : MG_FALSE;
-
-	return value;
+	return mgCreateValueInteger(_condition);
 }
 
 
@@ -432,7 +428,7 @@ static MGValue* _mgVisitFloat(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitString(MGModule *module, MGNode *node)
+static inline MGValue* _mgVisitString(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
