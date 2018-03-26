@@ -534,6 +534,75 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->childCount == 1);
+	MG_ASSERT(node->token);
+
+	const size_t opLength = node->token->end.string - node->token->begin.string;
+	MG_ASSERT(opLength > 0);
+	char *op = mgDuplicateFixedString(node->token->begin.string, opLength);
+	MG_ASSERT(op);
+
+	MGValue *operand = _mgVisitNode(module, node->children[0]);
+	MG_ASSERT(operand);
+
+	MGValue *value = NULL;
+
+	if (strcmp(op, "-") == 0)
+	{
+		switch (operand->type)
+		{
+		case MG_VALUE_INTEGER:
+			value = mgCreateValueInteger(-operand->data.i);
+			break;
+		case MG_VALUE_FLOAT:
+			value = mgCreateValueFloat(-operand->data.f);
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "+") == 0)
+	{
+		switch (operand->type)
+		{
+		case MG_VALUE_INTEGER:
+			value = mgCreateValueInteger(+operand->data.i);
+			break;
+		case MG_VALUE_FLOAT:
+			value = mgCreateValueFloat(+operand->data.f);
+			break;
+		default:
+			break;
+		}
+	}
+	else if ((strcmp(op, "not") == 0) || strcmp(op, "!") == 0)
+	{
+		switch (operand->type)
+		{
+		case MG_VALUE_INTEGER:
+			value = mgCreateValueInteger(!operand->data.i);
+			break;
+		case MG_VALUE_FLOAT:
+			value = mgCreateValueFloat(!operand->data.f);
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (value == NULL)
+		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", op, _MG_VALUE_TYPE_NAMES[operand->type]);
+
+	mgDestroyValue(operand);
+
+	free(op);
+
+	return value;
+}
+
+
 static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 {
 	switch (node->type)
@@ -557,6 +626,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitRange(module, node);
 	case MG_NODE_BIN_OP:
 		return _mgVisitBinOp(module, node);
+	case MG_NODE_UNARY_OP:
+		return _mgVisitUnaryOp(module, node);
 	case MG_NODE_CALL:
 		return _mgVisitCall(module, node);
 	case MG_NODE_FOR:
