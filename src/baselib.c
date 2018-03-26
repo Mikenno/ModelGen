@@ -71,7 +71,15 @@ static MGValue* mg_range(size_t argc, MGValue **argv)
 		MG_FAIL("Error: step cannot be 0", argc);
 
 	int length = (range[1] - range[0]) / range[2] + (((range[1] - range[0]) % range[2]) != 0);
-	MG_ASSERT(length >= 0);
+
+	if (argc < 3)
+		range[2] = (length > 0) ? 1 : -1;
+
+	if (((range[1] - range[0]) ^ range[2]) <= 0)
+		return mgCreateValueTuple(0);
+
+	if (length < 0)
+		length = -length;
 
 	MGValue *value = mgCreateValueTuple((size_t) length);
 	for (int i = 0; i < length; ++i)
