@@ -46,9 +46,80 @@ static unsigned int _mgTestsSkipped = 0;
 static clock_t _mgTestTimeBegin;
 static clock_t _mgTestTimeEnd;
 
+static const MGUnitTest *_mgCurrentTest = NULL;
+
+
+static void mgPrintTestStatus(const MGUnitTest *test, int status)
+{
+	const char *name = NULL;
+
+	if (test->name)
+		name = test->name + ((test->name[0] == '_') ? 1 : 0);
+
+#if MG_ANSI_COLORS
+	switch (status)
+	{
+	case -1:
+		fputs("\e[31m[FAIL]\e[0m ", stdout);
+		break;
+	case 0:
+		fputs("\e[33m[SKIP]\e[0m ", stdout);
+		break;
+	case 1:
+		fputs("\e[32m[PASS]\e[0m ", stdout);
+		break;
+	default:
+		fputs("\e[2m[    ]\e[0m ", stdout);
+		break;
+	}
+
+	if (name)
+	{
+		if (mgDirnameEnd(name) > 0)
+			printf("\e[2m%.*s\e[0m%s\n", (int) mgDirnameEnd(name) + 1, name, mgBasename(name));
+		else
+			puts(name);
+	}
+	else
+		putchar('\n');
+#else
+	switch (status)
+	{
+	case -1:
+		fputs("[FAIL] ", stdout);
+		break;
+	case 0:
+		fputs("[SKIP] ", stdout);
+		break;
+	case 1:
+		fputs("[PASS] ", stdout);
+		break;
+	default:
+		fputs("[    ] ", stdout);
+		break;
+	}
+
+	if (name)
+		puts(name);
+	else
+		putchar('\n');
+#endif
+
+	fflush(stdout);
+}
+
+
+static void mgOnExit(void)
+{
+	if (_mgCurrentTest)
+		mgPrintTestStatus(_mgCurrentTest, -2);
+}
+
 
 static void mgTestingBegin(void)
 {
+	atexit(mgOnExit);
+
 	_mgTestsRun = 0;
 
 	_mgTestsPassed = 0;
@@ -80,17 +151,13 @@ static void mgRunUnitTest(const MGUnitTest *test)
 {
 	unsigned int failedTests = _mgTestsFailed;
 	unsigned int skipTest = (test->skip || (test->name[0] == '_')) ? 1 : 0;
-	const char *name;
+
+	_mgCurrentTest = test;
 
 	if (skipTest)
 	{
 		++_mgTestsSkipped;
-
-#if MG_ANSI_COLORS
-		fputs("\e[33m[SKIP]\e[0m ", stdout);
-#else
-		fputs("[SKIP] ", stdout);
-#endif
+		mgPrintTestStatus(test, 0);
 	}
 	else
 	{
@@ -99,38 +166,13 @@ static void mgRunUnitTest(const MGUnitTest *test)
 		if (_mgTestsFailed == failedTests)
 		{
 			++_mgTestsPassed;
-
-#if MG_ANSI_COLORS
-			fputs("\e[32m[PASS]\e[0m ", stdout);
-#else
-			fputs("[PASS] ", stdout);
-#endif
+			mgPrintTestStatus(test, 1);
 		}
 		else
-		{
-#if MG_ANSI_COLORS
-			fputs("\e[31m[FAIL]\e[0m ", stdout);
-#else
-			fputs("[FAIL] ", stdout);
-#endif
-		}
+			mgPrintTestStatus(test, -1);
 	}
 
-	if (test->name)
-	{
-		name = test->name + ((test->name[0] == '_') ? 1 : 0);
-
-#if MG_ANSI_COLORS
-		if (mgDirnameEnd(name) > 0)
-			printf("\e[2m%.*s\e[0m%s\n", (int) mgDirnameEnd(name) + 1, name, mgBasename(name));
-		else
-			puts(name);
-#else
-		puts(name);
-#endif
-	}
-
-	fflush(stdout);
+	_mgCurrentTest = NULL;
 
 	++_mgTestsRun;
 }
