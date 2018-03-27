@@ -704,6 +704,302 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			break;
 		}
 	}
+	else if (strcmp(op, ">") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i > rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i > rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f > rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f > rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, ">=") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i >= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i >= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f >= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f >= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "<") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i < rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i < rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f < rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f < rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "<=") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i <= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i <= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f <= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f <= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "==") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i == rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i == rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f == rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_STRING:
+			MG_ASSERT(lhs->data.s);
+			switch (rhs->type)
+			{
+			case MG_VALUE_STRING:
+				MG_ASSERT(rhs->data.s);
+				value = mgCreateValueInteger(!strcmp(lhs->data.s, rhs->data.s));
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "!=") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i != rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i != rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f != rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f != rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_STRING:
+			switch (rhs->type)
+			{
+			case MG_VALUE_STRING:
+				MG_ASSERT(lhs->data.s);
+				MG_ASSERT(rhs->data.s);
+				value = mgCreateValueInteger(strcmp(lhs->data.s, rhs->data.s));
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "and") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i && rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i && rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f && rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f && rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "or") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i || rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i || rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f || rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f || rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
 
 	if (value == NULL)
 		MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
