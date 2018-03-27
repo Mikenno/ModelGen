@@ -521,12 +521,198 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 	char *op = mgDuplicateFixedString(node->token->begin.string, opLength);
 	MG_ASSERT(op);
 
+	if (strcmp(op, "=") == 0)
+	{
+		free(op);
+		return _mgVisitAssignment(module, node);
+	}
+
+	MGValue *lhs = _mgVisitNode(module, node->children[0]);
+	MG_ASSERT(lhs);
+	MGValue *rhs = _mgVisitNode(module, node->children[1]);
+	MG_ASSERT(rhs);
+
 	MGValue *value = NULL;
 
-	if (strcmp(op, "=") == 0)
-		value = _mgVisitAssignment(module, node);
-	else
-		MG_FAIL("Error: Unknown BinOp \"%s\"", op);
+	if (strcmp(op, "+") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i + rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.i + rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueFloat(lhs->data.f + rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.f + rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "-") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i - rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.i - rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueFloat(lhs->data.f - rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.f - rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "*") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i * rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.i * rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueFloat(lhs->data.f * rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.f * rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "/") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i / rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.i / rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueFloat(lhs->data.f / rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(lhs->data.f / rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	else if (strcmp(op, "%") == 0)
+	{
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i % rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(fmodf((float) lhs->data.i, rhs->data.f));
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueFloat(fmodf(lhs->data.f, (float) rhs->data.i));
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueFloat(fmodf(lhs->data.f, rhs->data.f));
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (value == NULL)
+		MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
+		        op, _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
+
+	MG_ASSERT(value);
+
+	mgDestroyValue(lhs);
+	mgDestroyValue(rhs);
 
 	free(op);
 
