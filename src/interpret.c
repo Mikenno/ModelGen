@@ -547,6 +547,16 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			case MG_VALUE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i + rhs->data.f);
 				break;
+			case MG_VALUE_STRING:
+				MG_ASSERT(rhs->data.s);
+				size_t len = (size_t) snprintf(NULL, 0, "%d%s", lhs->data.i, rhs->data.s);
+				MG_ASSERT(len >= 0);
+				char *s = (char*) malloc((len + 1) * sizeof(char));
+				snprintf(s, len + 1, "%d%s", lhs->data.i, rhs->data.s);
+				s[len] = '\0';
+				value = mgCreateValueString(s);
+				free(s);
+				break;
 			default:
 				break;
 			}
@@ -560,8 +570,53 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			case MG_VALUE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f + rhs->data.f);
 				break;
+			case MG_VALUE_STRING:
+				MG_ASSERT(rhs->data.s);
+				size_t len = (size_t) snprintf(NULL, 0, "%f%s", lhs->data.f, rhs->data.s);
+				MG_ASSERT(len >= 0);
+				char *s = (char*) malloc((len + 1) * sizeof(char));
+				snprintf(s, len + 1, "%f%s", lhs->data.f, rhs->data.s);
+				s[len] = '\0';
+				value = mgCreateValueString(s);
+				free(s);
+				break;
 			default:
 				break;
+			}
+			break;
+		case MG_VALUE_STRING:
+			MG_ASSERT(lhs->data.s);
+			char *s = NULL;
+			size_t len = 0;
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				len = (size_t) snprintf(NULL, 0, "%s%d", lhs->data.s, rhs->data.i);
+				MG_ASSERT(len >= 0);
+				s = (char*) malloc((len + 1) * sizeof(char));
+				snprintf(s, len + 1, "%s%d", lhs->data.s, rhs->data.i);
+				s[len] = '\0';
+				break;
+			case MG_VALUE_FLOAT:
+				len = (size_t) snprintf(NULL, 0, "%s%f", lhs->data.s, rhs->data.f);
+				MG_ASSERT(len >= 0);
+				s = (char*) malloc((len + 1) * sizeof(char));
+				snprintf(s, len + 1, "%s%f", lhs->data.s, rhs->data.f);
+				s[len] = '\0';
+				break;
+			case MG_VALUE_STRING:
+				MG_ASSERT(rhs->data.s);
+				s = (char*) malloc((strlen(lhs->data.s) + strlen(rhs->data.s) + 1) * sizeof(char));
+				MG_ASSERT(s);
+				strcpy(s, lhs->data.s);
+				strcat(s, rhs->data.s);
+			default:
+				break;
+			}
+			if (s)
+			{
+				value = mgCreateValueString(s);
+				free(s);
 			}
 			break;
 		default:
