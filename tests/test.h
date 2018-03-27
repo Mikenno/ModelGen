@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "../src/modelgen.h"
 #include "../src/utilities.h"
 
 #include "file.h"
@@ -18,18 +19,18 @@
 #define _MG_TEST_CONCATENATE(x, y) _MG_TEST_CONCATENATE_(x, y)
 
 
-typedef struct MGUnitTest {
+typedef struct MGTestCase {
 	const char *name;
-	int skip;
-	void (*func)(const struct MGUnitTest *test);
+	MGbool skip;
+	void (*func)(const struct MGTestCase *test);
 	void *data;
-} MGUnitTest;
+} MGTestCase;
 
 
 #define MG_TEST_NAMED(func, name) \
-	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test); \
-	MGUnitTest func = { name, 0, _MG_TEST_CONCATENATE(_, func), NULL }; \
-	void _MG_TEST_CONCATENATE(_, func)(const MGUnitTest *test)
+	void _MG_TEST_CONCATENATE(_, func)(const MGTestCase *test); \
+	MGTestCase func = { name, MG_FALSE, _MG_TEST_CONCATENATE(_, func), NULL }; \
+	void _MG_TEST_CONCATENATE(_, func)(const MGTestCase *test)
 
 #define MG_TEST(func) MG_TEST_NAMED(func, _MG_TEST_STRINGIZE(func))
 
@@ -46,10 +47,10 @@ static unsigned int _mgTestsSkipped = 0;
 static clock_t _mgTestTimeBegin;
 static clock_t _mgTestTimeEnd;
 
-static const MGUnitTest *_mgCurrentTest = NULL;
+static const MGTestCase *_mgCurrentTest = NULL;
 
 
-static void mgPrintTestStatus(const MGUnitTest *test, int status)
+static void mgPrintTestStatus(const MGTestCase *test, int status)
 {
 	const char *name = NULL;
 
@@ -147,7 +148,7 @@ static void mgTestingEnd(void)
 }
 
 
-static void mgRunUnitTest(const MGUnitTest *test)
+static void mgRunTestCase(const MGTestCase *test)
 {
 	unsigned int failedTests = _mgTestsFailed;
 	unsigned int skipTest = (test->skip || (test->name[0] == '_')) ? 1 : 0;
@@ -178,10 +179,10 @@ static void mgRunUnitTest(const MGUnitTest *test)
 }
 
 
-static void mgRunUnitTests(const MGUnitTest **tests)
+static void mgRunTestCases(const MGTestCase **tests)
 {
 	for (; *tests; ++tests)
-		mgRunUnitTest(*tests);
+		mgRunTestCase(*tests);
 }
 
 

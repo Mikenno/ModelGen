@@ -245,7 +245,7 @@ pass:
 }
 
 
-static void _mgTokenizerTest(const MGUnitTest *test)
+static void _mgTokenizerTest(const MGTestCase *test)
 {
 	const char *in = ((char**) test->data)[0];
 	const char *out = ((char**) test->data)[1];
@@ -273,14 +273,14 @@ static void mgRunTokenizerTest(const char *in)
 		strcpy(strrchr(out, '.'), ".tokens");
 	}
 
-	MGUnitTest test;
+	MGTestCase test;
 	test.name = out;
 	test.skip = mgBasename(out)[0] == '_';
 	test.func = _mgTokenizerTest;
 	test.data = (void*) files;
 
 	if (mgFileExists(out))
-		mgRunUnitTest(&test);
+		mgRunTestCase(&test);
 }
 
 

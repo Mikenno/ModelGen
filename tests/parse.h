@@ -240,7 +240,7 @@ pass:
 }
 
 
-static void _mgParserTest(const MGUnitTest *test)
+static void _mgParserTest(const MGTestCase *test)
 {
 	const char *in = ((char**) test->data)[0];
 	const char *out = ((char**) test->data)[1];
@@ -268,14 +268,14 @@ static void mgRunParserTest(const char *in)
 		strcpy(strrchr(out, '.'), ".ast");
 	}
 
-	MGUnitTest test;
+	MGTestCase test;
 	test.name = out;
 	test.skip = mgBasename(out)[0] == '_';
 	test.func = _mgParserTest;
 	test.data = (void*) files;
 
 	if (mgFileExists(out))
-		mgRunUnitTest(&test);
+		mgRunTestCase(&test);
 }
 
 

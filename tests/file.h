@@ -1,5 +1,5 @@
-#ifndef MODELGEN_TESTS_FILE_H
-#define MODELGEN_TESTS_FILE_H
+#ifndef MODELGEN_TEST_FILE_H
+#define MODELGEN_TEST_FILE_H
 
 #include <windows.h>
 

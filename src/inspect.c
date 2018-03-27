@@ -239,51 +239,31 @@ void mgInspectModule(const MGModule *module)
 }
 
 
-void _mgDebugReadPrint(const char *filename, char *str, size_t len)
+void mgInspectStringLines(const char *str)
 {
-	if (str)
-	{
-		printf("Reading: %s\n", filename);
+	unsigned int lineCount = 1;
 
-		unsigned int lineCount = 0;
-
-		if (len)
-		{
+	for (const char *c = str; *c; ++c)
+		if (*c == '\n')
 			++lineCount;
 
-			for (char *c = str; *c; ++c)
-				if (*c == '\n')
-					++lineCount;
-		}
+	const char *currentLine = str;
+	unsigned int line = 1;
 
-		printf("Length: %zu\n", len);
-		printf("Lines: %u\n", lineCount);
-
-		if (lineCount > 0)
-		{
-			char *currentLine = str;
-			unsigned int line = 1;
-
-			while (currentLine)
-			{
-				char *nextLine = strchr(currentLine, '\n');
-
-				if (nextLine)
-					*nextLine = '\0';
-
-				printf("%*u: %s\n", _MG_INT_COUNT_DIGITS(lineCount), line, currentLine);
-
-				if (nextLine)
-					*nextLine = '\n';
-
-				currentLine = nextLine ? (nextLine + 1) : NULL;
-				++line;
-			}
-		}
-	}
-	else
+	while (currentLine)
 	{
-		fprintf(stderr, "Failed Reading: %s\n", filename);
+		char *nextLine = strchr(currentLine, '\n');
+
+		if (nextLine)
+			*nextLine = '\0';
+
+		printf("%*u: %s\n", _MG_INT_COUNT_DIGITS(lineCount), line, currentLine);
+
+		if (nextLine)
+			*nextLine = '\n';
+
+		currentLine = nextLine ? (nextLine + 1) : NULL;
+		++line;
 	}
 }
 
@@ -318,7 +298,8 @@ MGbool mgDebugRead(const char *filename)
 	size_t len;
 	char *str = mgReadFile(filename, &len);
 
-	_mgDebugReadPrint(filename, str, len);
+	printf("Reading: %s\n", filename);
+	mgInspectStringLines(str);
 
 	free(str);
 
@@ -331,7 +312,8 @@ MGbool mgDebugReadHandle(FILE *file, const char *filename)
 	size_t len;
 	char *str = mgReadFileHandle(file, &len);
 
-	_mgDebugReadPrint(filename, str, len);
+	printf("Reading: %s\n", filename);
+	mgInspectStringLines(str);
 
 	free(str);
 

@@ -11,6 +11,8 @@ void _mgInspectValue(const MGValue *value);
 void mgInspectValue(const MGValue *value);
 void mgInspectModule(const MGModule *module);
 
+void mgInspectStringLines(const char *str);
+
 MGbool mgDebugRead(const char *filename);
 MGbool mgDebugReadHandle(FILE *file, const char *filename);
 
