@@ -7,6 +7,7 @@
 #include "module.h"
 #include "inspect.h"
 #include "utilities.h"
+#include "baselib.h"
 
 
 static inline void _mgFail(MGModule *module, MGNode *node, const char *format, ...)
@@ -455,37 +456,24 @@ static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
 {
 	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
 
-	int range[3] = { 0, 0, 1 };
+	MGValue *start = NULL, *stop = NULL, *step = NULL;
 
-	for (size_t i = 0; i < node->childCount; ++i)
+	start = _mgVisitNode(module, node->children[0]);
+	MG_ASSERT(start);
+	MG_ASSERT(start->type == MG_VALUE_INTEGER);
+
+	stop = _mgVisitNode(module, node->children[1]);
+	MG_ASSERT(stop);
+	MG_ASSERT(stop->type == MG_VALUE_INTEGER);
+
+	if (node->childCount == 3)
 	{
-		MGNode *child = node->children[i];
-
-		MG_ASSERT(child);
-		MG_ASSERT(child->type == MG_NODE_INTEGER);
-
-		MG_ASSERT(child->token);
-
-		const size_t _valueLength = child->token->end.string - child->token->begin.string;
-		MG_ASSERT(_valueLength > 0);
-		char *_value = mgDuplicateFixedString(child->token->begin.string, _valueLength);
-		MG_ASSERT(_value);
-
-		range[i] = strtol(_value, NULL, 10);
-
-		free(_value);
+		step = _mgVisitNode(module, node->children[2]);
+		MG_ASSERT(step);
+		MG_ASSERT(step->type == MG_VALUE_INTEGER);
 	}
 
-	MG_ASSERT(range[2] > 0);
-
-	int length = (range[1] - range[0]) / range[2] + (((range[1] - range[0]) % range[2]) != 0);
-	MG_ASSERT(length >= 0);
-
-	MGValue *value = mgCreateValueTuple((size_t) length);
-	for (int i = 0; i < length; ++i)
-		mgTupleAdd(value, mgCreateValueInteger(range[0] + range[2] * i));
-
-	return value;
+	return _mg_rangei(start->data.i, stop->data.i, (node->childCount == 3) ? step->data.i : 0);
 }
 
 

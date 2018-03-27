@@ -3,6 +3,8 @@
 
 #include "modelgen.h"
 
+MGValue* _mg_rangei(int start, int stop, int step);
+
 void mgLoadBaseLib(MGModule *module);
 
 #endif

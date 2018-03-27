@@ -6,6 +6,7 @@
 #include "modelgen.h"
 #include "module.h"
 #include "inspect.h"
+#include "utilities.h"
 
 
 static inline void _mgFail(const char *format, ...)
@@ -47,6 +48,29 @@ static MGValue* mg_print(size_t argc, MGValue **argv)
 }
 
 
+MGValue* _mg_rangei(int start, int stop, int step)
+{
+	int difference = stop - start;
+
+	if (difference == 0)
+		return mgCreateValueTuple(0);
+
+	if (step == 0)
+		step = (difference > 0) - (difference < 0);
+
+	int length = difference / step + ((difference % step) != 0);
+
+	if ((difference ^ step) < 0)
+		return mgCreateValueTuple(0);
+
+	MGValue *value = mgCreateValueTuple((size_t) length);
+	for (int i = 0; i < length; ++i)
+		mgTupleAdd(value, mgCreateValueInteger(start + step * i));
+
+	return value;
+}
+
+
 static MGValue* mg_range(size_t argc, MGValue **argv)
 {
 	if (argc < 1)
@@ -56,10 +80,10 @@ static MGValue* mg_range(size_t argc, MGValue **argv)
 
 	for (size_t i = 0; i < argc; ++i)
 		if (argv[i]->type != MG_VALUE_INTEGER)
-			MG_FAIL("Error: range expected argument %zu as \"%s\", received \"%s\"",
+			MG_FAIL("Error: rangef expected argument %zu as \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 
-	int range[3] = { 0, 0, 1 };
+	int range[3] = { 0, 0, 0 };
 
 	if (argc > 1)
 		for (size_t i = 0; i < argc; ++i)
@@ -67,25 +91,10 @@ static MGValue* mg_range(size_t argc, MGValue **argv)
 	else
 		range[1] = argv[0]->data.i;
 
-	if (range[2] == 0)
-		MG_FAIL("Error: step cannot be 0", argc);
+	if ((argc > 2) && (range[2] == 0))
+		MG_FAIL("Error: step cannot be 0");
 
-	int length = (range[1] - range[0]) / range[2] + (((range[1] - range[0]) % range[2]) != 0);
-
-	if (argc < 3)
-		range[2] = (length > 0) ? 1 : -1;
-
-	if (((range[1] - range[0]) ^ range[2]) <= 0)
-		return mgCreateValueTuple(0);
-
-	if (length < 0)
-		length = -length;
-
-	MGValue *value = mgCreateValueTuple((size_t) length);
-	for (int i = 0; i < length; ++i)
-		mgTupleAdd(value, mgCreateValueInteger(range[0] + range[2] * i));
-
-	return value;
+	return _mg_rangei(range[0], range[1], range[2]);
 }
 
 
