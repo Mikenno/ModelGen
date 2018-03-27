@@ -171,11 +171,10 @@ int main(int argc, char *argv[])
 		if (runStdin)
 		{
 			mgCreateModule(&module);
-			module.filename = "<stdin>";
 
 			mgLoadBaseLib(&module);
 
-			if ((result = mgRunFileHandle(&module, stdin)))
+			if ((result = mgRunFileHandle(&module, stdin, "<stdin>")))
 				mgDestroyValue(result);
 			else
 				err = 1;
@@ -194,7 +193,6 @@ int main(int argc, char *argv[])
 			const char *filename = argv[i];
 
 			mgCreateModule(&module);
-			module.filename = filename;
 
 			mgLoadBaseLib(&module);
 

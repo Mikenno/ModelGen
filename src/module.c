@@ -33,6 +33,8 @@ void mgDestroyModule(MGModule *module)
 	for (size_t i = 0; i < module->length; ++i)
 		_mgDestroyName(&module->names[i]);
 	free(module->names);
+
+	free(module->filename);
 }
 
 

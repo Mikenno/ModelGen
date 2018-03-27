@@ -92,7 +92,7 @@ typedef struct MGName {
 } MGName;
 
 typedef struct MGModule {
-	const char *filename;
+	char *filename;
 	MGName *names;
 	size_t length;
 	size_t capacity;
@@ -122,7 +122,7 @@ MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
 MGNode* mgParseString(MGParser *parser, const char *string);
 
 MGValue* mgRunFile(MGModule *module, const char *filename);
-MGValue* mgRunFileHandle(MGModule *module, FILE *file);
-MGValue* mgRunString(MGModule *module, const char *string);
+MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename);
+MGValue* mgRunString(MGModule *module, const char *string, const char *filename);
 
 #endif

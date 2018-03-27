@@ -1176,7 +1176,13 @@ MGValue* mgRunFile(MGModule *module, const char *filename)
 	MG_ASSERT(module);
 	MG_ASSERT(filename);
 
-	module->filename = filename;
+	if (module->filename)
+	{
+		free(module->filename);
+		module->filename = NULL;
+	}
+
+	module->filename = mgDuplicateString(filename);
 
 	MGValue *result = NULL;
 
@@ -1192,10 +1198,19 @@ MGValue* mgRunFile(MGModule *module, const char *filename)
 }
 
 
-MGValue* mgRunFileHandle(MGModule *module, FILE *file)
+MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(file);
+
+	if (module->filename)
+	{
+		free(module->filename);
+		module->filename = NULL;
+	}
+
+	if (filename)
+		module->filename = mgDuplicateString(filename);
 
 	MGValue *result = NULL;
 
@@ -1211,10 +1226,19 @@ MGValue* mgRunFileHandle(MGModule *module, FILE *file)
 }
 
 
-MGValue* mgRunString(MGModule *module, const char *string)
+MGValue* mgRunString(MGModule *module, const char *string, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(string);
+
+	if (module->filename)
+	{
+		free(module->filename);
+		module->filename = NULL;
+	}
+
+	if (filename)
+		module->filename = mgDuplicateString(filename);
 
 	MGValue *result = NULL;
 
