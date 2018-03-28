@@ -112,3 +112,50 @@ Module
 - Call
 -- Identifier print
 -- String "end"
+
+- For
+-- Identifier i
+-- Call
+--- Identifier range
+--- Integer 4
+-- Block
+--- Call
+---- Identifier print
+---- Identifier i
+--- If
+---- BinOp >
+----- Identifier i
+----- Integer 1
+---- Block
+----- Call
+------ Identifier print
+------ Identifier i
+------ Integer 1
+----- If
+------ BinOp >
+------- Identifier i
+------- Integer 2
+------ Call
+------- Identifier print
+------- Identifier i
+------- Integer 1
+------- Integer 1
+---- Block
+----- Call
+------ Identifier print
+------ Identifier i
+------ Integer 0
+----- If
+------ BinOp >
+------- Identifier i
+------- Integer 0
+------ Call
+------- Identifier print
+------- Identifier i
+------- Integer 0
+------- Integer 1
+------ Call
+------- Identifier print
+------- Identifier i
+------- Integer 0
+------- Integer 0

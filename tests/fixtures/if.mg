@@ -36,3 +36,16 @@ else
 		print("false false")
 	print("false")
 print("end")
+
+for i in range(4)
+	print(i)
+	if i > 1
+		print(i, 1)
+		if i > 2
+			print(i, 1, 1)
+	else
+		print(i, 0)
+		if i > 0
+			print(i, 0, 1)
+		else
+			print(i, 0, 0)

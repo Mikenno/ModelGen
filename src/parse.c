@@ -358,6 +358,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		while (token->type == MG_TOKEN_ELSE)
 		{
+			if (start->begin.character != token->begin.character)
+				break;
+
 			if (end)
 				MG_FAIL("Error: Cannot have consecutive else");
 
