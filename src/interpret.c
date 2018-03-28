@@ -49,9 +49,14 @@ static MGValue* _mgDeepCopyValue(MGValue *value)
 	case MG_VALUE_LIST:
 		if (value->data.a.length)
 		{
-			copy->data.a.items = (MGValue**) malloc(value->data.a.length * sizeof(MGValue*));
+			copy->data.a.items = (MGValue**) malloc(value->data.a.capacity * sizeof(MGValue*));
 			for (size_t i = 0; i < value->data.a.length; ++i)
 				copy->data.a.items[i] = _mgDeepCopyValue(value->data.a.items[i]);
+		}
+		else if (value->data.a.capacity)
+		{
+			copy->data.a.items = NULL;
+			copy->data.a.capacity = 0;
 		}
 		break;
 	default:
@@ -605,6 +610,20 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			{
 				value = mgCreateValueString(s);
 				free(s);
+			}
+			break;
+		case MG_VALUE_TUPLE:
+		case MG_VALUE_LIST:
+			if (lhs->type == rhs->type)
+			{
+				value = mgCreateValueTuple(lhs->data.a.length + rhs->data.a.length);
+				value->type = (lhs->type == MG_VALUE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
+
+				for (size_t i = 0; i < lhs->data.a.length; ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(lhs->data.a.items[i]));
+
+				for (size_t i = 0; i < rhs->data.a.length; ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(rhs->data.a.items[i]));
 			}
 			break;
 		default:
