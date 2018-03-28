@@ -15,7 +15,7 @@ int mgStringEndsWith(const char *string, const char *suffix)
 }
 
 
-char* mgDuplicateString(const char *str)
+char* mgStringDuplicate(const char *str)
 {
 	char *s = (char*) malloc((strlen(str) + 1) * sizeof(char));
 	strcpy(s, str);
@@ -23,12 +23,29 @@ char* mgDuplicateString(const char *str)
 }
 
 
-char* mgDuplicateFixedString(const char *str, size_t count)
+char* mgStringDuplicateFixed(const char *str, size_t count)
 {
 	char *s = (char*) malloc((count + 1) * sizeof(char));
 	strncpy(s, str, count);
 	s[count] = '\0';
 	return s;
+}
+
+
+inline char* mgStringRepeat(char *destination, const char *source, size_t length, size_t times)
+{
+	for (size_t i = 0; i < times; ++i)
+		strcpy(destination + length * i, source);
+
+	return destination;
+}
+
+
+char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times)
+{
+	char *s = (char*) malloc((length * times + 1) * sizeof(char));
+
+	return mgStringRepeat(s, str, length, times);
 }
 
 

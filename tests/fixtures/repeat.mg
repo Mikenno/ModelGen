@@ -1,0 +1,11 @@
+print("Test" * 4)
+print(4 * "Test")
+print(2 * "Test" * 2)
+print("Test" * 0)
+print("Test" * -1)
+
+print((1, 2, 3) * 4)
+print(4 * (1, 2, 3))
+print(2 * (1, 2, 3) * 2)
+print((1, 2, 3) * 0)
+print((1, 2, 3) * -1)

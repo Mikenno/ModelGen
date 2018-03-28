@@ -8,8 +8,11 @@
 
 int mgStringEndsWith(const char *string, const char *suffix);
 
-char* mgDuplicateString(const char *str);
-char* mgDuplicateFixedString(const char *str, size_t count);
+char* mgStringDuplicate(const char *str);
+char* mgStringDuplicateFixed(const char *str, size_t count);
+
+char* mgStringRepeat(char *destination, const char *source, size_t length, size_t times);
+char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times);
 
 const char* mgBasename(const char *filename);
 

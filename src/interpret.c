@@ -43,7 +43,7 @@ static MGValue* _mgDeepCopyValue(MGValue *value)
 	switch (copy->type)
 	{
 	case MG_VALUE_STRING:
-		copy->data.s = mgDuplicateString(value->data.s);
+		copy->data.s = mgStringDuplicate(value->data.s);
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
@@ -101,7 +101,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		func = _mgVisitNode(module, nameNode);
 		MG_ASSERT(func);
 
-		name = mgDuplicateString("<anonymous>");
+		name = mgStringDuplicate("<anonymous>");
 	}
 	else
 	{
@@ -110,7 +110,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 		MG_ASSERT(nameLength > 0);
-		name = mgDuplicateFixedString(nameNode->token->begin.string, nameLength);
+		name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 
 		func = mgModuleGet(module, name);
 
@@ -156,7 +156,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 				const size_t procNameLength = procNameNode->token->end.string - procNameNode->token->begin.string;
 				MG_ASSERT(procNameLength > 0);
-				char *procName = mgDuplicateFixedString(procNameNode->token->begin.string, procNameLength);
+				char *procName = mgStringDuplicateFixed(procNameNode->token->begin.string, procNameLength);
 				MG_ASSERT(procName);
 
 				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", procName, procParametersNode->childCount, argc);
@@ -175,7 +175,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				{
 					const size_t procParameterNameLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
 					MG_ASSERT(procParameterNameLength > 0);
-					procParameterName = mgDuplicateFixedString(procParameterNode->token->begin.string, procParameterNameLength);
+					procParameterName = mgStringDuplicateFixed(procParameterNode->token->begin.string, procParameterNameLength);
 				}
 				else if (procParameterNode->type == MG_NODE_BIN_OP)
 				{
@@ -184,7 +184,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 					const size_t opLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
 					MG_ASSERT(opLength > 0);
-					char *op = mgDuplicateFixedString(procParameterNode->token->begin.string, opLength);
+					char *op = mgStringDuplicateFixed(procParameterNode->token->begin.string, opLength);
 					MG_ASSERT(op);
 
 					MG_ASSERT(strcmp(op, "=") == 0);
@@ -197,7 +197,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 					const size_t procParameterNameLength = procParameterNameNode->token->end.string - procParameterNameNode->token->begin.string;
 					MG_ASSERT(procParameterNameLength > 0);
-					procParameterName = mgDuplicateFixedString(procParameterNameNode->token->begin.string, procParameterNameLength);
+					procParameterName = mgStringDuplicateFixed(procParameterNameNode->token->begin.string, procParameterNameLength);
 				}
 
 				MG_ASSERT(procParameterName);
@@ -245,7 +245,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 
 	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 	MG_ASSERT(nameLength > 0);
-	char *name = mgDuplicateFixedString(nameNode->token->begin.string, nameLength);
+	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
 	MGValue *test = _mgVisitNode(module, node->children[1]);
@@ -340,7 +340,7 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 
 	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 	MG_ASSERT(nameLength > 0);
-	char *name = mgDuplicateFixedString(nameNode->token->begin.string, nameLength);
+	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
 	mgModuleSet(module, name, proc);
@@ -386,7 +386,7 @@ static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 
 	const size_t nameLength = node->token->end.string - node->token->begin.string;
 	MG_ASSERT(nameLength > 0);
-	char *name = mgDuplicateFixedString(node->token->begin.string, nameLength);
+	char *name = mgStringDuplicateFixed(node->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
 	MGValue *value = mgModuleGet(module, name);
@@ -406,7 +406,7 @@ static MGValue* _mgVisitInteger(MGModule *module, MGNode *node)
 
 	const size_t _valueLength = node->token->end.string - node->token->begin.string;
 	MG_ASSERT(_valueLength > 0);
-	char *_value = mgDuplicateFixedString(node->token->begin.string, _valueLength);
+	char *_value = mgStringDuplicateFixed(node->token->begin.string, _valueLength);
 	MG_ASSERT(_value);
 
 	MGValue *value = mgCreateValueInteger(strtol(_value, NULL, 10));
@@ -423,7 +423,7 @@ static MGValue* _mgVisitFloat(MGModule *module, MGNode *node)
 
 	const size_t _valueLength = node->token->end.string - node->token->begin.string;
 	MG_ASSERT(_valueLength > 0);
-	char *_value = mgDuplicateFixedString(node->token->begin.string, _valueLength);
+	char *_value = mgStringDuplicateFixed(node->token->begin.string, _valueLength);
 	MG_ASSERT(_value);
 
 	MGValue *value = mgCreateValueFloat(strtof(_value, NULL));
@@ -492,7 +492,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 	MG_ASSERT(nameLength > 0);
-	char *name = mgDuplicateFixedString(nameNode->token->begin.string, nameLength);
+	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
 	MGValue *value = _mgVisitNode(module, node->children[1]);
@@ -511,7 +511,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 
 	const size_t opLength = node->token->end.string - node->token->begin.string;
 	MG_ASSERT(opLength > 0);
-	char *op = mgDuplicateFixedString(node->token->begin.string, opLength);
+	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
 	MG_ASSERT(op);
 
 	if (strcmp(op, "=") == 0)
@@ -677,6 +677,31 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			case MG_VALUE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i * rhs->data.f);
 				break;
+			case MG_VALUE_STRING:
+			{
+				const size_t len = strlen(rhs->data.s);
+
+				if ((len > 0) && (lhs->data.i > 0))
+				{
+					char *str = mgStringRepeatDuplicate(rhs->data.s, len, (size_t) lhs->data.i);
+					value = mgCreateValueString(str);
+					free(str);
+				}
+				else
+					value = mgCreateValueString(NULL);
+
+				break;
+			}
+			case MG_VALUE_TUPLE:
+			{
+				const size_t len = ((rhs->data.a.length > 0) && (lhs->data.i > 0)) ? (rhs->data.a.length * lhs->data.i) : 0;
+				value = mgCreateValueTuple(len);
+
+				for (size_t i = 0; i < len; ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(rhs->data.a.items[i % rhs->data.a.length]));
+
+				break;
+			}
 			default:
 				break;
 			}
@@ -692,6 +717,31 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				break;
 			default:
 				break;
+			}
+			break;
+		case MG_VALUE_STRING:
+			if (rhs->type == MG_VALUE_INTEGER)
+			{
+				const size_t len = strlen(lhs->data.s);
+
+				if ((len > 0) && (rhs->data.i > 0))
+				{
+					char *str = mgStringRepeatDuplicate(lhs->data.s, len, (size_t) rhs->data.i);
+					value = mgCreateValueString(str);
+					free(str);
+				}
+				else
+					value = mgCreateValueString(NULL);
+			}
+			break;
+		case MG_VALUE_TUPLE:
+			if (rhs->type == MG_VALUE_INTEGER)
+			{
+				const size_t len = ((lhs->data.a.length > 0) && (rhs->data.i > 0)) ? (lhs->data.a.length * rhs->data.i) : 0;
+				value = mgCreateValueTuple(len);
+
+				for (size_t i = 0; i < len; ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(lhs->data.a.items[i % lhs->data.a.length]));
 			}
 			break;
 		default:
@@ -1085,7 +1135,7 @@ static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 
 	const size_t opLength = node->token->end.string - node->token->begin.string;
 	MG_ASSERT(opLength > 0);
-	char *op = mgDuplicateFixedString(node->token->begin.string, opLength);
+	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
 	MG_ASSERT(op);
 
 	MGValue *operand = _mgVisitNode(module, node->children[0]);
@@ -1201,7 +1251,7 @@ MGValue* mgRunFile(MGModule *module, const char *filename)
 		module->filename = NULL;
 	}
 
-	module->filename = mgDuplicateString(filename);
+	module->filename = mgStringDuplicate(filename);
 
 	MGValue *result = NULL;
 
@@ -1229,7 +1279,7 @@ MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename)
 	}
 
 	if (filename)
-		module->filename = mgDuplicateString(filename);
+		module->filename = mgStringDuplicate(filename);
 
 	MGValue *result = NULL;
 
@@ -1257,7 +1307,7 @@ MGValue* mgRunString(MGModule *module, const char *string, const char *filename)
 	}
 
 	if (filename)
-		module->filename = mgDuplicateString(filename);
+		module->filename = mgStringDuplicate(filename);
 
 	MGValue *result = NULL;
 

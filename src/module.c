@@ -71,7 +71,7 @@ void mgDestroyValue(MGValue *value)
 
 static inline void _mgSetValue(MGName *names, size_t i, const char *name, MGValue *value)
 {
-	names[i].name = mgDuplicateString(name);
+	names[i].name = mgStringDuplicate(name);
 	names[i].value = value;
 }
 
@@ -183,7 +183,7 @@ inline MGValue* mgCreateValueFloat(float f)
 inline MGValue* mgCreateValueString(const char *s)
 {
 	MGValue *value = mgCreateValue(MG_VALUE_STRING);
-	value->data.s = mgDuplicateString(s ? s : "");
+	value->data.s = mgStringDuplicate(s ? s : "");
 	return value;
 }
 
@@ -201,7 +201,7 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 inline void mgStringSet(MGValue *value, const char *s)
 {
 	free(value->data.s);
-	value->data.s = mgDuplicateString(s ? s : "");
+	value->data.s = mgStringDuplicate(s ? s : "");
 }
 
 
