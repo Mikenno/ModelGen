@@ -8,6 +8,7 @@
 #include "tokens.h"
 #include "ast.h"
 #include "value.h"
+#include "collections.h"
 
 #include <stdio.h>
 
@@ -44,8 +45,7 @@ typedef struct MGToken {
 typedef struct MGTokenizer {
 	const char *filename;
 	char *string;
-	MGToken *tokens;
-	size_t tokenCount;
+	_MGList(MGToken) tokens;
 } MGTokenizer;
 
 typedef struct MGNode MGNode;
@@ -55,9 +55,7 @@ typedef struct MGNode {
 	MGToken *token;
 	MGToken *tokenBegin;
 	MGToken *tokenEnd;
-	MGNode **children;
-	size_t childCount;
-	size_t childCapacity;
+	_MGList(MGNode*) children;
 	MGNode *parent;
 } MGNode;
 
@@ -77,11 +75,7 @@ typedef struct MGValue {
 		float f;
 		char *s;
 		MGCFunction cfunc;
-		struct {
-			MGValue **items;
-			size_t length;
-			size_t capacity;
-		} a;
+		_MGList(MGValue*) a;
 		MGNode *func;
 	} data;
 } MGValue;
@@ -93,9 +87,7 @@ typedef struct MGName {
 
 typedef struct MGModule {
 	char *filename;
-	MGName *names;
-	size_t length;
-	size_t capacity;
+	_MGList(MGName) names;
 } MGModule;
 
 char* mgReadFile(const char *filename, size_t *length);

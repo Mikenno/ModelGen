@@ -41,9 +41,9 @@ static void _mgTestTokenizer(const char *in, const char *out)
 		goto fail;
 	}
 
-	outToken = outTokenizer.tokens;
+	outToken = &_mgListGet(outTokenizer.tokens, 0);
 
-	for (inToken = inTokenizer.tokens;; ++inToken)
+	for (inToken = &_mgListGet(inTokenizer.tokens, 0);; ++inToken)
 	{
 		if (!_MG_IS_TESTABLE_TOKEN(inToken))
 			continue;
@@ -222,7 +222,7 @@ fail:
 
 	puts("Token Dump:");
 
-	for (inToken = inTokenizer.tokens;; ++inToken)
+	for (inToken = &_mgListGet(inTokenizer.tokens, 0);; ++inToken)
 	{
 		if (!_MG_IS_TESTABLE_TOKEN(inToken))
 			continue;

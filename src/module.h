@@ -40,21 +40,20 @@ const char* mgStringGet(MGValue *value);
 
 MGValue* mgCreateValueTuple(size_t capacity);
 
+#define mgTupleClear mgListClear
+
+#define mgTupleLength mgListLength
+#define mgTupleCapacity mgListCapacity
+#define mgTupleItems mgListItems
+
+#define mgTupleSet mgListSet
+#define mgTupleGet mgListGet
+
 #define mgTupleAdd mgListAdd
 #define mgTupleInsert mgListInsert
 
 #define mgTupleRemove mgListRemove
 #define mgTupleRemoveRange mgListRemoveRange
-
-#define mgTupleClear mgListClear
-
-#define mgTupleSet mgListSet
-#define mgTupleGet mgListGet
-
-#define mgTupleGetLength mgListGetLength
-#define mgTupleGetCapacity mgListGetCapacity
-
-#define mgRelativeToAbsolute(value, index) (((index) < 0) ? (intmax_t) value->data.a.length + (index) : (index))
 
 MGValue* mgCreateValueList(size_t capacity);
 
@@ -66,10 +65,11 @@ void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end);
 
 void mgListClear(MGValue *list);
 
-#define mgListSet(list, index, value) list->data.a.items[mgRelativeToAbsolute(list, index)] = value
-#define mgListGet(list, index) list->data.a.items[mgRelativeToAbsolute(list, index)]
+#define mgListLength(list) _mgListLength(list->data.a)
+#define mgListCapacity(list) _mgListCapacity(list->data.a)
+#define mgListItems(list) _mgListItems(list->data.a)
 
-#define mgListGetLength(list) list->data.a.length
-#define mgListGetCapacity(list) list->data.a.capacity
+#define mgListSet(list, index, value) _mgListSet(list->data.a, _mgListIndexRelativeToAbsolute(list->data.a, index), value)
+#define mgListGet(list, index) _mgListGet(list->data.a, _mgListIndexRelativeToAbsolute(list->data.a, index))
 
 #endif

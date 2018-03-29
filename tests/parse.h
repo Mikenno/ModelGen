@@ -12,8 +12,8 @@ static size_t _mgCountNodes(MGNode *node)
 {
 	size_t count = 1;
 
-	for (size_t i = 0; i < node->childCount; ++i)
-		count += _mgCountNodes(node->children[i]);
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+		count += _mgCountNodes(_mgListGet(node->children, i));
 
 	return count;
 }
@@ -23,10 +23,10 @@ static void _mgFlattenNodes(MGNode *node, MGNode **nodes)
 {
 	*nodes++ = node;
 
-	for (size_t i = 0; i < node->childCount; ++i)
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 	{
-		_mgFlattenNodes(node->children[i], nodes);
-		nodes += _mgCountNodes(node->children[i]);
+		_mgFlattenNodes(_mgListGet(node->children, i), nodes);
+		nodes += _mgCountNodes(_mgListGet(node->children, i));
 	}
 }
 

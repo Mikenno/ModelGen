@@ -145,14 +145,14 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 	fputs("\e[0m", stdout);
 #endif
 
-	for (size_t i = 0; i < node->childCount; ++i)
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 	{
 		if (isLast)
 			strcpy(prefixEnd, _MG_NODE_CHILD_INDENT_LAST);
 		else
 			strcpy(prefixEnd, _MG_NODE_CHILD_INDENT);
 
-		_mgInspectNode(node->children[i], prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, (MGbool) (i == (node->childCount - 1)));
+		_mgInspectNode(_mgListGet(node->children, i), prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, (MGbool) (i == (_mgListLength(node->children) - 1)));
 	}
 }
 
@@ -229,13 +229,13 @@ void mgInspectModule(const MGModule *module)
 {
 	if (module->filename)
 		printf("Module [%zu:%zu] \"%s\"\n",
-		       module->length, module->capacity, mgBasename(module->filename));
+		       _mgListLength(module->names), _mgListCapacity(module->names), mgBasename(module->filename));
 	else
 		printf("Module [%zu:%zu]\n",
-		       module->length, module->capacity);
+		       _mgListLength(module->names), _mgListCapacity(module->names));
 
-	for (size_t i = 0; i < module->length; ++i)
-		_mgInspectName(&module->names[i]);
+	for (size_t i = 0; i < _mgListLength(module->names); ++i)
+		_mgInspectName(&_mgListItems(module->names)[i]);
 }
 
 

@@ -450,15 +450,13 @@ void mgCreateTokenizer(MGTokenizer *tokenizer)
 
 void mgDestroyTokenizer(MGTokenizer *tokenizer)
 {
-	size_t i;
+	for (size_t i = 0; i < _mgListLength(tokenizer->tokens); ++i)
+		if ((_mgListGet(tokenizer->tokens, i).type == MG_TOKEN_STRING) && _mgListGet(tokenizer->tokens, i).value.s)
+			free(_mgListGet(tokenizer->tokens, i).value.s);
 
-	if (tokenizer->tokens)
-		for (i = 0; i < tokenizer->tokenCount; ++i)
-			if ((tokenizer->tokens[i].type == MG_TOKEN_STRING) && tokenizer->tokens[i].value.s)
-				free(tokenizer->tokens[i].value.s);
+	_mgListDestroy(tokenizer->tokens);
 
 	free(tokenizer->string);
-	free(tokenizer->tokens);
 }
 
 
@@ -492,8 +490,9 @@ static inline MGToken* _mgTokenizeString(MGTokenizer *tokenizer, size_t *tokenCo
 	}
 	while (token.type != MG_TOKEN_EOF);
 
-	tokenizer->tokens = tokens;
-	tokenizer->tokenCount = count;
+	_mgListItems(tokenizer->tokens) = tokens;
+	_mgListLength(tokenizer->tokens) = count;
+	_mgListCapacity(tokenizer->tokens) = count;
 
 	if (tokenCount)
 		*tokenCount = count;

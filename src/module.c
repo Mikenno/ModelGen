@@ -30,9 +30,9 @@ void mgDestroyModule(MGModule *module)
 {
 	MG_ASSERT(module);
 
-	for (size_t i = 0; i < module->length; ++i)
-		_mgDestroyName(&module->names[i]);
-	free(module->names);
+	for (size_t i = 0; i < _mgListLength(module->names); ++i)
+		_mgDestroyName(&_mgListItems(module->names)[i]);
+	_mgListDestroy(module->names);
 
 	free(module->filename);
 }
@@ -78,13 +78,9 @@ static inline void _mgSetValue(MGName *names, size_t i, const char *name, MGValu
 
 static inline void _mgAddValue(MGModule *module, const char *name, MGValue *value)
 {
-	if (module->capacity == module->length)
-	{
-		module->capacity = module->capacity ? module->capacity << 1 : 2;
-		module->names = (MGName*) realloc(module->names, module->capacity * sizeof(MGName));
-	}
+	_mgListAddUninitialized(MGName, module->names);
 
-	_mgSetValue(module->names, module->length++, name, value);
+	_mgSetValue(_mgListItems(module->names), _mgListLength(module->names)++, name, value);
 }
 
 
@@ -103,16 +99,16 @@ void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 	MG_ASSERT(name);
 
 	MGName *_name = NULL;
-	for (size_t i = 0; (_name == NULL) && (i < module->length); ++i)
-		if (strcmp(module->names[i].name, name) == 0)
-			_name = &module->names[i];
+	for (size_t i = 0; (_name == NULL) && (i < _mgListLength(module->names)); ++i)
+		if (strcmp(_mgListGet(module->names, i).name, name) == 0)
+			_name = &_mgListGet(module->names, i);
 
 	if (value)
 	{
 		if (_name)
 		{
 			_mgDestroyName(_name);
-			_mgSetValue(module->names, (size_t) (_name - module->names), name, value);
+			_mgSetValue(_mgListItems(module->names), (size_t) (_name - _mgListItems(module->names)), name, value);
 		}
 		else
 			_mgAddValue(module, name, value);
@@ -121,11 +117,11 @@ void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 	{
 		_mgDestroyName(_name);
 
-		if (module->length > 1)
-			if (_name != &module->names[module->length - 1])
-				_mgSwapNames(module->names, (size_t) (_name - module->names), module->length - 1);
+		if (_mgListLength(module->names) > 1)
+			if (_name != &_mgListItems(module->names)[_mgListLength(module->names) - 1])
+				_mgSwapNames(_mgListItems(module->names), (size_t) (_name - _mgListItems(module->names)), _mgListLength(module->names) - 1);
 
-		--module->length;
+		--_mgListLength(module->names);
 	}
 }
 
@@ -135,9 +131,9 @@ inline MGValue* mgModuleGet(MGModule *module, const char *name)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	for (size_t i = 0; i < module->length; ++i)
-		if (strcmp(module->names[i].name, name) == 0)
-			return module->names[i].value;
+	for (size_t i = 0; i < _mgListLength(module->names); ++i)
+		if (strcmp(_mgListGet(module->names, i).name, name) == 0)
+			return _mgListGet(module->names, i).value;
 
 	return NULL;
 }
@@ -224,17 +220,9 @@ MGValue* mgCreateValueList(size_t capacity)
 	MGValue *value = mgCreateValue(MG_VALUE_LIST);
 
 	if (capacity > 0)
-	{
-		value->data.a.items = (MGValue**) malloc(capacity * sizeof(MGValue*));
-		value->data.a.capacity = capacity;
-	}
+		_mgListCreate(MGValue*, value->data.a, capacity);
 	else
-	{
-		value->data.a.items = NULL;
-		value->data.a.capacity = 0;
-	}
-
-	value->data.a.length = 0;
+		_mgListInitialize(value->data.a);
 
 	return value;
 }
@@ -246,13 +234,7 @@ void mgListAdd(MGValue *list, MGValue *value)
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 	MG_ASSERT(value);
 
-	if (list->data.a.capacity == list->data.a.length)
-	{
-		list->data.a.capacity = list->data.a.capacity ? list->data.a.capacity << 1 : 2;
-		list->data.a.items = (MGValue**) realloc(list->data.a.items, list->data.a.capacity * sizeof(MGValue*));
-	}
-
-	list->data.a.items[list->data.a.length++] = value;
+	_mgListAdd(MGValue*, list->data.a, value);
 }
 
 
@@ -262,21 +244,13 @@ void mgListInsert(MGValue *list, intmax_t index, MGValue *value)
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 	MG_ASSERT(value);
 
-	index = mgRelativeToAbsolute(list, index);
-	MG_ASSERT((index >= 0) && (index <= mgListGetLength(list)));
+	index = _mgListIndexRelativeToAbsolute(list->data.a, index);
+	MG_ASSERT((index >= 0) && (index <= _mgListLength(list->data.a)));
 
-	if (mgListGetLength(list) == 0)
-	{
+	if (_mgListLength(list->data.a) == 0)
 		mgListAdd(list, value);
-		return;
-	}
-
-	mgListAdd(list, mgListGet(list, -1));
-
-	for (intmax_t i = mgListGetLength(list) - 2; i > index; --i)
-		mgListSet(list, i, mgListGet(list, i - 1));
-
-	mgListSet(list, index, value);
+	else
+		_mgListInsert(MGValue*, list->data.a, index, value);
 }
 
 
@@ -285,15 +259,12 @@ void mgListRemove(MGValue *list, intmax_t index)
 	MG_ASSERT(list);
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 
-	index = mgRelativeToAbsolute(list, index);
-	MG_ASSERT((index >= 0) && (index < mgListGetLength(list)));
+	index = _mgListIndexRelativeToAbsolute(list->data.a, index);
+	MG_ASSERT((index >= 0) && (index < _mgListLength(list->data.a)));
 
-	mgDestroyValue(list->data.a.items[index]);
+	mgDestroyValue(_mgListGet(list->data.a, index));
 
-	for (intmax_t i = index + 1; i < mgListGetLength(list); ++i)
-		mgListSet(list, i - 1, mgListGet(list, i));
-
-	--list->data.a.length;
+	_mgListRemove(list->data.a, index);
 }
 
 
@@ -302,26 +273,21 @@ void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end)
 	MG_ASSERT(list);
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 
-	begin = mgRelativeToAbsolute(list, begin);
-	end = mgRelativeToAbsolute(list, end);
+	begin = _mgListIndexRelativeToAbsolute(list->data.a, begin);
+	end = _mgListIndexRelativeToAbsolute(list->data.a, end);
 	MG_ASSERT(begin <= end);
-	MG_ASSERT((begin >= 0) && (end < mgListGetLength(list)));
+	MG_ASSERT((begin >= 0) && (end < _mgListLength(list->data.a)));
 
-	if ((begin == 0) && (end == (mgListGetLength(list) - 1)))
+	if ((begin == 0) && (end == (_mgListLength(list->data.a) - 1)))
 	{
 		mgListClear(list);
 		return;
 	}
 
-	intmax_t move = end - begin + 1;
+	for (size_t i = (size_t) begin; i <= (size_t) end; ++i)
+		mgDestroyValue(_mgListGet(list->data.a, i));
 
-	for (intmax_t i = begin; i <= end; ++i)
-		mgDestroyValue(mgListGet(list, i));
-
-	for (intmax_t i = end + 1; i < mgListGetLength(list); ++i)
-		mgListSet(list, i - move, mgListGet(list, i));
-
-	list->data.a.length -= move;
+	_mgListRemoveRange(list->data.a, begin, end);
 }
 
 
@@ -331,7 +297,7 @@ inline void mgListClear(MGValue *list)
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 
 	for (size_t i = 0; i < list->data.a.length; ++i)
-		mgDestroyValue(list->data.a.items[i]);
+		mgDestroyValue(_mgListGet(list->data.a, i));
 
-	list->data.a.length = 0;
+	_mgListClear(list->data.a);
 }

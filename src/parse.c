@@ -86,10 +86,11 @@ MGNode* mgCreateNode(MGToken *token)
 
 void mgDestroyNode(MGNode *node)
 {
-	for (size_t i = 0; i < node->childCount; ++i)
-		if (node->children[i])
-			mgDestroyNode(node->children[i]);
-	free(node->children);
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+		if (_mgListGet(node->children, i))
+			mgDestroyNode(_mgListGet(node->children, i));
+
+	_mgListDestroy(node->children);
 
 	free(node);
 }
@@ -100,14 +101,9 @@ static void _mgAddChild(MGNode *parent, MGNode *child)
 	MG_ASSERT(parent);
 	MG_ASSERT(child);
 
-	if (parent->childCapacity == parent->childCount)
-	{
-		parent->childCapacity = parent->childCapacity ? parent->childCapacity << 1 : 2;
-		parent->children = (MGNode**) realloc(parent->children, parent->childCapacity * sizeof(MGNode*));
-	}
+	_mgListAdd(MGNode*, parent->children, child);
 
 	parent->tokenEnd = child->tokenEnd;
-	parent->children[parent->childCount++] = child;
 	child->parent = parent;
 }
 
@@ -126,8 +122,8 @@ static inline MGNode* _mgWrapNode(MGToken *token, MGNode *node)
 
 static inline MGNode* _mgDestroyNodeExtractFirst(MGNode *node)
 {
-	MGNode *child = node->children[0];
-	node->children[0] = NULL;
+	MGNode *child = _mgListGet(node->children, 0);
+	_mgListSet(node->children, 0, NULL);
 
 	child->tokenBegin = node->tokenBegin;
 	child->tokenEnd = node->tokenEnd;
@@ -169,7 +165,7 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 
 			_mgParseBlock(parser, token, block, token->begin.character);
 
-			if (block->childCount == 1)
+			if (_mgListLength(block->children) == 1)
 				_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
 			else
 				_mgAddChild(node, block);
@@ -257,7 +253,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		_mgAddChild(node, _mgParseSubexpression(parser, token));
 
-		MG_ASSERT(node->childCount == 1);
+		MG_ASSERT(_mgListLength(node->children) == 1);
 
 		token = node->tokenEnd + 1;
 	}
@@ -267,7 +263,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		node->type = MG_NODE_TUPLE;
 		++token;
 
-		if (!_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN) && (node->childCount == 1))
+		if (!_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN) && (_mgListLength(node->children) == 1))
 			node = _mgDestroyNodeExtractFirst(node);
 
 		token = node->tokenEnd + 1;
@@ -313,7 +309,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 			_mgParseBlock(parser, token, block, token->begin.character);
 
-			if (block->childCount == 1)
+			if (_mgListLength(block->children) == 1)
 				_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
 			else
 				_mgAddChild(node, block);
@@ -344,7 +340,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		_mgParseBlock(parser, token, block, token->begin.character);
 
-		if (block->childCount == 1)
+		if (_mgListLength(block->children) == 1)
 			_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
 		else
 			_mgAddChild(node, block);
@@ -400,7 +396,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 			_mgParseBlock(parser, token, block, token->begin.character);
 
-			if (block->childCount == 1)
+			if (_mgListLength(block->children) == 1)
 				_mgAddChild(_node, _mgDestroyNodeExtractFirst(block));
 			else
 				_mgAddChild(_node, block);
@@ -462,7 +458,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 				_mgParseBlock(parser, token, block, token->begin.character);
 
-				if (block->childCount == 1)
+				if (_mgListLength(block->children) == 1)
 					_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
 				else
 					_mgAddChild(node, block);
@@ -545,7 +541,7 @@ static MGNode* _mgParseBinaryOperation(MGParser *parser, MGToken *token, int lev
 		MG_ASSERT(child);
 		_mgAddChild(node, child);
 
-		MG_ASSERT(node->childCount == 2);
+		MG_ASSERT(_mgListLength(node->children) == 2);
 	}
 
 	return node;
@@ -632,7 +628,7 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level)
 		MG_ASSERT(child);
 		_mgAddChild(node, child);
 
-		MG_ASSERT(node->childCount == 2);
+		MG_ASSERT(_mgListLength(node->children) == 2);
 	}
 
 	return node;
@@ -685,7 +681,7 @@ static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 
 static inline MGNode* _mgParse(MGParser *parser)
 {
-	parser->root = _mgParseModule(parser, parser->tokenizer.tokens);
+	parser->root = _mgParseModule(parser, parser->tokenizer.tokens.items);
 
 	return parser->root;
 }

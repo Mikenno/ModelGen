@@ -49,15 +49,12 @@ static MGValue* _mgDeepCopyValue(MGValue *value)
 	case MG_VALUE_LIST:
 		if (value->data.a.length)
 		{
-			copy->data.a.items = (MGValue**) malloc(value->data.a.capacity * sizeof(MGValue*));
-			for (size_t i = 0; i < value->data.a.length; ++i)
-				copy->data.a.items[i] = _mgDeepCopyValue(value->data.a.items[i]);
+			_mgListCreate(MGValue*, copy->data.a, _mgListCapacity(value->data.a));
+			for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+				_mgListAdd(MGValue*, copy->data.a, _mgDeepCopyValue(_mgListGet(value->data.a, i)));
 		}
 		else if (value->data.a.capacity)
-		{
-			copy->data.a.items = NULL;
-			copy->data.a.capacity = 0;
-		}
+			_mgListInitialize(copy->data.a);
 		break;
 	default:
 		break;
@@ -72,10 +69,10 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node);
 
 static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 {
-	MGValue *value = mgCreateValueTuple(node->childCount);
+	MGValue *value = mgCreateValueTuple(_mgListLength(node->children));
 
-	for (size_t i = 0; i < node->childCount; ++i)
-		mgTupleAdd(value, _mgVisitNode(module, node->children[i]));
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+		mgTupleAdd(value, _mgVisitNode(module, _mgListGet(node->children, i)));
 
 	return value;
 }
@@ -89,9 +86,9 @@ static inline MGValue* _mgVisitModule(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount > 0);
+	MG_ASSERT(_mgListLength(node->children) > 0);
 
-	MGNode *nameNode = node->children[0];
+	MGNode *nameNode = _mgListGet(node->children, 0);
 
 	MGValue *func = NULL;
 	char *name;
@@ -121,21 +118,19 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE))
 		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
 
-	size_t argc = node->childCount - 1;
-	MGValue **argv = (MGValue**) malloc(argc * sizeof(MGValue*));
+	_MGList(MGValue*) args;
+	_mgListCreate(MGValue*, args, _mgListLength(node->children) - 1);
 
-	for (size_t i = 0; i < argc; ++i)
+	for (size_t i = 0; i < _mgListCapacity(args); ++i)
 	{
-		argv[i] = _mgVisitNode(module, node->children[i + 1]);
-		MG_ASSERT(argv[i]);
+		_mgListAdd(MGValue*, args, _mgVisitNode(module, _mgListGet(node->children, i + 1)));
+		MG_ASSERT(_mgListGet(args, i));
 	}
 
 	MGValue *value = NULL;
 
 	if (func->type == MG_VALUE_CFUNCTION)
-	{
-		value = func->data.cfunc(argc, argv);
-	}
+		value = func->data.cfunc(_mgListLength(args), _mgListItems(args));
 	else
 	{
 		MGNode *procNode = func->data.func;
@@ -143,14 +138,14 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		if (procNode)
 		{
 			MG_ASSERT(procNode->type == MG_NODE_PROCEDURE);
-			MG_ASSERT((procNode->childCount == 2) || (procNode->childCount == 3));
+			MG_ASSERT((_mgListLength(procNode->children) == 2) || (_mgListLength(procNode->children) == 3));
 
-			MGNode *procParametersNode = procNode->children[1];
+			MGNode *procParametersNode = _mgListGet(procNode->children, 1);
 			MG_ASSERT(procParametersNode->type == MG_NODE_TUPLE);
 
-			if (procParametersNode->childCount < argc)
+			if (_mgListLength(procParametersNode->children) < _mgListLength(args))
 			{
-				MGNode *procNameNode = procNode->children[0];
+				MGNode *procNameNode = _mgListGet(procNode->children, 0);
 				MG_ASSERT(procNameNode->type == MG_NODE_IDENTIFIER);
 				MG_ASSERT(procNameNode->token);
 
@@ -159,14 +154,14 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				char *procName = mgStringDuplicateFixed(procNameNode->token->begin.string, procNameLength);
 				MG_ASSERT(procName);
 
-				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", procName, procParametersNode->childCount, argc);
+				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", procName, _mgListLength(procParametersNode->children), _mgListLength(args));
 
 				free(procName);
 			}
 
-			for (size_t i = 0; i < procParametersNode->childCount; ++i)
+			for (size_t i = 0; i < _mgListLength(procParametersNode->children); ++i)
 			{
-				MGNode *procParameterNode = procParametersNode->children[i];
+				MGNode *procParameterNode = _mgListGet(procParametersNode->children, i);
 				MG_ASSERT((procParameterNode->type == MG_NODE_IDENTIFIER) || (procParameterNode->type == MG_NODE_BIN_OP));
 
 				char *procParameterName = NULL;
@@ -179,7 +174,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				}
 				else if (procParameterNode->type == MG_NODE_BIN_OP)
 				{
-					MG_ASSERT(procParameterNode->childCount == 2);
+					MG_ASSERT(_mgListLength(procParameterNode->children) == 2);
 					MG_ASSERT(procParameterNode->token);
 
 					const size_t opLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
@@ -191,7 +186,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 					free(op);
 
-					MGNode *procParameterNameNode = procParameterNode->children[0];
+					MGNode *procParameterNameNode = _mgListGet(procParameterNode->children, 0);
 					MG_ASSERT(procParameterNameNode->type == MG_NODE_IDENTIFIER);
 					MG_ASSERT(procParameterNameNode->token);
 
@@ -202,21 +197,21 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 				MG_ASSERT(procParameterName);
 
-				if (i < argc)
-					mgModuleSet(module, procParameterName, _mgDeepCopyValue(argv[i]));
+				if (i < _mgListLength(args))
+					mgModuleSet(module, procParameterName, _mgDeepCopyValue(_mgListGet(args, i)));
 				else
 				{
 					if (procParameterNode->type != MG_NODE_BIN_OP)
 						MG_FAIL("Error: Expected argument \"%s\"", procParameterName);
 
-					mgModuleSet(module, procParameterName, _mgVisitNode(module, procParameterNode->children[1]));
+					mgModuleSet(module, procParameterName, _mgVisitNode(module, _mgListGet(procParameterNode->children, 1)));
 				}
 
 				free(procParameterName);
 			}
 
-			if (procNode->childCount == 3)
-				value = _mgVisitNode(module, procNode->children[2]);
+			if (_mgListLength(procNode->children) == 3)
+				value = _mgVisitNode(module, _mgListGet(procNode->children, 2));
 		}
 		else
 		{
@@ -225,9 +220,9 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		}
 	}
 
-	for (size_t i = 0; i < argc; ++i)
-		mgDestroyValue(argv[i]);
-	free(argv);
+	for (size_t i = 0; i < _mgListLength(args); ++i)
+		mgDestroyValue(_mgListGet(args, i));
+	_mgListDestroy(args);
 
 	free(name);
 
@@ -237,9 +232,9 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount >= 2);
+	MG_ASSERT(_mgListLength(node->children) >= 2);
 
-	MGNode *nameNode = node->children[0];
+	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 	MG_ASSERT(nameNode->token);
 
@@ -248,7 +243,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	MGValue *test = _mgVisitNode(module, node->children[1]);
+	MGValue *test = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(test);
 	MG_ASSERT(test->type == MG_VALUE_TUPLE);
 
@@ -261,9 +256,9 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 
 		mgModuleSet(module, name, _mgDeepCopyValue(value));
 
-		for (size_t j = 2; j < node->childCount; ++j)
+		for (size_t j = 2; j < _mgListLength(node->children); ++j)
 		{
-			MGValue *result = _mgVisitNode(module, node->children[j]);
+			MGValue *result = _mgVisitNode(module, _mgListGet(node->children, j));
 			MG_ASSERT(result);
 			mgDestroyValue(result);
 		}
@@ -284,9 +279,9 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount >= 2);
+	MG_ASSERT(_mgListLength(node->children) >= 2);
 
-	MGValue *condition = _mgVisitNode(module, node->children[0]);
+	MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(condition);
 
 	int _condition = 0;
@@ -315,18 +310,18 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 	}
 
 	if (_condition)
-		return _mgVisitNode(module, node->children[1]);
-	else if (node->childCount > 2)
-		return _mgVisitNode(module, node->children[2]);
+		return _mgVisitNode(module, _mgListGet(node->children, 1));
+	else if (_mgListLength(node->children) > 2)
+		return _mgVisitNode(module, _mgListGet(node->children, 2));
 	return mgCreateValueInteger(_condition);
 }
 
 
 static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 {
-	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
+	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
-	MGNode *nameNode = node->children[0];
+	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
 
 	MGValue *proc = mgCreateValue(MG_VALUE_PROCEDURE);
@@ -353,10 +348,10 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount == 2);
+	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	MGValue *value = _mgVisitNode(module, node->children[0]);
-	MGValue *index = _mgVisitNode(module, node->children[1]);
+	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
 
 	MG_ASSERT(value);
 	MG_ASSERT(index);
@@ -368,7 +363,7 @@ static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
 
-	if ((mgIntegerGet(index) < 0) || (mgIntegerGet(index) >= mgListGetLength(value)))
+	if ((mgIntegerGet(index) < 0) || (mgIntegerGet(index) >= mgListLength(value)))
 		MG_FAIL("Error: \"%s\" index out of range", _MG_VALUE_TYPE_NAMES[value->type]);
 
 	MGValue *result = _mgDeepCopyValue(mgTupleGet(value, mgIntegerGet(index)));
@@ -447,11 +442,11 @@ static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 	MG_ASSERT(node->token);
 	MG_ASSERT((node->type == MG_NODE_TUPLE) || (node->type == MG_NODE_LIST));
 
-	MGValue *value = mgCreateValueTuple(node->childCount);
+	MGValue *value = mgCreateValueTuple(_mgListLength(node->children));
 	value->type = (node->type == MG_NODE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
 
-	for (size_t i = 0; i < node->childCount; ++i)
-		mgTupleAdd(value, _mgVisitNode(module, node->children[i]));
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+		mgTupleAdd(value, _mgVisitNode(module, _mgListGet(node->children, i)));
 
 	return value;
 }
@@ -459,34 +454,34 @@ static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
 {
-	MG_ASSERT((node->childCount == 2) || (node->childCount == 3));
+	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
 	MGValue *start = NULL, *stop = NULL, *step = NULL;
 
-	start = _mgVisitNode(module, node->children[0]);
+	start = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(start);
 	MG_ASSERT(start->type == MG_VALUE_INTEGER);
 
-	stop = _mgVisitNode(module, node->children[1]);
+	stop = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(stop);
 	MG_ASSERT(stop->type == MG_VALUE_INTEGER);
 
-	if (node->childCount == 3)
+	if (_mgListLength(node->children) == 3)
 	{
-		step = _mgVisitNode(module, node->children[2]);
+		step = _mgVisitNode(module, _mgListGet(node->children, 2));
 		MG_ASSERT(step);
 		MG_ASSERT(step->type == MG_VALUE_INTEGER);
 	}
 
-	return _mg_rangei(start->data.i, stop->data.i, (node->childCount == 3) ? step->data.i : 0);
+	return _mg_rangei(start->data.i, stop->data.i, (_mgListLength(node->children) == 3) ? step->data.i : 0);
 }
 
 
 static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount == 2);
+	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	MGNode *nameNode = node->children[0];
+	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 	MG_ASSERT(nameNode->token);
 
@@ -495,7 +490,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	MGValue *value = _mgVisitNode(module, node->children[1]);
+	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 1));
 	mgModuleSet(module, name, value);
 
 	free(name);
@@ -506,7 +501,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount == 2);
+	MG_ASSERT(_mgListLength(node->children) == 2);
 	MG_ASSERT(node->token);
 
 	const size_t opLength = node->token->end.string - node->token->begin.string;
@@ -520,9 +515,9 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		return _mgVisitAssignment(module, node);
 	}
 
-	MGValue *lhs = _mgVisitNode(module, node->children[0]);
+	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(lhs);
-	MGValue *rhs = _mgVisitNode(module, node->children[1]);
+	MGValue *rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(rhs);
 
 	MGValue *value = NULL;
@@ -1130,7 +1125,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->childCount == 1);
+	MG_ASSERT(_mgListLength(node->children) == 1);
 	MG_ASSERT(node->token);
 
 	const size_t opLength = node->token->end.string - node->token->begin.string;
@@ -1138,7 +1133,7 @@ static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
 	MG_ASSERT(op);
 
-	MGValue *operand = _mgVisitNode(module, node->children[0]);
+	MGValue *operand = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(operand);
 
 	MGValue *value = NULL;
