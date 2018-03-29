@@ -218,9 +218,9 @@ void mgInspectValue(const MGValue *value)
 }
 
 
-static void _mgInspectName(MGName *name)
+static void _mgInspectName(MGNameValue *name)
 {
-	printf("%s: %s = ", name->name, _MG_VALUE_TYPE_NAMES[name->value->type]);
+	printf("%s: %s = ", name->key, _MG_VALUE_TYPE_NAMES[name->value->type]);
 	mgInspectValue(name->value);
 }
 

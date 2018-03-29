@@ -84,4 +84,7 @@
 #define _mgListIndexRelativeToAbsolute(list, index) \
 	 (((index) < 0) ? (intmax_t) (list).length + (index) : (index))
 
+
+#define _MGPair(k, v) struct { k key; v value; }
+
 #endif

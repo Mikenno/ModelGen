@@ -80,14 +80,11 @@ typedef struct MGValue {
 	} data;
 } MGValue;
 
-typedef struct MGName {
-	char *name;
-	MGValue *value;
-} MGName;
+typedef _MGPair(char*, MGValue*) MGNameValue;
 
 typedef struct MGModule {
 	char *filename;
-	_MGList(MGName) names;
+	_MGList(MGNameValue) names;
 } MGModule;
 
 char* mgReadFile(const char *filename, size_t *length);

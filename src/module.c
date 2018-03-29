@@ -7,14 +7,14 @@
 #include "utilities.h"
 
 
-static void _mgDestroyName(MGName *name)
+static inline void _mgDestroyNameValue(MGNameValue *pair)
 {
-	MG_ASSERT(name);
-	MG_ASSERT(name->name);
-	MG_ASSERT(name->value);
+	MG_ASSERT(pair);
+	MG_ASSERT(pair->key);
+	MG_ASSERT(pair->value);
 
-	free(name->name);
-	mgDestroyValue(name->value);
+	free(pair->key);
+	mgDestroyValue(pair->value);
 }
 
 
@@ -22,7 +22,7 @@ void mgCreateModule(MGModule *module)
 {
 	MG_ASSERT(module);
 
-	memset(module, 0, sizeof(MGParser));
+	memset(module, 0, sizeof(MGModule));
 }
 
 
@@ -31,7 +31,7 @@ void mgDestroyModule(MGModule *module)
 	MG_ASSERT(module);
 
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		_mgDestroyName(&_mgListItems(module->names)[i]);
+		_mgDestroyNameValue(&_mgListItems(module->names)[i]);
 	_mgListDestroy(module->names);
 
 	free(module->filename);
@@ -69,27 +69,27 @@ void mgDestroyValue(MGValue *value)
 }
 
 
-static inline void _mgSetValue(MGName *names, size_t i, const char *name, MGValue *value)
+static inline void _mgSetValue(MGNameValue *names, size_t i, const char *name, MGValue *value)
 {
-	names[i].name = mgStringDuplicate(name);
+	names[i].key = mgStringDuplicate(name);
 	names[i].value = value;
 }
 
 
 static inline void _mgAddValue(MGModule *module, const char *name, MGValue *value)
 {
-	_mgListAddUninitialized(MGName, module->names);
+	_mgListAddUninitialized(MGNameValue, module->names);
 
 	_mgSetValue(_mgListItems(module->names), _mgListLength(module->names)++, name, value);
 }
 
 
-static inline void _mgSwapNames(MGName *names, size_t i, size_t i2)
+static inline void _mgSwapNames(MGNameValue *names, size_t i, size_t i2)
 {
-	MGName temp;
-	memcpy(&temp, &names[i], sizeof(MGName));
-	memcpy(&names[i], &names[i2], sizeof(MGName));
-	memcpy(&names[i2], &temp, sizeof(MGName));
+	MGNameValue temp;
+	memcpy(&temp, &names[i], sizeof(MGNameValue));
+	memcpy(&names[i], &names[i2], sizeof(MGNameValue));
+	memcpy(&names[i2], &temp, sizeof(MGNameValue));
 }
 
 
@@ -98,28 +98,28 @@ void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	MGName *_name = NULL;
-	for (size_t i = 0; (_name == NULL) && (i < _mgListLength(module->names)); ++i)
-		if (strcmp(_mgListGet(module->names, i).name, name) == 0)
-			_name = &_mgListGet(module->names, i);
+	MGNameValue *pair = NULL;
+	for (size_t i = 0; (pair == NULL) && (i < _mgListLength(module->names)); ++i)
+		if (strcmp(_mgListGet(module->names, i).key, name) == 0)
+			pair = &_mgListGet(module->names, i);
 
 	if (value)
 	{
-		if (_name)
+		if (pair)
 		{
-			_mgDestroyName(_name);
-			_mgSetValue(_mgListItems(module->names), (size_t) (_name - _mgListItems(module->names)), name, value);
+			_mgDestroyNameValue(pair);
+			_mgSetValue(_mgListItems(module->names), (size_t) (pair - _mgListItems(module->names)), name, value);
 		}
 		else
 			_mgAddValue(module, name, value);
 	}
-	else if (_name)
+	else if (pair)
 	{
-		_mgDestroyName(_name);
+		_mgDestroyNameValue(pair);
 
 		if (_mgListLength(module->names) > 1)
-			if (_name != &_mgListItems(module->names)[_mgListLength(module->names) - 1])
-				_mgSwapNames(_mgListItems(module->names), (size_t) (_name - _mgListItems(module->names)), _mgListLength(module->names) - 1);
+			if (pair != &_mgListItems(module->names)[_mgListLength(module->names) - 1])
+				_mgSwapNames(_mgListItems(module->names), (size_t) (pair - _mgListItems(module->names)), _mgListLength(module->names) - 1);
 
 		--_mgListLength(module->names);
 	}
@@ -132,7 +132,7 @@ inline MGValue* mgModuleGet(MGModule *module, const char *name)
 	MG_ASSERT(name);
 
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		if (strcmp(_mgListGet(module->names, i).name, name) == 0)
+		if (strcmp(_mgListGet(module->names, i).key, name) == 0)
 			return _mgListGet(module->names, i).value;
 
 	return NULL;
