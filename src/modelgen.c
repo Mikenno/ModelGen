@@ -6,7 +6,6 @@
 #include "modelgen.h"
 #include "module.h"
 #include "inspect.h"
-#include "baselib.h"
 
 #ifdef _WIN32
 #   include <stdint.h>
@@ -165,50 +164,26 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		MGModule module;
-		MGValue *result;
+		MGInstance instance;
+		mgCreateInstance(&instance);
 
 		if (runStdin)
-		{
-			mgCreateModule(&module);
-
-			mgLoadBaseLib(&module);
-
-			if ((result = mgInterpretFileHandle(&module, stdin, "<stdin>")))
-				mgDestroyValue(result);
-			else
-				err = 1;
-
-			if (dumpModule)
-			{
-				putchar('\n');
-				mgInspectModule(&module);
-			}
-
-			mgDestroyModule(&module);
-		}
+			mgRunFileHandle(&instance, stdin, "<stdin>");
 
 		for (; i < argc; ++i)
+			mgRunFile(&instance, argv[i], NULL);
+
+		if (dumpModule)
 		{
-			const char *filename = argv[i];
-
-			mgCreateModule(&module);
-
-			mgLoadBaseLib(&module);
-
-			if ((result = mgInterpretFile(&module, filename)))
-				mgDestroyValue(result);
-			else
-				err = 1;
-
-			if (dumpModule)
+			for (size_t j = 0; j < _mgListLength(instance.modules); ++j)
 			{
 				putchar('\n');
-				mgInspectModule(&module);
+				printf("%s: ", _mgListGet(instance.modules, j).key);
+				mgInspectModule(&_mgListGet(instance.modules, j).value);
 			}
-
-			mgDestroyModule(&module);
 		}
+
+		mgDestroyInstance(&instance);
 	}
 
 #ifdef _WIN32

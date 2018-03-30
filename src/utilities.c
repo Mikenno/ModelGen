@@ -15,6 +15,16 @@ int mgStringEndsWith(const char *string, const char *suffix)
 }
 
 
+inline char* mgStringReplaceCharacter(char *str, char find, char replace)
+{
+	for (char *p = str; *p; ++p)
+		if (*p == find)
+			*p = replace;
+
+	return str;
+}
+
+
 char* mgStringDuplicate(const char *str)
 {
 	char *s = (char*) malloc((strlen(str) + 1) * sizeof(char));

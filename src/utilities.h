@@ -8,6 +8,8 @@
 
 int mgStringEndsWith(const char *string, const char *suffix);
 
+char* mgStringReplaceCharacter(char *str, char find, char replace);
+
 char* mgStringDuplicate(const char *str);
 char* mgStringDuplicateFixed(const char *str, size_t count);
 

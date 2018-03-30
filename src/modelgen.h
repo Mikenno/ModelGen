@@ -80,13 +80,22 @@ typedef struct MGValue {
 	} data;
 } MGValue;
 
+typedef struct MGInstance MGInstance;
+
 typedef _MGPair(char*, MGValue*) MGNameValue;
 
 typedef struct MGModule {
+	MGInstance *instance;
 	MGParser parser;
 	char *filename;
 	_MGList(MGNameValue) names;
 } MGModule;
+
+typedef _MGPair(char*, MGModule) MGNameModule;
+
+typedef struct MGInstance {
+	_MGList(MGNameModule) modules;
+} MGInstance;
 
 char* mgReadFile(const char *filename, size_t *length);
 char* mgReadFileHandle(FILE *file, size_t *length);
@@ -116,5 +125,14 @@ MGValue* mgInterpret(MGModule *module);
 MGValue* mgInterpretFile(MGModule *module, const char *filename);
 MGValue* mgInterpretFileHandle(MGModule *module, FILE *file, const char *filename);
 MGValue* mgInterpretString(MGModule *module, const char *string, const char *filename);
+
+void mgCreateInstance(MGInstance *instance);
+void mgDestroyInstance(MGInstance *instance);
+
+void mgRunFile(MGInstance *instance, const char *filename, const char *name);
+void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name);
+void mgRunString(MGInstance *instance, const char *string, const char *name);
+
+void mgImportModule(MGInstance *instance, const char *name);
 
 #endif

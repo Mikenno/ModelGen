@@ -235,7 +235,21 @@ void mgInspectModule(const MGModule *module)
 		       _mgListLength(module->names), _mgListCapacity(module->names));
 
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		_mgInspectName(&_mgListItems(module->names)[i]);
+		_mgInspectName(&_mgListGet(module->names, i));
+}
+
+
+void mgInspectInstance(const MGInstance *instance)
+{
+	printf("Instance [%zu:%zu]\n",
+	       _mgListLength(instance->modules), _mgListCapacity(instance->modules));
+
+	for (size_t i = 0; i < _mgListLength(instance->modules); ++i)
+	{
+		putchar('\n');
+		printf("%s: ", _mgListGet(instance->modules, i).key);
+		mgInspectModule(&_mgListGet(instance->modules, i).value);
+	}
 }
 
 
