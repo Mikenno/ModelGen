@@ -83,6 +83,7 @@ typedef struct MGValue {
 typedef _MGPair(char*, MGValue*) MGNameValue;
 
 typedef struct MGModule {
+	MGParser parser;
 	char *filename;
 	_MGList(MGNameValue) names;
 } MGModule;
@@ -106,12 +107,14 @@ void mgDestroyParser(MGParser *parser);
 MGNode* mgCreateNode(MGToken *token);
 void mgDestroyNode(MGNode *node);
 
+MGNode* mgParse(MGParser *parser);
 MGNode* mgParseFile(MGParser *parser, const char *filename);
 MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
 MGNode* mgParseString(MGParser *parser, const char *string);
 
-MGValue* mgRunFile(MGModule *module, const char *filename);
-MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename);
-MGValue* mgRunString(MGModule *module, const char *string, const char *filename);
+MGValue* mgInterpret(MGModule *module);
+MGValue* mgInterpretFile(MGModule *module, const char *filename);
+MGValue* mgInterpretFileHandle(MGModule *module, FILE *file, const char *filename);
+MGValue* mgInterpretString(MGModule *module, const char *string, const char *filename);
 
 #endif

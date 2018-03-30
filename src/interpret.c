@@ -1235,7 +1235,16 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 }
 
 
-MGValue* mgRunFile(MGModule *module, const char *filename)
+inline MGValue* mgInterpret(MGModule *module)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->parser.root);
+
+	return _mgVisitNode(module, module->parser.root);
+}
+
+
+MGValue* mgInterpretFile(MGModule *module, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(filename);
@@ -1248,21 +1257,18 @@ MGValue* mgRunFile(MGModule *module, const char *filename)
 
 	module->filename = mgStringDuplicate(filename);
 
+	mgDestroyParser(&module->parser);
+	mgCreateParser(&module->parser);
+
 	MGValue *result = NULL;
-
-	MGParser parser;
-	mgCreateParser(&parser);
-
-	if (mgParseFile(&parser, filename))
-		result = _mgVisitNode(module, parser.root);
-
-	mgDestroyParser(&parser);
+	if (mgParseFile(&module->parser, filename))
+		result = mgInterpret(module);
 
 	return result;
 }
 
 
-MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename)
+MGValue* mgInterpretFileHandle(MGModule *module, FILE *file, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(file);
@@ -1276,21 +1282,18 @@ MGValue* mgRunFileHandle(MGModule *module, FILE *file, const char *filename)
 	if (filename)
 		module->filename = mgStringDuplicate(filename);
 
+	mgDestroyParser(&module->parser);
+	mgCreateParser(&module->parser);
+
 	MGValue *result = NULL;
-
-	MGParser parser;
-	mgCreateParser(&parser);
-
-	if (mgParseFileHandle(&parser, file))
-		result = _mgVisitNode(module, parser.root);
-
-	mgDestroyParser(&parser);
+	if (mgParseFileHandle(&module->parser, file))
+		result = mgInterpret(module);
 
 	return result;
 }
 
 
-MGValue* mgRunString(MGModule *module, const char *string, const char *filename)
+MGValue* mgInterpretString(MGModule *module, const char *string, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(string);
@@ -1304,15 +1307,12 @@ MGValue* mgRunString(MGModule *module, const char *string, const char *filename)
 	if (filename)
 		module->filename = mgStringDuplicate(filename);
 
+	mgDestroyParser(&module->parser);
+	mgCreateParser(&module->parser);
+
 	MGValue *result = NULL;
-
-	MGParser parser;
-	mgCreateParser(&parser);
-
-	if (mgParseString(&parser, string))
-		result = _mgVisitNode(module, parser.root);
-
-	mgDestroyParser(&parser);
+	if (mgParseString(&module->parser, string))
+		result = mgInterpret(module);
 
 	return result;
 }

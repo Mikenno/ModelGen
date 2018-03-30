@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
 			mgLoadBaseLib(&module);
 
-			if ((result = mgRunFileHandle(&module, stdin, "<stdin>")))
+			if ((result = mgInterpretFileHandle(&module, stdin, "<stdin>")))
 				mgDestroyValue(result);
 			else
 				err = 1;
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 
 			mgLoadBaseLib(&module);
 
-			if ((result = mgRunFile(&module, filename)))
+			if ((result = mgInterpretFile(&module, filename)))
 				mgDestroyValue(result);
 			else
 				err = 1;

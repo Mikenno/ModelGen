@@ -679,7 +679,7 @@ static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 }
 
 
-static inline MGNode* _mgParse(MGParser *parser)
+inline MGNode* mgParse(MGParser *parser)
 {
 	parser->root = _mgParseModule(parser, parser->tokenizer.tokens.items);
 
@@ -692,7 +692,7 @@ MGNode* mgParseFile(MGParser *parser, const char *filename)
 	if (!mgTokenizeFile(&parser->tokenizer, filename, NULL))
 		return NULL;
 
-	return _mgParse(parser);
+	return mgParse(parser);
 }
 
 
@@ -701,7 +701,7 @@ MGNode* mgParseFileHandle(MGParser *parser, FILE *file)
 	if (!mgTokenizeFileHandle(&parser->tokenizer, file, NULL))
 		return NULL;
 
-	return _mgParse(parser);
+	return mgParse(parser);
 }
 
 
@@ -710,5 +710,5 @@ MGNode* mgParseString(MGParser *parser, const char *string)
 	if (!mgTokenizeString(&parser->tokenizer, string, NULL))
 		return NULL;
 
-	return _mgParse(parser);
+	return mgParse(parser);
 }

@@ -23,6 +23,8 @@ void mgCreateModule(MGModule *module)
 	MG_ASSERT(module);
 
 	memset(module, 0, sizeof(MGModule));
+
+	mgCreateParser(&module->parser);
 }
 
 
@@ -33,6 +35,8 @@ void mgDestroyModule(MGModule *module)
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
 		_mgDestroyNameValue(&_mgListItems(module->names)[i]);
 	_mgListDestroy(module->names);
+
+	mgDestroyParser(&module->parser);
 
 	free(module->filename);
 }
