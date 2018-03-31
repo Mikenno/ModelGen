@@ -66,7 +66,9 @@ typedef struct MGParser {
 
 typedef struct MGValue MGValue;
 
-typedef MGValue* (*MGCFunction)(size_t argc, MGValue **argv);
+typedef struct MGModule MGModule;
+
+typedef MGValue* (*MGCFunction)(MGModule *module, size_t argc, MGValue **argv);
 
 typedef struct MGValue {
 	MGValueType type;

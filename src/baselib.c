@@ -27,7 +27,7 @@ static inline void _mgFail(const char *format, ...)
 #define MG_FAIL(...) _mgFail(__VA_ARGS__)
 
 
-static MGValue* mg_print(size_t argc, MGValue **argv)
+static MGValue* mg_print(MGModule *module, size_t argc, MGValue **argv)
 {
 	for (size_t i = 0; i < argc; ++i)
 	{
@@ -71,7 +71,7 @@ MGValue* _mg_rangei(int start, int stop, int step)
 }
 
 
-static MGValue* mg_range(size_t argc, MGValue **argv)
+static MGValue* mg_range(MGModule *module, size_t argc, MGValue **argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: range expected at least 1 argument, received %zu", argc);
@@ -98,7 +98,7 @@ static MGValue* mg_range(size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_type(size_t argc, MGValue **argv)
+static MGValue* mg_type(MGModule *module, size_t argc, MGValue **argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: type expects exactly 1 argument, received %zu", argc);

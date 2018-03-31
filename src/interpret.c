@@ -130,7 +130,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MGValue *value = NULL;
 
 	if (func->type == MG_VALUE_CFUNCTION)
-		value = func->data.cfunc(_mgListLength(args), _mgListItems(args));
+		value = func->data.cfunc(module, _mgListLength(args), _mgListItems(args));
 	else
 	{
 		MGNode *procNode = func->data.func;
