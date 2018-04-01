@@ -11,12 +11,14 @@
 	_MG_T(COMMENT, "comment") \
 	_MG_T(NEWLINE, "newline") \
 	_MG_T(WHITESPACE, "whitespace") \
-	_MG_T(PROC, "proc") \
-	_MG_T(EMIT, "emit") \
 	_MG_T(FOR, "for") \
-	_MG_T(IN, "in") \
 	_MG_T(IF, "if") \
 	_MG_T(ELSE, "else") \
+	_MG_T(PROC, "proc") \
+	_MG_T(EMIT, "emit") \
+	_MG_T(FUNC, "func") \
+	_MG_T(RETURN, "return") \
+	_MG_T(IN, "in") \
 	_MG_T(LPAREN, "(") \
 	_MG_T(RPAREN, ")") \
 	_MG_T(LSQUARE, "[") \

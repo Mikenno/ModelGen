@@ -203,6 +203,7 @@ void _mgInspectValue(const MGValue *value)
 		printf("%p", value->data.cfunc);
 		break;
 	case MG_VALUE_PROCEDURE:
+	case MG_VALUE_FUNCTION:
 		printf("%p", value->data.func);
 		break;
 	default:

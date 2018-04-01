@@ -303,13 +303,18 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_NOT;
 			break;
 		case 4:
-			if (!strncmp("proc", token->begin.string, 4))
+			if (!strncmp("else", token->begin.string, 4))
+				token->type = MG_TOKEN_ELSE;
+			else if (!strncmp("proc", token->begin.string, 4))
 				token->type = MG_TOKEN_PROC;
 			else if (!strncmp("emit", token->begin.string, 4))
 				token->type = MG_TOKEN_EMIT;
-			else if (!strncmp("else", token->begin.string, 4))
-				token->type = MG_TOKEN_ELSE;
+			else if (!strncmp("func", token->begin.string, 4))
+				token->type = MG_TOKEN_FUNC;
 			break;
+		case 6:
+			if (!strncmp("return", token->begin.string, 6))
+				token->type = MG_TOKEN_RETURN;
 		default:
 			break;
 		}

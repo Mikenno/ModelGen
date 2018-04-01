@@ -17,9 +17,11 @@
 	_MG_N(CALL, "Call") \
 	_MG_N(FOR, "For") \
 	_MG_N(IF, "If") \
-	_MG_N(PROCEDURE, "Procedure") \
 	_MG_N(ASSIGN, "Assign") \
-	_MG_N(SUBSCRIPT, "Subscript")
+	_MG_N(SUBSCRIPT, "Subscript") \
+	_MG_N(PROCEDURE, "Procedure") \
+	_MG_N(FUNCTION, "Function") \
+	_MG_N(RETURN, "Return")
 
 
 #define _MG_LONGEST_NODE_NAME_LENGTH 10

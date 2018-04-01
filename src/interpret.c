@@ -111,18 +111,10 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 
 	MGValue *func = NULL;
-	char *name;
+	char *name = NULL;
 
-	if (nameNode->type == MG_NODE_PROCEDURE)
+	if (nameNode->type == MG_NODE_IDENTIFIER)
 	{
-		func = _mgVisitNode(module, nameNode);
-		MG_ASSERT(func);
-
-		name = mgStringDuplicate("<anonymous>");
-	}
-	else
-	{
-		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 		MG_ASSERT(nameNode->token);
 
 		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
@@ -134,8 +126,15 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		if (!func)
 			MG_FAIL("Error: Undefined name \"%s\"", name);
 	}
+	else
+		func = _mgVisitNode(module, nameNode);
 
-	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE))
+	MG_ASSERT(func);
+
+	if (name == NULL)
+		name = mgStringDuplicate("<anonymous>");
+
+	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE) && (func->type != MG_VALUE_FUNCTION))
 		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
 
 	_MGList(MGValue*) args;
@@ -165,7 +164,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 		if (procNode)
 		{
-			MG_ASSERT(procNode->type == MG_NODE_PROCEDURE);
+			MG_ASSERT((procNode->type == MG_NODE_PROCEDURE) || procNode->type == MG_NODE_FUNCTION);
 			MG_ASSERT((_mgListLength(procNode->children) == 2) || (_mgListLength(procNode->children) == 3));
 
 			MGNode *procParametersNode = _mgListGet(procNode->children, 1);
@@ -266,6 +265,25 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitReturn(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+
+	MGStackFrame *frame = module->instance->callStackTop;
+
+	if (_mgListLength(node->children) > 0)
+		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
+	else
+		frame->value = mgCreateValueTuple(0);
+
+	frame->state = MG_STACK_FRAME_STATE_UNWINDING;
+
+	return mgCreateValueInteger((_mgListLength(node->children) > 0) ? 1 : 0);
+}
+
+
 static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) >= 2);
@@ -360,7 +378,7 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
 
-	MGValue *proc = mgCreateValue(MG_VALUE_PROCEDURE);
+	MGValue *proc = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
 	proc->data.func = node;
 
 	if (nameNode->type == MG_NODE_INVALID)
@@ -1260,7 +1278,10 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 	case MG_NODE_IF:
 		return _mgVisitIf(module, node);
 	case MG_NODE_PROCEDURE:
+	case MG_NODE_FUNCTION:
 		return _mgVisitProcedure(module, node);
+	case MG_NODE_RETURN:
+		return _mgVisitReturn(module, node);
 	case MG_NODE_SUBSCRIPT:
 		return _mgVisitSubscript(module, node);
 	default:
