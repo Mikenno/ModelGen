@@ -92,7 +92,7 @@ static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 		}
 	}
 
-	return mgCreateValueTuple(0);
+	return mgCreateValueVoid();
 }
 
 
@@ -247,7 +247,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	if (frame.value)
 		value = _mgDeepCopyValue(frame.value);
 	else
-		value = mgCreateValueTuple(0);
+		value = mgCreateValueVoid();
 
 	mgPopStackFrame(module->instance, &frame);
 
@@ -324,10 +324,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 
 	free(name);
 
-	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
-	value->data.i = iterations;
-
-	return value;
+	return mgCreateValueInteger(iterations);
 }
 
 

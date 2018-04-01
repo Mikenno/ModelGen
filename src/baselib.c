@@ -44,7 +44,7 @@ static MGValue* mg_print(MGModule *module, size_t argc, MGValue **argv)
 
 	putchar('\n');
 
-	return mgCreateValueInteger(0);
+	return mgCreateValueVoid();
 }
 
 
@@ -130,7 +130,7 @@ static MGValue* mg_traceback(MGModule *module, size_t argc, MGValue **argv)
 		++depth;
 	}
 
-	return mgCreateValueTuple(0);
+	return mgCreateValueVoid();
 }
 
 

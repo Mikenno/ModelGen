@@ -29,6 +29,8 @@ MGValue* mgCreateValueFloat(float f);
 MGValue* mgCreateValueString(const char *s);
 MGValue* mgCreateValueCFunction(MGCFunction cfunc);
 
+#define mgCreateValueVoid() mgCreateValueTuple(0)
+
 #define mgIntegerSet(value, _i) value->data.i = _i
 #define mgIntegerGet(value) value->data.i
 
