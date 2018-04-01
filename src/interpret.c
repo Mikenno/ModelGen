@@ -10,9 +10,11 @@
 #include "baselib.h"
 
 
-static inline void _mgFail(MGModule *module, MGNode *node, const char *format, ...)
+static inline void _mgFail(const char *file, int line, MGModule *module, MGNode *node, const char *format, ...)
 {
 	fflush(stdout);
+
+	fprintf(stderr, "%s:%d: ", file, line);
 
 	if (module->filename)
 		fprintf(stderr, "%s:", module->filename);
@@ -30,7 +32,7 @@ static inline void _mgFail(MGModule *module, MGNode *node, const char *format, .
 	exit(1);
 }
 
-#define MG_FAIL(...) _mgFail(module, node, __VA_ARGS__)
+#define MG_FAIL(...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
 static MGValue* _mgDeepCopyValue(MGValue *value)
@@ -69,12 +71,28 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node);
 
 static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 {
-	MGValue *value = mgCreateValueTuple(_mgListLength(node->children));
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+
+	MGStackFrame *frame = module->instance->callStackTop;
 
 	for (size_t i = 0; i < _mgListLength(node->children); ++i)
-		mgTupleAdd(value, _mgVisitNode(module, _mgListGet(node->children, i)));
+	{
+		MGValue *value = _mgVisitNode(module, _mgListGet(node->children, i));
 
-	return value;
+		if (frame->state == MG_STACK_FRAME_STATE_UNWINDING)
+		{
+			mgDestroyValue(value);
+
+			if (frame->value)
+				return _mgDeepCopyValue(frame->value);
+
+			break;
+		}
+	}
+
+	return mgCreateValueTuple(0);
 }
 
 
@@ -86,6 +104,8 @@ static inline MGValue* _mgVisitModule(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
 	MG_ASSERT(_mgListLength(node->children) > 0);
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
@@ -127,10 +147,18 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		MG_ASSERT(_mgListGet(args, i));
 	}
 
-	MGValue *value = NULL;
+	MGStackFrame frame;
+	mgCreateStackFrame(&frame);
+
+	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
+	frame.module = module;
+	frame.caller = node;
+	frame.callerName = name;
+
+	mgPushStackFrame(module->instance, &frame);
 
 	if (func->type == MG_VALUE_CFUNCTION)
-		value = func->data.cfunc(module, _mgListLength(args), _mgListItems(args));
+		frame.value = func->data.cfunc(module, _mgListLength(args), _mgListItems(args));
 	else
 	{
 		MGNode *procNode = func->data.func;
@@ -211,20 +239,28 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 			}
 
 			if (_mgListLength(procNode->children) == 3)
-				value = _mgVisitNode(module, _mgListGet(procNode->children, 2));
-		}
-		else
-		{
-			value = mgCreateValue(MG_VALUE_INTEGER);
-			value->data.i = 0;
+				_mgVisitNode(module, _mgListGet(procNode->children, 2));
 		}
 	}
+
+	MGValue *value = NULL;
+
+	if (frame.value)
+		value = _mgDeepCopyValue(frame.value);
+	else
+		value = mgCreateValueTuple(0);
+
+	mgPopStackFrame(module->instance, &frame);
+
+	mgDestroyStackFrame(&frame);
 
 	for (size_t i = 0; i < _mgListLength(args); ++i)
 		mgDestroyValue(_mgListGet(args, i));
 	_mgListDestroy(args);
 
 	free(name);
+
+	MG_ASSERT(value);
 
 	return value;
 }
@@ -1238,6 +1274,7 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 inline MGValue* mgInterpret(MGModule *module)
 {
 	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
 	MG_ASSERT(module->parser.root);
 
 	return _mgVisitNode(module, module->parser.root);

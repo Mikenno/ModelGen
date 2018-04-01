@@ -68,6 +68,49 @@ void mgDestroyInstance(MGInstance *instance)
 }
 
 
+void mgCreateStackFrame(MGStackFrame *frame)
+{
+	MG_ASSERT(frame);
+
+	memset(frame, 0, sizeof(MGStackFrame));
+}
+
+
+void mgDestroyStackFrame(MGStackFrame *frame)
+{
+	MG_ASSERT(frame);
+
+	if (frame->value)
+		mgDestroyValue(frame->value);
+}
+
+
+void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame)
+{
+	MG_ASSERT(instance);
+	MG_ASSERT(frame);
+
+	if (instance->callStackTop)
+		instance->callStackTop->next = frame;
+
+	frame->last = instance->callStackTop;
+
+	instance->callStackTop = frame;
+}
+
+
+void mgPopStackFrame(MGInstance *instance, MGStackFrame *frame)
+{
+	MG_ASSERT(instance);
+	MG_ASSERT(frame);
+
+	instance->callStackTop = frame->last;
+
+	if (frame->last)
+		frame->last->next = NULL;
+}
+
+
 static MGModule* _mgInstanceSet(MGInstance *instance, const char *name, MGModule *module)
 {
 	MG_ASSERT(instance);
@@ -175,12 +218,27 @@ static inline MGModule* _mgModuleLoadString(MGInstance *instance, const char *st
 }
 
 
-static inline void _mgRunModule(MGModule *module)
+static inline void _mgRunModule(MGInstance *instance, MGModule *module)
 {
 	MG_ASSERT(module);
+	MG_ASSERT(instance);
+	MG_ASSERT(module->instance == instance);
 
 	mgLoadBaseLib(module);
+
+	MGStackFrame frame;
+	mgCreateStackFrame(&frame);
+
+	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
+	frame.module = module;
+	frame.caller = NULL;
+	frame.callerName = NULL;
+
+	mgPushStackFrame(instance, &frame);
 	mgInterpret(module);
+	mgPopStackFrame(instance, &frame);
+
+	mgDestroyStackFrame(&frame);
 }
 
 
@@ -191,7 +249,7 @@ static inline void _mgRunFile(MGInstance *instance, const char *filename, const 
 	if (module == NULL)
 		module = _mgModuleLoadFile(instance, filename, name);
 
-	_mgRunModule(module);
+	_mgRunModule(instance, module);
 }
 
 
@@ -212,7 +270,7 @@ void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name)
 	MG_ASSERT(file);
 	MG_ASSERT(name);
 
-	_mgRunModule(_mgModuleLoadFileHandle(instance, file, name));
+	_mgRunModule(instance, _mgModuleLoadFileHandle(instance, file, name));
 }
 
 
@@ -222,7 +280,7 @@ void mgRunString(MGInstance *instance, const char *string, const char *name)
 	MG_ASSERT(string);
 	MG_ASSERT(name);
 
-	_mgRunModule(_mgModuleLoadString(instance, string, name));
+	_mgRunModule(instance, _mgModuleLoadString(instance, string, name));
 }
 
 

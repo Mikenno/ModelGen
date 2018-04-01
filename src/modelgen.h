@@ -8,6 +8,7 @@
 #include "tokens.h"
 #include "ast.h"
 #include "value.h"
+#include "frame.h"
 #include "collections.h"
 
 #include <stdio.h>
@@ -93,10 +94,23 @@ typedef struct MGModule {
 	_MGList(MGNameValue) names;
 } MGModule;
 
+typedef struct MGStackFrame MGStackFrame;
+
+typedef struct MGStackFrame {
+	MGStackFrameState state;
+	MGStackFrame *last;
+	MGStackFrame *next;
+	const MGModule *module;
+	const MGNode *caller;
+	const char *callerName;
+	MGValue *value;
+} MGStackFrame;
+
 typedef _MGPair(char*, MGModule) MGNameModule;
 
 typedef struct MGInstance {
 	_MGList(MGNameModule) modules;
+	MGStackFrame *callStackTop;
 } MGInstance;
 
 char* mgReadFile(const char *filename, size_t *length);
@@ -130,6 +144,12 @@ MGValue* mgInterpretString(MGModule *module, const char *string, const char *fil
 
 void mgCreateInstance(MGInstance *instance);
 void mgDestroyInstance(MGInstance *instance);
+
+void mgCreateStackFrame(MGStackFrame *frame);
+void mgDestroyStackFrame(MGStackFrame *frame);
+
+void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame);
+void mgPopStackFrame(MGInstance *instance, MGStackFrame *frame);
 
 void mgRunFile(MGInstance *instance, const char *filename, const char *name);
 void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name);

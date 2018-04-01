@@ -11,6 +11,7 @@ void _mgInspectValue(const MGValue *value);
 void mgInspectValue(const MGValue *value);
 void mgInspectModule(const MGModule *module);
 void mgInspectInstance(const MGInstance *instance);
+void mgInspectStackFrame(const MGStackFrame *frame);
 
 void mgInspectStringLines(const char *str);
 

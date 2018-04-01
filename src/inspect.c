@@ -253,6 +253,41 @@ void mgInspectInstance(const MGInstance *instance)
 }
 
 
+void mgInspectStackFrame(const MGStackFrame *frame)
+{
+	MG_ASSERT(frame);
+	MG_ASSERT(frame->module);
+
+	printf("StackFrame\n");
+
+	if (frame->callerName)
+		printf("Callee: %s\n", frame->callerName);
+
+	if (frame->caller)
+	{
+		MGToken *token = frame->caller->tokenBegin ? frame->caller->tokenBegin : frame->caller->token;
+
+		if (token)
+		{
+			MG_ASSERT(frame->module->filename);
+
+			printf("Caller: %s:%u:%u\n",
+			       frame->module->filename,
+			       frame->caller->tokenBegin->begin.line,
+			       frame->caller->tokenBegin->begin.character);
+		}
+	}
+
+	printf("State: %s\n", _MG_STACK_FRAME_STATE_NAMES[frame->state]);
+
+	if (frame->value)
+	{
+		printf("Value = ");
+		mgInspectValue(frame->value);
+	}
+}
+
+
 void mgInspectStringLines(const char *str)
 {
 	unsigned int lineCount = 1;
