@@ -107,6 +107,33 @@ static MGValue* mg_type(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_traceback(MGModule *module, size_t argc, MGValue **argv)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+
+	const MGStackFrame *frame = module->instance->callStackTop;
+
+	while (frame->last)
+		frame = frame->last;
+
+	size_t depth = 0;
+
+	while (frame)
+	{
+		printf("%zu: ", depth);
+		mgInspectStackFrame(frame);
+		putchar('\n');
+
+		frame = frame->next;
+		++depth;
+	}
+
+	return mgCreateValueTuple(0);
+}
+
+
 void mgLoadBaseLib(MGModule *module)
 {
 	mgModuleSetInteger(module, "false", 0);
@@ -121,4 +148,5 @@ void mgLoadBaseLib(MGModule *module)
 	mgModuleSetCFunction(module, "print", mg_print);
 	mgModuleSetCFunction(module, "range", mg_range);
 	mgModuleSetCFunction(module, "type", mg_type);
+	mgModuleSetCFunction(module, "traceback", mg_traceback);
 }
