@@ -5,8 +5,16 @@ Module
 --- Integer 0
 --- Integer 1
 --- Integer 2
---- Integer 3
---- Integer 4
+-- Call
+--- Identifier print
+--- Identifier i
+
+- For
+-- Identifier i
+-- List
+--- Integer 0
+--- Integer 1
+--- Integer 2
 -- Call
 --- Identifier print
 --- Identifier i
@@ -15,7 +23,7 @@ Module
 -- Identifier i
 -- Call
 --- Identifier range
---- Integer 5
+--- Integer 3
 -- Block
 --- Call
 ---- Identifier print
@@ -28,7 +36,7 @@ Module
 -- Identifier i
 -- Call
 --- Identifier range
---- Integer 5
+--- Integer 3
 -- Block
 --- Call
 ---- Identifier print
@@ -37,7 +45,7 @@ Module
 ---- Identifier j
 ---- Call
 ----- Identifier range
------ Integer 5
+----- Integer 3
 ---- Call
 ----- Identifier print
 ----- Identifier i
@@ -47,7 +55,7 @@ Module
 -- Identifier i
 -- Call
 --- Identifier range
---- Integer 5
+--- Integer 3
 -- Call
 --- Identifier print
 --- Identifier i
@@ -56,12 +64,12 @@ Module
 -- Identifier i
 -- Call
 --- Identifier range
---- Integer 5
+--- Integer 3
 -- For
 --- Identifier j
 --- Call
 ---- Identifier range
----- Integer 5
+---- Integer 3
 --- Call
 ---- Identifier print
 ---- Identifier i
@@ -71,7 +79,7 @@ Module
 -- Identifier i
 -- Call
 --- Identifier range
---- Integer 5
+--- Integer 3
 -- Block
 --- Call
 ---- Identifier print
@@ -80,7 +88,7 @@ Module
 ---- Identifier j
 ---- Call
 ----- Identifier range
------ Integer 5
+----- Integer 3
 ---- Call
 ----- Identifier print
 ----- Identifier i

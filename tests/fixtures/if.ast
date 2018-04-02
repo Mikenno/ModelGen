@@ -54,6 +54,13 @@ Module
 -- Identifier print
 -- String "end"
 
+- BinOp =
+-- Identifier x
+-- Integer 1
+- BinOp =
+-- Identifier y
+-- Integer 1
+
 - Call
 -- Identifier print
 -- String "begin"

@@ -15,6 +15,9 @@ if true print(1) print(2)
 else print(3) print(4)
 print("end")
 
+x = 1
+y = 1
+
 print("begin")
 if x == y
 	print("true")
