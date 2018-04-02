@@ -6,6 +6,9 @@
 
 #define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) (x))) + 1)
 
+#define _MG_EPSILON 1E-6f
+#define _MG_FEQUAL(x, y) ((((y) - _MG_EPSILON) < (x)) && ((x) < ((y) + _MG_EPSILON)))
+
 int mgStringEndsWith(const char *string, const char *suffix);
 
 char* mgStringReplaceCharacter(char *str, char find, char replace);

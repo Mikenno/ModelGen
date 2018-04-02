@@ -343,12 +343,8 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 		_condition = condition->data.i != 0;
 		break;
 	case MG_VALUE_FLOAT:
-#define _MG_EPSILON 1E-6f
-#define _MG_FEQUAL(x, y) ((((y) - _MG_EPSILON) < (x)) && ((x) < ((y) + _MG_EPSILON)))
 		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
 		break;
-#undef _MG_EPSILON
-#undef _MG_FEQUAL
 	case MG_VALUE_STRING:
 		_condition = condition->data.s ? (int) strlen(condition->data.s) : 0;
 		break;
@@ -568,8 +564,13 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 
 	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(lhs);
-	MGValue *rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-	MG_ASSERT(rhs);
+	MGValue *rhs = NULL;
+
+	if ((strcmp(op, "and") != 0) && (strcmp(op, "or") != 0))
+	{
+		rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+		MG_ASSERT(rhs);
+	}
 
 	MGValue *value = NULL;
 
@@ -1022,7 +1023,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
 				break;
 			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f == rhs->data.f);
+				value = mgCreateValueInteger(_MG_FEQUAL(lhs->data.f, rhs->data.f));
 				break;
 			default:
 				break;
@@ -1095,30 +1096,46 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
-			switch (rhs->type)
+			if (lhs->data.i)
 			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i && rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i && rhs->data.f);
-				break;
-			default:
-				break;
+				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+				MG_ASSERT(rhs);
+
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(rhs->data.i != 0);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
+					break;
+				default:
+					break;
+				}
 			}
+			else
+				value = mgCreateValueInteger(0);
 			break;
 		case MG_VALUE_FLOAT:
-			switch (rhs->type)
+			if (!_MG_FEQUAL(lhs->data.f, 0.0f))
 			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f && rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f && rhs->data.f);
-				break;
-			default:
-				break;
+				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+				MG_ASSERT(rhs);
+
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(rhs->data.i != 0);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
+					break;
+				default:
+					break;
+				}
 			}
+			else
+				value = mgCreateValueInteger(0);
 			break;
 		default:
 			break;
@@ -1129,30 +1146,46 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
-			switch (rhs->type)
+			if (!lhs->data.i)
 			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i || rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i || rhs->data.f);
-				break;
-			default:
-				break;
+				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+				MG_ASSERT(rhs);
+
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(rhs->data.i != 0);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
+					break;
+				default:
+					break;
+				}
 			}
+			else
+				value = mgCreateValueInteger(1);
 			break;
 		case MG_VALUE_FLOAT:
-			switch (rhs->type)
+			if (_MG_FEQUAL(lhs->data.f, 0.0f))
 			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f || rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f || rhs->data.f);
-				break;
-			default:
-				break;
+				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+				MG_ASSERT(rhs);
+
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(rhs->data.i != 0);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
+					break;
+				default:
+					break;
+				}
 			}
+			else
+				value = mgCreateValueInteger(1);
 			break;
 		default:
 			break;
@@ -1160,13 +1193,21 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 	}
 
 	if (value == NULL)
-		MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
-		        op, _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
+	{
+		if (rhs)
+			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
+			        op, _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
+		else
+			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\"",
+			        op, _MG_VALUE_TYPE_NAMES[lhs->type]);
+	}
 
 	MG_ASSERT(value);
 
 	mgDestroyValue(lhs);
-	mgDestroyValue(rhs);
+
+	if (rhs)
+		mgDestroyValue(rhs);
 
 	free(op);
 
