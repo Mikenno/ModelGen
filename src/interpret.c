@@ -265,6 +265,48 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitEmit(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(node->type == MG_NODE_EMIT);
+	MG_ASSERT(_mgListLength(node->children) == 1);
+
+	MGValue *tuple = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(tuple);
+
+	if (tuple->type != MG_VALUE_TUPLE)
+		MG_FAIL("Error: Expected \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_TUPLE], _MG_VALUE_TYPE_NAMES[tuple->type]);
+	else if (mgTupleLength(tuple) != 3)
+		MG_FAIL("Error: Expected tuple with a length of 3, received a tuple with a length of %zu",
+		        mgTupleLength(tuple));
+
+	const size_t vertexCount = _mgListLength(module->instance->vertices);
+
+	_mgListAddUninitialized(MGVertex, module->instance->vertices);
+	MGVertex *vertices = _mgListItems(module->instance->vertices);
+
+	for (size_t i = 0; i < 3; ++i)
+	{
+		if (mgTupleGet(tuple, i)->type == MG_VALUE_INTEGER)
+			vertices[vertexCount][i] = (float) mgTupleGet(tuple, i)->data.i;
+		else if (mgTupleGet(tuple, i)->type == MG_VALUE_FLOAT)
+			vertices[vertexCount][i] = mgTupleGet(tuple, i)->data.f;
+		else
+			MG_FAIL("Error: Expected \"%s\" or \"%s\", received \"%s\"",
+			        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+			        _MG_VALUE_TYPE_NAMES[tuple->type]);
+	}
+
+	++_mgListLength(module->instance->vertices);
+
+	mgDestroyValue(tuple);
+
+	return mgCreateValueVoid();
+}
+
+
 static MGValue* _mgVisitReturn(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(module);
@@ -1318,6 +1360,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 	case MG_NODE_PROCEDURE:
 	case MG_NODE_FUNCTION:
 		return _mgVisitProcedure(module, node);
+	case MG_NODE_EMIT:
+		return _mgVisitEmit(module, node);
 	case MG_NODE_RETURN:
 		return _mgVisitReturn(module, node);
 	case MG_NODE_SUBSCRIPT:

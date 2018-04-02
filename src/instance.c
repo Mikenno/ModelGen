@@ -55,6 +55,8 @@ void mgCreateInstance(MGInstance *instance)
 	MG_ASSERT(instance);
 
 	memset(instance, 0, sizeof(MGInstance));
+
+	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
 }
 
 
@@ -65,6 +67,8 @@ void mgDestroyInstance(MGInstance *instance)
 	for (size_t i = 0; i < _mgListLength(instance->modules); ++i)
 		_mgDestroyNameModule(&_mgListItems(instance->modules)[i]);
 	_mgListDestroy(instance->modules);
+
+	_mgListDestroy(instance->vertices);
 }
 
 

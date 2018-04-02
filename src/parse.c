@@ -467,10 +467,10 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			}
 		}
 	}
-	else if (token->type == MG_TOKEN_RETURN)
+	else if ((token->type == MG_TOKEN_RETURN) || (token->type == MG_TOKEN_EMIT))
 	{
 		node = mgCreateNode(token);
-		node->type = MG_NODE_RETURN;
+		node->type = (token->type == MG_TOKEN_RETURN) ? MG_NODE_RETURN : MG_NODE_EMIT;
 		node->tokenEnd = token++;
 
 		_MG_TOKEN_SCAN_LINE(token);

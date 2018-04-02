@@ -108,9 +108,12 @@ typedef struct MGStackFrame {
 
 typedef _MGPair(char*, MGModule) MGNameModule;
 
+typedef float MGVertex[3];
+
 typedef struct MGInstance {
 	_MGList(MGNameModule) modules;
 	MGStackFrame *callStackTop;
+	_MGList(MGVertex) vertices;
 } MGInstance;
 
 char* mgReadFile(const char *filename, size_t *length);
