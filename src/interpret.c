@@ -299,13 +299,13 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 
 	MGValue *test = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(test);
-	MG_ASSERT(test->type == MG_VALUE_TUPLE);
+	MG_ASSERT((test->type == MG_VALUE_TUPLE) || (test->type == MG_VALUE_LIST));
 
 	int iterations = 0;
 
-	for (size_t i = 0; i < test->data.a.length; ++i, ++iterations)
+	for (size_t i = 0; i < _mgListLength(test->data.a); ++i, ++iterations)
 	{
-		MGValue *value = test->data.a.items[i];
+		MGValue *value = _mgListGet(test->data.a, i);
 		MG_ASSERT(value);
 
 		mgModuleSet(module, name, _mgDeepCopyValue(value));
