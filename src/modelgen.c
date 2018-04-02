@@ -6,6 +6,7 @@
 #include "modelgen.h"
 #include "module.h"
 #include "inspect.h"
+#include "format.h"
 
 #ifdef _WIN32
 #   include <stdint.h>
@@ -18,11 +19,17 @@ void usage(void)
 	printf(
 		"Usage: modelgen [options] [--] [files]\n"
 		"\n"
-		"    -h, --help   Print this help message and exit\n"
-		"    --version    Print ModelGen version and exit\n"
-		"    - --stdin    Read stdin as a file\n"
-		"    --tokens     Print tokens and exit\n"
-		"    --ast        Print ast and exit\n"
+		"    -h, --help        Print this help message and exit\n"
+		"    --version         Print ModelGen version and exit\n"
+		"    --export=<format> Export model to stdout in the given format\n"
+		"    --export <file>   Export model to <file> in the detected format\n"
+		"    - --stdin         Read stdin as a file\n"
+		"    --tokens          Print tokens and exit\n"
+		"    --ast             Print ast and exit\n"
+		"\n"
+		"Formats:\n"
+		"\n"
+		"    obj Wavefront .obj format\n"
 		"\n"
 		"Introspection:\n"
 		"\n"
@@ -44,6 +51,9 @@ int main(int argc, char *argv[])
 	MGbool debugAST = MG_FALSE;
 	MGbool profileTime = MG_FALSE;
 	MGbool dumpModule = MG_FALSE;
+
+	MGbool exportOBJ = MG_FALSE;
+	const char *exportFilename = NULL;
 
 	int i = 1;
 	const char *arg;
@@ -83,6 +93,42 @@ int main(int argc, char *argv[])
 			debugAST = MG_TRUE;
 		else if (!strcmp("--debug-read", arg))
 			debugRead = MG_TRUE;
+		else if (!strcmp("--export", arg) || !strncmp("--export=", arg, 9))
+		{
+			exportFilename = NULL;
+
+			const char *format = NULL;
+
+			if (!strcmp("--export", arg))
+			{
+				if (i >= (argc - 1))
+				{
+					fputs("Error: Missing filename after \"--export\"", stderr);
+					return EXIT_FAILURE;
+				}
+
+				exportFilename = argv[++i];
+				format = strrchr(exportFilename, '.');
+
+				if (format == NULL)
+				{
+					fprintf(stderr, "Error: Missing file extension \"%s\"\n", exportFilename);
+					return EXIT_FAILURE;
+				}
+
+				++format;
+			}
+			else
+				format = arg + 9;
+
+			if (!strcmp(format, "obj"))
+				exportOBJ = MG_TRUE;
+			else
+			{
+				fprintf(stderr, "Error: Unknown format \"%s\"\n", format);
+				return EXIT_FAILURE;
+			}
+		}
 		else if (!strcmp("--profile", arg))
 			profileTime = MG_TRUE;
 		else if (!strcmp("--dump-module", arg))
@@ -94,7 +140,7 @@ int main(int argc, char *argv[])
 		}
 		else if (arg[0] == '-')
 		{
-			fprintf(stderr, "Unknown option: %s", arg);
+			fprintf(stderr, "Unknown option: %s\n", arg);
 			return EXIT_FAILURE;
 		}
 		else
@@ -181,6 +227,26 @@ int main(int argc, char *argv[])
 				printf("%s: ", _mgListGet(instance.modules, j).key);
 				mgInspectModule(&_mgListGet(instance.modules, j).value);
 			}
+		}
+
+		if (exportOBJ)
+		{
+			if (exportFilename)
+			{
+				FILE *f = fopen(exportFilename, "w");
+
+				if (f)
+				{
+					mgExportOBJ(&instance, f);
+					fclose(f);
+				}
+				else
+				{
+					fprintf(stderr, "Error: Failed opening file \"%s\"\n", exportFilename);
+				}
+			}
+			else
+				mgExportOBJ(&instance, stdout);
 		}
 
 		mgDestroyInstance(&instance);
