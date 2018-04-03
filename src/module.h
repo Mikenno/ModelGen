@@ -9,9 +9,6 @@
 void mgCreateModule(MGModule *module);
 void mgDestroyModule(MGModule *module);
 
-MGValue* mgCreateValue(MGValueType type);
-void mgDestroyValue(MGValue *value);
-
 void mgModuleSet(MGModule *module, const char *name, MGValue *value);
 MGValue* mgModuleGet(MGModule *module, const char *name);
 
@@ -23,6 +20,9 @@ MGValue* mgModuleGet(MGModule *module, const char *name);
 int mgModuleGetInteger(MGModule *module, const char *name, int defaultValue);
 float mgModuleGetFloat(MGModule *module, const char *name, float defaultValue);
 const char* mgModuleGetString(MGModule *module, const char *name, const char *defaultValue);
+
+MGValue* mgCreateValue(MGValueType type);
+void mgDestroyValue(MGValue *value);
 
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);

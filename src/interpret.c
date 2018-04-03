@@ -49,13 +49,13 @@ static MGValue* _mgDeepCopyValue(MGValue *value)
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
-		if (value->data.a.length)
+		if (mgListLength(value))
 		{
-			_mgListCreate(MGValue*, copy->data.a, _mgListCapacity(value->data.a));
-			for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
-				_mgListAdd(MGValue*, copy->data.a, _mgDeepCopyValue(_mgListGet(value->data.a, i)));
+			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
+			for (size_t i = 0; i < mgListLength(value); ++i)
+				_mgListAdd(MGValue*, copy->data.a, _mgDeepCopyValue(mgListGet(value, i)));
 		}
-		else if (value->data.a.capacity)
+		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
 		break;
 	default:
@@ -718,14 +718,14 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		case MG_VALUE_LIST:
 			if (lhs->type == rhs->type)
 			{
-				value = mgCreateValueTuple(lhs->data.a.length + rhs->data.a.length);
+				value = mgCreateValueTuple(mgListLength(lhs) + mgListLength(rhs));
 				value->type = (lhs->type == MG_VALUE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
 
-				for (size_t i = 0; i < lhs->data.a.length; ++i)
-					mgTupleAdd(value, _mgDeepCopyValue(lhs->data.a.items[i]));
+				for (size_t i = 0; i < mgListLength(lhs); ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(mgListGet(lhs, i)));
 
-				for (size_t i = 0; i < rhs->data.a.length; ++i)
-					mgTupleAdd(value, _mgDeepCopyValue(rhs->data.a.items[i]));
+				for (size_t i = 0; i < mgListLength(rhs); ++i)
+					mgTupleAdd(value, _mgDeepCopyValue(mgListGet(rhs, i)));
 			}
 			break;
 		default:
@@ -796,11 +796,11 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 			}
 			case MG_VALUE_TUPLE:
 			{
-				const size_t len = ((rhs->data.a.length > 0) && (lhs->data.i > 0)) ? (rhs->data.a.length * lhs->data.i) : 0;
+				const size_t len = ((mgListLength(rhs) > 0) && (lhs->data.i > 0)) ? (mgListLength(rhs) * lhs->data.i) : 0;
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, _mgDeepCopyValue(rhs->data.a.items[i % rhs->data.a.length]));
+					mgTupleAdd(value, _mgDeepCopyValue(mgListGet(rhs, i % mgListLength(rhs))));
 
 				break;
 			}
@@ -839,11 +839,11 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		case MG_VALUE_TUPLE:
 			if (rhs->type == MG_VALUE_INTEGER)
 			{
-				const size_t len = ((lhs->data.a.length > 0) && (rhs->data.i > 0)) ? (lhs->data.a.length * rhs->data.i) : 0;
+				const size_t len = ((mgListLength(lhs) > 0) && (rhs->data.i > 0)) ? (mgListLength(lhs) * rhs->data.i) : 0;
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, _mgDeepCopyValue(lhs->data.a.items[i % lhs->data.a.length]));
+					mgTupleAdd(value, _mgDeepCopyValue(mgListGet(lhs, i % mgListLength(lhs))));
 			}
 			break;
 		default:

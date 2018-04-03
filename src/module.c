@@ -42,37 +42,6 @@ void mgDestroyModule(MGModule *module)
 }
 
 
-inline MGValue* mgCreateValue(MGValueType type)
-{
-	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
-	value->type = type;
-	return value;
-}
-
-
-void mgDestroyValue(MGValue *value)
-{
-	MG_ASSERT(value);
-
-	switch (value->type)
-	{
-	case MG_VALUE_STRING:
-		free(value->data.s);
-		break;
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
-		for (size_t i = 0; i < value->data.a.length; ++i)
-			mgDestroyValue(value->data.a.items[i]);
-		free(value->data.a.items);
-		break;
-	default:
-		break;
-	}
-
-	free(value);
-}
-
-
 static inline void _mgSetValue(MGNameValue *names, size_t i, const char *name, MGValue *value)
 {
 	names[i].key = mgStringDuplicate(name);
@@ -161,6 +130,37 @@ inline const char* mgModuleGetString(MGModule *module, const char *name, const c
 {
 	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_STRING)) ? value->data.s : defaultValue;
+}
+
+
+inline MGValue* mgCreateValue(MGValueType type)
+{
+	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
+	value->type = type;
+	return value;
+}
+
+
+void mgDestroyValue(MGValue *value)
+{
+	MG_ASSERT(value);
+
+	switch (value->type)
+	{
+	case MG_VALUE_STRING:
+		free(value->data.s);
+		break;
+	case MG_VALUE_TUPLE:
+	case MG_VALUE_LIST:
+		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+			mgDestroyValue(_mgListGet(value->data.a, i));
+		_mgListDestroy(value->data.a);
+		break;
+	default:
+		break;
+	}
+
+	free(value);
 }
 
 

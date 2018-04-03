@@ -189,13 +189,13 @@ void _mgInspectValue(const MGValue *value)
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
 		putchar((value->type == MG_VALUE_TUPLE) ? '(' : '[');
-		for (size_t i = 0; i < value->data.a.length; ++i)
+		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
 		{
 			if (i > 0)
 				fputs(", ", stdout);
-			_mgInspectValue(value->data.a.items[i]);
+			_mgInspectValue(_mgListGet(value->data.a, i));
 		}
-		if ((value->data.a.length == 1) && (value->type == MG_VALUE_TUPLE))
+		if ((_mgListLength(value->data.a) == 1) && (value->type == MG_VALUE_TUPLE))
 			putchar(',');
 		putchar((value->type == MG_VALUE_TUPLE) ? ')' : ']');
 		break;
