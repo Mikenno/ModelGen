@@ -79,12 +79,10 @@ static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 
 	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 	{
-		MGValue *value = _mgVisitNode(module, _mgListGet(node->children, i));
+		mgDestroyValue(_mgVisitNode(module, _mgListGet(node->children, i)));
 
 		if (frame->state == MG_STACK_FRAME_STATE_UNWINDING)
 		{
-			mgDestroyValue(value);
-
 			if (frame->value)
 				return _mgDeepCopyValue(frame->value);
 
