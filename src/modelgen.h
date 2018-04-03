@@ -73,6 +73,7 @@ typedef MGValue* (*MGCFunction)(MGModule *module, size_t argc, MGValue **argv);
 
 typedef struct MGValue {
 	MGValueType type;
+	size_t refCount;
 	union {
 		int i;
 		float f;

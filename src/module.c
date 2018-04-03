@@ -44,6 +44,10 @@ void mgDestroyModule(MGModule *module)
 
 static inline void _mgSetValue(MGNameValue *names, size_t i, const char *name, MGValue *value)
 {
+	MG_ASSERT(names);
+	MG_ASSERT(name);
+	MG_ASSERT(value);
+
 	names[i].key = mgStringDuplicate(name);
 	names[i].value = value;
 }
@@ -136,7 +140,11 @@ inline const char* mgModuleGetString(MGModule *module, const char *name, const c
 inline MGValue* mgCreateValue(MGValueType type)
 {
 	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
+	MG_ASSERT(value);
+
 	value->type = type;
+	value->refCount = 1;
+
 	return value;
 }
 
@@ -144,6 +152,9 @@ inline MGValue* mgCreateValue(MGValueType type)
 void mgDestroyValue(MGValue *value)
 {
 	MG_ASSERT(value);
+
+	if (--value->refCount > 0)
+		return;
 
 	switch (value->type)
 	{
