@@ -446,47 +446,64 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
+static inline MGValue* _mgResolveSubscript(MGModule *module, MGNode *node, size_t *index)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(node);
+	MG_ASSERT(index);
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
 	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 0));
-	MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
+	MGValue *_index = _mgVisitNode(module, _mgListGet(node->children, 1));
 
 	MG_ASSERT(value);
-	MG_ASSERT(index);
+	MG_ASSERT(_index);
 
 	if ((value->type != MG_VALUE_TUPLE) && (value->type != MG_VALUE_LIST))
 		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[value->type]);
 
-	if (index->type != MG_VALUE_INTEGER)
+	if (_index->type != MG_VALUE_INTEGER)
 		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
+		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[_index->type]);
 
-	const int i = (int) _mgListIndexRelativeToAbsolute(value->data.a, mgIntegerGet(index));
+	const size_t i = (size_t) _mgListIndexRelativeToAbsolute(value->data.a, mgIntegerGet(_index));
 
 	if ((i < 0) || (i >= mgListLength(value)))
 	{
-		if (mgIntegerGet(index) >= 0)
+		if (mgIntegerGet(_index) >= 0)
 		{
-			MG_FAIL("Error: \"%s\" index out of range (0 <= %d < %zu)",
+			MG_FAIL("Error: \"%s\" index out of range (0 <= %zu < %zu)",
 			        _MG_VALUE_TYPE_NAMES[value->type],
-			        mgIntegerGet(index), mgListLength(value));
+			        mgIntegerGet(_index), mgListLength(value));
 		}
 		else
 		{
-			MG_FAIL("Error: \"%s\" index out of range (%d <= %d < 0)",
+			MG_FAIL("Error: \"%s\" index out of range (%zu <= %zu < 0)",
 			        _MG_VALUE_TYPE_NAMES[value->type],
-			        -mgListLength(value), mgIntegerGet(index));
+			        -mgListLength(value), mgIntegerGet(_index));
 		}
 	}
 
-	MGValue *result = _mgReferenceValue(mgTupleGet(value, i));
+	mgDestroyValue(_index);
 
-	mgDestroyValue(value);
-	mgDestroyValue(index);
+	*index = i;
 
-	return result;
+	return value;
+}
+
+
+static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
+{
+	size_t i;
+	MGValue *collection = _mgResolveSubscript(module, node, &i);
+	MG_ASSERT(collection);
+
+	MGValue *value = _mgReferenceValue(_mgListGet(collection->data.a, i));
+	MG_ASSERT(value);
+
+	mgDestroyValue(collection);
+
+	return value;
 }
 
 
@@ -596,21 +613,36 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	MGNode *nameNode = _mgListGet(node->children, 0);
-	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
-	MG_ASSERT(nameNode->token);
-
-	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-	MG_ASSERT(nameLength > 0);
-	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
-	MG_ASSERT(name);
-
 	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(value);
 
-	mgModuleSet(module, name, value);
+	MGNode *lhs = _mgListGet(node->children, 0);
+	MG_ASSERT(lhs);
+	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT));
 
-	free(name);
+	if (lhs->type == MG_NODE_IDENTIFIER)
+	{
+		MG_ASSERT(lhs->token);
+
+		const size_t nameLength = lhs->token->end.string - lhs->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(lhs->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		mgModuleSet(module, name, value);
+
+		free(name);
+	}
+	else if (lhs->type == MG_NODE_SUBSCRIPT)
+	{
+		size_t i;
+		MGValue *collection = _mgResolveSubscript(module, lhs, &i);
+		MG_ASSERT(collection);
+		MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
+
+		mgDestroyValue(_mgListGet(collection->data.a, i));
+		_mgListSet(collection->data.a, i, value);
+	}
 
 	return _mgReferenceValue(value);
 }
