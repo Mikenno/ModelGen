@@ -452,10 +452,25 @@ static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
 
-	if ((mgIntegerGet(index) < 0) || (mgIntegerGet(index) >= mgListLength(value)))
-		MG_FAIL("Error: \"%s\" index out of range", _MG_VALUE_TYPE_NAMES[value->type]);
+	const int i = (int) _mgListIndexRelativeToAbsolute(value->data.a, mgIntegerGet(index));
 
-	MGValue *result = _mgDeepCopyValue(mgTupleGet(value, mgIntegerGet(index)));
+	if ((i < 0) || (i >= mgListLength(value)))
+	{
+		if (mgIntegerGet(index) >= 0)
+		{
+			MG_FAIL("Error: \"%s\" index out of range (0 <= %d < %zu)",
+			        _MG_VALUE_TYPE_NAMES[value->type],
+			        mgIntegerGet(index), mgListLength(value));
+		}
+		else
+		{
+			MG_FAIL("Error: \"%s\" index out of range (%d <= %d < 0)",
+			        _MG_VALUE_TYPE_NAMES[value->type],
+			        -mgListLength(value), mgIntegerGet(index));
+		}
+	}
+
+	MGValue *result = _mgDeepCopyValue(mgTupleGet(value, i));
 
 	mgDestroyValue(value);
 	mgDestroyValue(index);

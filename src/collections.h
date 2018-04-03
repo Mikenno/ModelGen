@@ -64,7 +64,7 @@
 
 #define _mgListRemove(list, index) \
 	do { \
-		for (size_t i = index + 1; i < _mgListLength(list); ++i) \
+		for (size_t i = (index) + 1; i < _mgListLength(list); ++i) \
 			_mgListSet(list, i - 1, _mgListGet(list, i)); \
 		--(list).length; \
 	} while (0)
