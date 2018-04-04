@@ -67,6 +67,11 @@ typedef struct MGParser {
 
 typedef struct MGValue MGValue;
 
+typedef _MGList(MGValue*) MGValueList;
+
+typedef _MGPair(char*, MGValue*) MGValueMapPair;
+typedef _MGList(MGValueMapPair) MGValueMap;
+
 typedef struct MGModule MGModule;
 
 typedef MGValue* (*MGCFunction)(MGModule *module, size_t argc, MGValue **argv);
@@ -79,20 +84,19 @@ typedef struct MGValue {
 		float f;
 		char *s;
 		MGCFunction cfunc;
-		_MGList(MGValue*) a;
+		MGValueList a;
+		MGValueMap m;
 		MGNode *func;
 	} data;
 } MGValue;
 
 typedef struct MGInstance MGInstance;
 
-typedef _MGPair(char*, MGValue*) MGNameValue;
-
 typedef struct MGModule {
 	MGInstance *instance;
 	MGParser parser;
 	char *filename;
-	_MGList(MGNameValue) names;
+	MGValueMap names;
 } MGModule;
 
 typedef struct MGStackFrame MGStackFrame;

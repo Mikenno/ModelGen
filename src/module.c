@@ -7,17 +7,6 @@
 #include "utilities.h"
 
 
-static inline void _mgDestroyNameValue(MGNameValue *pair)
-{
-	MG_ASSERT(pair);
-	MG_ASSERT(pair->key);
-	MG_ASSERT(pair->value);
-
-	free(pair->key);
-	mgDestroyValue(pair->value);
-}
-
-
 void mgCreateModule(MGModule *module)
 {
 	MG_ASSERT(module);
@@ -25,6 +14,7 @@ void mgCreateModule(MGModule *module)
 	memset(module, 0, sizeof(MGModule));
 
 	mgCreateParser(&module->parser);
+	_mgCreateMap(&module->names, 1 << 4);
 }
 
 
@@ -32,41 +22,10 @@ void mgDestroyModule(MGModule *module)
 {
 	MG_ASSERT(module);
 
-	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		_mgDestroyNameValue(&_mgListGet(module->names, i));
-	_mgListDestroy(module->names);
-
 	mgDestroyParser(&module->parser);
+	_mgDestroyMap(&module->names);
 
 	free(module->filename);
-}
-
-
-static inline void _mgSetValue(MGNameValue *names, size_t i, const char *name, MGValue *value)
-{
-	MG_ASSERT(names);
-	MG_ASSERT(name);
-	MG_ASSERT(value);
-
-	names[i].key = mgStringDuplicate(name);
-	names[i].value = value;
-}
-
-
-static inline void _mgAddValue(MGModule *module, const char *name, MGValue *value)
-{
-	_mgListAddUninitialized(MGNameValue, module->names);
-
-	_mgSetValue(_mgListItems(module->names), _mgListLength(module->names)++, name, value);
-}
-
-
-static inline void _mgSwapNames(MGNameValue *names, size_t i, size_t i2)
-{
-	MGNameValue temp;
-	memcpy(&temp, &names[i], sizeof(MGNameValue));
-	memcpy(&names[i], &names[i2], sizeof(MGNameValue));
-	memcpy(&names[i2], &temp, sizeof(MGNameValue));
 }
 
 
@@ -75,31 +34,7 @@ void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	MGNameValue *pair = NULL;
-	for (size_t i = 0; (pair == NULL) && (i < _mgListLength(module->names)); ++i)
-		if (strcmp(_mgListGet(module->names, i).key, name) == 0)
-			pair = &_mgListGet(module->names, i);
-
-	if (value)
-	{
-		if (pair)
-		{
-			_mgDestroyNameValue(pair);
-			_mgSetValue(_mgListItems(module->names), (size_t) (pair - _mgListItems(module->names)), name, value);
-		}
-		else
-			_mgAddValue(module, name, value);
-	}
-	else if (pair)
-	{
-		_mgDestroyNameValue(pair);
-
-		if (_mgListLength(module->names) > 1)
-			if (pair != &_mgListItems(module->names)[_mgListLength(module->names) - 1])
-				_mgSwapNames(_mgListItems(module->names), (size_t) (pair - _mgListItems(module->names)), _mgListLength(module->names) - 1);
-
-		--_mgListLength(module->names);
-	}
+	_mgMapSet(&module->names, name, value);
 }
 
 
@@ -108,11 +43,7 @@ inline MGValue* mgModuleGet(MGModule *module, const char *name)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		if (strcmp(_mgListGet(module->names, i).key, name) == 0)
-			return _mgListGet(module->names, i).value;
-
-	return NULL;
+	return _mgMapGet(&module->names, name);
 }
 
 
@@ -134,6 +65,122 @@ inline const char* mgModuleGetString(MGModule *module, const char *name, const c
 {
 	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_STRING)) ? value->data.s : defaultValue;
+}
+
+
+static inline void _mgDestroyMapValuePair(MGValueMapPair *pair)
+{
+	MG_ASSERT(pair);
+	MG_ASSERT(pair->key);
+	MG_ASSERT(pair->value);
+
+	free(pair->key);
+	mgDestroyValue(pair->value);
+}
+
+
+void _mgCreateMap(MGValueMap *map, size_t capacity)
+{
+	MG_ASSERT(map);
+
+	if (capacity > 0)
+		_mgListCreate(MGValueMapPair, *map, capacity);
+	else
+		_mgListInitialize(*map);
+}
+
+
+void _mgDestroyMap(MGValueMap *map)
+{
+	MG_ASSERT(map);
+
+	_mgMapClear(map);
+	_mgListDestroy(*map);
+}
+
+
+void _mgMapClear(MGValueMap *map)
+{
+	MG_ASSERT(map);
+
+	for (size_t i = 0; i < _mgListLength(*map); ++i)
+		_mgDestroyMapValuePair(&_mgListGet(*map, i));
+
+	_mgListLength(*map) = 0;
+}
+
+
+static inline void _mgMapSetSet(MGValueMapPair *names, size_t i, const char *key, MGValue *value)
+{
+	MG_ASSERT(names);
+	MG_ASSERT(key);
+	MG_ASSERT(value);
+
+	names[i].key = mgStringDuplicate(key);
+	names[i].value = value;
+}
+
+
+static inline void _mgMapSetAdd(MGValueMap *map, const char *key, MGValue *value)
+{
+	_mgListAddUninitialized(MGValueMapPair, *map);
+
+	_mgMapSetSet(_mgListItems(*map), _mgListLength(*map)++, key, value);
+}
+
+
+static inline void _mgMapSetSwap(MGValueMapPair *pairs, size_t i, size_t i2)
+{
+	MGValueMapPair temp;
+	memcpy(&temp, &pairs[i], sizeof(MGValueMapPair));
+	memcpy(&pairs[i], &pairs[i2], sizeof(MGValueMapPair));
+	memcpy(&pairs[i2], &temp, sizeof(MGValueMapPair));
+}
+
+
+void _mgMapSet(MGValueMap *map, const char *key, MGValue *value)
+{
+	MG_ASSERT(map);
+	MG_ASSERT(key);
+
+	MGValueMapPair *pair = NULL;
+	for (size_t i = 0; (pair == NULL) && (i < _mgListLength(*map)); ++i)
+		if (strcmp(_mgListGet(*map, i).key, key) == 0)
+			pair = &_mgListGet(*map, i);
+
+	if (value)
+	{
+		if (pair)
+		{
+			_mgDestroyMapValuePair(pair);
+			_mgMapSetSet(_mgListItems(*map), (size_t) (pair - _mgListItems(*map)), key, value);
+		}
+		else
+			_mgMapSetAdd(map, key, value);
+	}
+	else if (pair)
+	{
+		_mgDestroyMapValuePair(pair);
+
+		if (_mgListLength(*map) > 1)
+			if (pair != &_mgListItems(*map)[_mgListLength(*map) - 1])
+				_mgMapSetSwap(_mgListItems(*map), (size_t) (pair - _mgListItems(*map)), _mgListLength(*map) - 1);
+
+		--_mgListLength(*map);
+	}
+}
+
+
+MGValue* _mgMapGet(const MGValueMap *map, const char *key)
+{
+	MG_ASSERT(map);
+	MG_ASSERT(key);
+
+	for (size_t i = 0; i < _mgListLength(*map); ++i)
+		if (strcmp(_mgListGet(*map, i).key, key) == 0)
+			return _mgListGet(*map, i).value;
+
+	return NULL;
 }
 
 
@@ -166,6 +213,9 @@ void mgDestroyValue(MGValue *value)
 		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
 			mgDestroyValue(_mgListGet(value->data.a, i));
 		_mgListDestroy(value->data.a);
+		break;
+	case MG_VALUE_MAP:
+		_mgDestroyMap(&value->data.m);
 		break;
 	default:
 		break;
@@ -205,6 +255,14 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 
 	MGValue *value = mgCreateValue(MG_VALUE_CFUNCTION);
 	value->data.cfunc = cfunc;
+	return value;
+}
+
+
+inline MGValue* mgCreateValueMap(size_t capacity)
+{
+	MGValue *value = mgCreateValue(MG_VALUE_MAP);
+	_mgCreateMap(&value->data.m, capacity);
 	return value;
 }
 
@@ -311,7 +369,7 @@ inline void mgListClear(MGValue *list)
 	MG_ASSERT(list);
 	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
 
-	for (size_t i = 0; i < list->data.a.length; ++i)
+	for (size_t i = 0; i < _mgListLength(list->data.a); ++i)
 		mgDestroyValue(_mgListGet(list->data.a, i));
 
 	_mgListClear(list->data.a);

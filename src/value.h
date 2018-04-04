@@ -9,7 +9,7 @@
 	_MG_V(STRING, "String") \
 	_MG_V(TUPLE, "Tuple") \
 	_MG_V(LIST, "List") \
-	_MG_V(CALL, "Call") \
+	_MG_V(MAP, "Map") \
 	_MG_V(CFUNCTION, "CFunction") \
 	_MG_V(PROCEDURE, "Procedure") \
 	_MG_V(FUNCTION, "Function")

@@ -21,6 +21,14 @@ int mgModuleGetInteger(MGModule *module, const char *name, int defaultValue);
 float mgModuleGetFloat(MGModule *module, const char *name, float defaultValue);
 const char* mgModuleGetString(MGModule *module, const char *name, const char *defaultValue);
 
+void _mgCreateMap(MGValueMap *map, size_t capacity);
+void _mgDestroyMap(MGValueMap *map);
+
+void _mgMapClear(MGValueMap *map);
+
+void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
+MGValue* _mgMapGet(const MGValueMap *map, const char *key);
+
 MGValue* mgCreateValue(MGValueType type);
 void mgDestroyValue(MGValue *value);
 
@@ -28,7 +36,9 @@ MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);
 MGValue* mgCreateValueString(const char *s);
 MGValue* mgCreateValueCFunction(MGCFunction cfunc);
-
+MGValue* mgCreateValueTuple(size_t capacity);
+MGValue* mgCreateValueList(size_t capacity);
+MGValue* mgCreateValueMap(size_t capacity);
 #define mgCreateValueVoid() mgCreateValueTuple(0)
 
 #define mgIntegerSet(value, _i) value->data.i = _i
@@ -39,8 +49,6 @@ MGValue* mgCreateValueCFunction(MGCFunction cfunc);
 
 void mgStringSet(MGValue *value, const char *s);
 const char* mgStringGet(MGValue *value);
-
-MGValue* mgCreateValueTuple(size_t capacity);
 
 #define mgTupleClear mgListClear
 
@@ -57,8 +65,6 @@ MGValue* mgCreateValueTuple(size_t capacity);
 #define mgTupleRemove mgListRemove
 #define mgTupleRemoveRange mgListRemoveRange
 
-MGValue* mgCreateValueList(size_t capacity);
-
 void mgListAdd(MGValue *list, MGValue *value);
 void mgListInsert(MGValue *list, intmax_t index, MGValue *value);
 
@@ -67,11 +73,15 @@ void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end);
 
 void mgListClear(MGValue *list);
 
-#define mgListLength(list) _mgListLength(list->data.a)
-#define mgListCapacity(list) _mgListCapacity(list->data.a)
-#define mgListItems(list) _mgListItems(list->data.a)
+#define mgListLength(list) _mgListLength((list)->data.a)
+#define mgListCapacity(list) _mgListCapacity((list)->data.a)
+#define mgListItems(list) _mgListItems((list)->data.a)
 
-#define mgListSet(list, index, value) _mgListSet(list->data.a, _mgListIndexRelativeToAbsolute(list->data.a, index), value)
-#define mgListGet(list, index) _mgListGet(list->data.a, _mgListIndexRelativeToAbsolute(list->data.a, index))
+#define mgListSet(list, index, value) _mgListSet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index), value)
+#define mgListGet(list, index) _mgListGet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index))
+
+#define mgMapClear(map) _mgMapClear(&(map)->data.m)
+#define mgMapSet(map, key, value) _mgMapSet(&(map)->data.m, key, value)
+#define mgMapGet(map, key) _mgMapGet(&(map)->data.m, key)
 
 #endif
