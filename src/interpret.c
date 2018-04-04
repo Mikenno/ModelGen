@@ -16,7 +16,7 @@ static inline void _mgFail(const char *file, int line, MGModule *module, MGNode 
 
 	fprintf(stderr, "%s:%d: ", file, line);
 
-	if (module->filename)
+	if (module && module->filename)
 		fprintf(stderr, "%s:", module->filename);
 	if (node && node->tokenBegin)
 		fprintf(stderr, "%u:%u: ", node->tokenBegin->begin.line, node->tokenBegin->begin.character);
@@ -60,6 +60,19 @@ static MGValue* _mgDeepCopyValue(const MGValue *value)
 		}
 		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
+		break;
+	case MG_VALUE_MAP:
+		if (_mgListLength(value->data.m))
+		{
+			_mgCreateMap(&copy->data.m, _mgListLength(value->data.m));
+			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
+			{
+				const MGValueMapPair *pair = &_mgListGet(value->data.m, i);
+				mgMapSet(copy, pair->key, _mgDeepCopyValue(pair->value));
+			}
+		}
+		else
+			_mgCreateMap(&copy->data.m, 0);
 		break;
 	default:
 		break;
@@ -446,62 +459,121 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgResolveSubscript(MGModule *module, MGNode *node, size_t *index)
+static inline size_t _mgResolveArrayIndex(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(node);
+	MG_ASSERT(collection);
+	MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
 	MG_ASSERT(index);
-	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 0));
-	MGValue *_index = _mgVisitNode(module, _mgListGet(node->children, 1));
-
-	MG_ASSERT(value);
-	MG_ASSERT(_index);
-
-	if ((value->type != MG_VALUE_TUPLE) && (value->type != MG_VALUE_LIST))
-		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[value->type]);
-
-	if (_index->type != MG_VALUE_INTEGER)
+	if (index->type != MG_VALUE_INTEGER)
 		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[value->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[_index->type]);
+		        _MG_VALUE_TYPE_NAMES[collection->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
 
-	const size_t i = (size_t) _mgListIndexRelativeToAbsolute(value->data.a, mgIntegerGet(_index));
+	size_t i = (size_t) _mgListIndexRelativeToAbsolute(collection->data.a, mgIntegerGet(index));
 
-	if ((i < 0) || (i >= mgListLength(value)))
+	if ((i < 0) || (i >= mgListLength(collection)))
 	{
-		if (mgIntegerGet(_index) >= 0)
+		if (mgIntegerGet(index) >= 0)
 		{
 			MG_FAIL("Error: \"%s\" index out of range (0 <= %zu < %zu)",
-			        _MG_VALUE_TYPE_NAMES[value->type],
-			        mgIntegerGet(_index), mgListLength(value));
+			        _MG_VALUE_TYPE_NAMES[collection->type],
+			        mgIntegerGet(index), mgListLength(collection));
 		}
 		else
 		{
 			MG_FAIL("Error: \"%s\" index out of range (%zu <= %zu < 0)",
-			        _MG_VALUE_TYPE_NAMES[value->type],
-			        -mgListLength(value), mgIntegerGet(_index));
+			        _MG_VALUE_TYPE_NAMES[collection->type],
+			        -mgListLength(collection), mgIntegerGet(index));
 		}
 	}
 
-	mgDestroyValue(_index);
+	return i;
+}
 
-	*index = i;
 
-	return value;
+static inline MGValue* _mgResolveArrayGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
+{
+	return _mgReferenceValue(_mgListGet(collection->data.a, _mgResolveArrayIndex(module, node, collection, index)));
+}
+
+
+static inline void _mgResolveArraySet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
+{
+	const size_t i = _mgResolveArrayIndex(module, node, collection, index);
+
+	mgDestroyValue(_mgListGet(collection->data.a, i));
+	_mgListSet(collection->data.a, i, _mgReferenceValue(value));
+}
+
+
+static inline MGValue* _mgResolveMapGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *key)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(collection->type == MG_VALUE_MAP);
+	MG_ASSERT(key);
+	MG_ASSERT(key->type == MG_VALUE_STRING);
+	MG_ASSERT(key->data.s);
+
+	MGValue *value = mgMapGet(collection, key->data.s);
+
+	if (value == NULL)
+		MG_FAIL("Error: Undefined key \"%s\"", key->data.s);
+
+	return _mgReferenceValue(value);
+}
+
+
+static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *value)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(collection->type == MG_VALUE_MAP);
+	MG_ASSERT(key);
+	MG_ASSERT(key->type == MG_VALUE_STRING);
+	MG_ASSERT(key->data.s);
+	MG_ASSERT(value);
+
+	mgMapSet(collection, key->data.s, value);
+}
+
+
+static inline MGValue* _mgResolveSubscriptGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
+{
+	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
+		return _mgResolveArrayGet(module, node, collection, index);
+	else if (collection->type == MG_VALUE_MAP)
+		return _mgResolveMapGet(module, node, collection, index);
+	else
+		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
+
+	return NULL;
+}
+
+
+static inline void _mgResolveSubscriptSet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
+{
+	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
+		_mgResolveArraySet(module, node, collection, index, value);
+	else if (collection->type == MG_VALUE_MAP)
+		_mgResolveMapSet(collection, index, value);
+	else
+		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
 }
 
 
 static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 {
-	size_t i;
-	MGValue *collection = _mgResolveSubscript(module, node, &i);
-	MG_ASSERT(collection);
+	MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
+	MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
 
-	MGValue *value = _mgReferenceValue(_mgListGet(collection->data.a, i));
-	MG_ASSERT(value);
+	MG_ASSERT(collection);
+	MG_ASSERT(index);
+
+	MGValue *value = _mgResolveSubscriptGet(module, node, collection, index);
 
 	mgDestroyValue(collection);
+	mgDestroyValue(index);
+
+	MG_ASSERT(value);
 
 	return value;
 }
@@ -609,6 +681,32 @@ static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitMap(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(node->type == MG_NODE_MAP);
+	MG_ASSERT((_mgListLength(node->children) % 2) == 0);
+
+	MGValue *map = mgCreateValueMap(_mgListLength(node->children) / 2);
+
+	for (size_t i = 0; i < _mgListLength(node->children); i += 2)
+	{
+		MGValue *value = _mgVisitNode(module, _mgListGet(node->children, i + 1));
+		MGValue *key = _mgVisitNode(module, _mgListGet(node->children, i));
+
+		MG_ASSERT(key);
+		MG_ASSERT(key->type == MG_VALUE_STRING);
+		MG_ASSERT(key->data.s);
+		MG_ASSERT(value);
+
+		mgMapSet(map, key->data.s, value);
+
+		mgDestroyValue(key);
+	}
+
+	return map;
+}
+
+
 static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
@@ -635,13 +733,16 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 	}
 	else if (lhs->type == MG_NODE_SUBSCRIPT)
 	{
-		size_t i;
-		MGValue *collection = _mgResolveSubscript(module, lhs, &i);
-		MG_ASSERT(collection);
-		MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
+		MGValue *index = _mgVisitNode(module, _mgListGet(lhs->children, 1));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(lhs->children, 0));
 
-		mgDestroyValue(_mgListGet(collection->data.a, i));
-		_mgListSet(collection->data.a, i, _mgReferenceValue(value));
+		MG_ASSERT(collection);
+		MG_ASSERT(index);
+
+		_mgResolveSubscriptSet(module, lhs, collection, index, _mgReferenceValue(value));
+
+		mgDestroyValue(collection);
+		mgDestroyValue(index);
 	}
 	else if (lhs->type == MG_NODE_TUPLE)
 	{
@@ -1444,6 +1545,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitTuple(module, node);
 	case MG_NODE_RANGE:
 		return _mgVisitRange(module, node);
+	case MG_NODE_MAP:
+		return _mgVisitMap(module, node);
 	case MG_NODE_BIN_OP:
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_UNARY_OP:

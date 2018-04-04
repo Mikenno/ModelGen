@@ -278,6 +278,47 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		token = node->tokenEnd + 1;
 	}
+	else if (token->type == MG_TOKEN_LBRACE)
+	{
+		node = mgCreateNode(token);
+		node->type = MG_NODE_MAP;
+
+		++token;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		while (token->type != MG_TOKEN_RBRACE)
+		{
+			MG_ASSERT((token->type == MG_TOKEN_IDENTIFIER) || (token->type == MG_TOKEN_STRING));
+
+			MGNode *key = mgCreateNode(token);
+			key->type = (token->type == MG_TOKEN_IDENTIFIER) ? MG_NODE_IDENTIFIER : MG_NODE_STRING;
+			key->tokenEnd = token;
+			_mgAddChild(node, key);
+
+			++token;
+			_MG_TOKEN_SCAN_LINE(token);
+			MG_ASSERT((token->type == MG_TOKEN_COLON));
+
+			++token;
+			_MG_TOKEN_SCAN_LINES(token);
+
+			MGNode *value = _mgParseExpression(parser, token);
+			_mgAddChild(node, value);
+
+			token = value->tokenEnd + 1;
+			_MG_TOKEN_SCAN_LINES(token);
+
+			if (token->type == MG_TOKEN_RBRACE)
+				break;
+
+			MG_ASSERT(token->type == MG_TOKEN_COMMA);
+			++token;
+			_MG_TOKEN_SCAN_LINES(token);
+		}
+
+		if (token->type == MG_TOKEN_RBRACE)
+			node->tokenEnd = token++;
+	}
 	else if (token->type == MG_TOKEN_FOR)
 	{
 		node = mgCreateNode(token);
