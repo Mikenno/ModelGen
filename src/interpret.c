@@ -618,7 +618,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 	MGNode *lhs = _mgListGet(node->children, 0);
 	MG_ASSERT(lhs);
-	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT));
+	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_TUPLE));
 
 	if (lhs->type == MG_NODE_IDENTIFIER)
 	{
@@ -629,7 +629,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		char *name = mgStringDuplicateFixed(lhs->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
-		mgModuleSet(module, name, value);
+		mgModuleSet(module, name, _mgReferenceValue(value));
 
 		free(name);
 	}
@@ -641,10 +641,47 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
 
 		mgDestroyValue(_mgListGet(collection->data.a, i));
-		_mgListSet(collection->data.a, i, value);
+		_mgListSet(collection->data.a, i, _mgReferenceValue(value));
+	}
+	else if (lhs->type == MG_NODE_TUPLE)
+	{
+		if ((value->type != MG_VALUE_TUPLE) && (value->type != MG_VALUE_LIST))
+			MG_FAIL("Error: \"%s\" is not iterable", _MG_VALUE_TYPE_NAMES[value->type]);
+
+		if (_mgListLength(lhs->children) != mgListLength(value))
+			MG_FAIL("Error: Mismatched lengths for parallel assignment (%zu != %zu)", _mgListLength(lhs->children), mgListLength(value));
+
+		char *name = NULL;
+		size_t nameCapacity = 0;
+
+		for (size_t i = 0; i < _mgListLength(lhs->children); ++i)
+		{
+			if (_mgListGet(lhs->children, i)->type != MG_NODE_IDENTIFIER)
+				MG_FAIL("Error: Cannot assign to \"%s\"", _MG_NODE_NAMES[_mgListGet(lhs->children, i)->type]);
+
+			const MGNode *const nameNode = _mgListGet(lhs->children, i);
+			MG_ASSERT(nameNode->token);
+
+			const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+			MG_ASSERT(nameLength > 0);
+
+			if (nameLength >= nameCapacity)
+			{
+				nameCapacity = nameLength + 1;
+				name = (char*) realloc(name, nameCapacity * sizeof(char));
+				MG_ASSERT(name);
+			}
+
+			strncpy(name, nameNode->token->begin.string, nameLength);
+			name[nameLength] = '\0';
+
+			mgModuleSet(module, name, _mgReferenceValue(mgListGet(value, i)));
+		}
+
+		free(name);
 	}
 
-	return _mgReferenceValue(value);
+	return value;
 }
 
 
