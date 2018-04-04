@@ -3,6 +3,23 @@
 #include <string.h>
 
 #include "utilities.h"
+#include "debug.h"
+
+
+inline uint32_t mgNextPowerOfTwo(uint32_t x)
+{
+	MG_ASSERT(x > 0);
+	MG_ASSERT(x <= ((UINT32_MAX / 2) + 1));
+
+	--x;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+
+	return x + 1;
+}
 
 
 int mgStringEndsWith(const char *string, const char *suffix)

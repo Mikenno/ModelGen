@@ -262,7 +262,7 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 inline MGValue* mgCreateValueMap(size_t capacity)
 {
 	MGValue *value = mgCreateValue(MG_VALUE_MAP);
-	_mgCreateMap(&value->data.m, capacity);
+	_mgCreateMap(&value->data.m, capacity > 0 ? (size_t) mgNextPowerOfTwo((uint32_t) capacity) : 0);
 	return value;
 }
 
@@ -293,7 +293,7 @@ MGValue* mgCreateValueList(size_t capacity)
 	MGValue *value = mgCreateValue(MG_VALUE_LIST);
 
 	if (capacity > 0)
-		_mgListCreate(MGValue*, value->data.a, capacity);
+		_mgListCreate(MGValue*, value->data.a, (size_t) mgNextPowerOfTwo((uint32_t) capacity));
 	else
 		_mgListInitialize(value->data.a);
 
