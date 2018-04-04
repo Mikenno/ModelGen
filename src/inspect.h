@@ -7,11 +7,12 @@
 
 void mgInspectToken(const MGToken *token, const char *filename, MGbool justify);
 void mgInspectNode(const MGNode *node);
-void _mgInspectValue(const MGValue *value);
 void mgInspectValue(const MGValue *value);
 void mgInspectModule(const MGModule *module);
 void mgInspectInstance(const MGInstance *instance);
 void mgInspectStackFrame(const MGStackFrame *frame);
+
+void _mgInspectValue(const MGValue *value, unsigned int depth);
 
 void mgInspectStringLines(const char *str);
 

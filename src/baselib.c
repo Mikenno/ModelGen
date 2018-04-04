@@ -37,7 +37,7 @@ static MGValue* mg_print(MGModule *module, size_t argc, MGValue **argv)
 		MGValue *value = argv[i];
 
 		if (value->type != MG_VALUE_STRING)
-			_mgInspectValue(argv[i]);
+			_mgInspectValue(argv[i], 0);
 		else if (value->data.s)
 			fputs(value->data.s, stdout);
 	}

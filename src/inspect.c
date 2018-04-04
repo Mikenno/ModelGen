@@ -168,7 +168,26 @@ void mgInspectNode(const MGNode *node)
 }
 
 
-void _mgInspectValue(const MGValue *value)
+static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth)
+{
+	for (unsigned int i = 0; i < depth; ++i)
+		fputs("    ", stdout);
+
+	printf("%s: %s", name->key, _MG_VALUE_TYPE_NAMES[name->value->type]);
+
+	if ((name->value->type == MG_VALUE_TUPLE) || (name->value->type == MG_VALUE_LIST))
+		printf("[%zu]", _mgListLength(name->value->data.a));
+	else if (name->value->type == MG_VALUE_MAP)
+		printf("[%zu]", _mgListLength(name->value->data.m));
+
+	fputs(" = ", stdout);
+
+	_mgInspectValue(name->value, depth);
+	putchar('\n');
+}
+
+
+void _mgInspectValue(const MGValue *value, unsigned int depth)
 {
 	switch (value->type)
 	{
@@ -193,11 +212,23 @@ void _mgInspectValue(const MGValue *value)
 		{
 			if (i > 0)
 				fputs(", ", stdout);
-			_mgInspectValue(_mgListGet(value->data.a, i));
+			_mgInspectValue(_mgListGet(value->data.a, i), depth);
 		}
 		if ((_mgListLength(value->data.a) == 1) && (value->type == MG_VALUE_TUPLE))
 			putchar(',');
 		putchar((value->type == MG_VALUE_TUPLE) ? ')' : ']');
+		break;
+	case MG_VALUE_MAP:
+		putchar('{');
+		if (_mgListLength(value->data.m))
+		{
+			putchar('\n');
+			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
+				_mgInspectName(&_mgListGet(value->data.m, i), depth + 1);
+			for (unsigned int i = 0; i < depth; ++i)
+				fputs("    ", stdout);
+		}
+		putchar('}');
 		break;
 	case MG_VALUE_CFUNCTION:
 		printf("%p", value->data.cfunc);
@@ -214,15 +245,8 @@ void _mgInspectValue(const MGValue *value)
 
 void mgInspectValue(const MGValue *value)
 {
-	_mgInspectValue(value);
+	_mgInspectValue(value, 0);
 	putchar('\n');
-}
-
-
-static void _mgInspectName(MGNameValue *name)
-{
-	printf("%s: %s = ", name->key, _MG_VALUE_TYPE_NAMES[name->value->type]);
-	mgInspectValue(name->value);
 }
 
 
@@ -236,7 +260,7 @@ void mgInspectModule(const MGModule *module)
 		       _mgListLength(module->names), _mgListCapacity(module->names));
 
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		_mgInspectName(&_mgListGet(module->names, i));
+		_mgInspectName(&_mgListGet(module->names, i), 0);
 }
 
 
