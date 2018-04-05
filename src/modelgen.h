@@ -96,7 +96,7 @@ typedef struct MGModule {
 	MGInstance *instance;
 	MGParser parser;
 	char *filename;
-	MGValueMap names;
+	MGValue *globals;
 } MGModule;
 
 typedef struct MGStackFrame MGStackFrame;

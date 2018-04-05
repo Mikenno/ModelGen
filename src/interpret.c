@@ -35,7 +35,7 @@ static inline void _mgFail(const char *file, int line, MGModule *module, MGNode 
 #define MG_FAIL(...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
-static MGValue* _mgDeepCopyValue(const MGValue *value)
+inline MGValue* mgDeepCopyValue(const MGValue *value)
 {
 	MG_ASSERT(value);
 
@@ -56,7 +56,7 @@ static MGValue* _mgDeepCopyValue(const MGValue *value)
 		{
 			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
 			for (size_t i = 0; i < mgListLength(value); ++i)
-				_mgListAdd(MGValue*, copy->data.a, _mgDeepCopyValue(mgListGet(value, i)));
+				_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(mgListGet(value, i)));
 		}
 		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
@@ -68,7 +68,7 @@ static MGValue* _mgDeepCopyValue(const MGValue *value)
 			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
 			{
 				const MGValueMapPair *pair = &_mgListGet(value->data.m, i);
-				mgMapSet(copy, pair->key, _mgDeepCopyValue(pair->value));
+				mgMapSet(copy, pair->key, mgDeepCopyValue(pair->value));
 			}
 		}
 		else
@@ -82,7 +82,7 @@ static MGValue* _mgDeepCopyValue(const MGValue *value)
 }
 
 
-static inline MGValue* _mgReferenceValue(MGValue *value)
+inline MGValue* mgReferenceValue(MGValue *value)
 {
 	MG_ASSERT(value);
 
@@ -110,7 +110,7 @@ static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 		if (frame->state == MG_STACK_FRAME_STATE_UNWINDING)
 		{
 			if (frame->value)
-				return _mgReferenceValue(frame->value);
+				return mgReferenceValue(frame->value);
 
 			break;
 		}
@@ -249,7 +249,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				MG_ASSERT(procParameterName);
 
 				if (i < _mgListLength(args))
-					mgModuleSet(module, procParameterName, _mgReferenceValue(_mgListGet(args, i)));
+					mgModuleSet(module, procParameterName, mgReferenceValue(_mgListGet(args, i)));
 				else
 				{
 					if (procParameterNode->type != MG_NODE_BIN_OP)
@@ -269,7 +269,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MGValue *value = NULL;
 
 	if (frame.value)
-		value = _mgReferenceValue(frame.value);
+		value = mgReferenceValue(frame.value);
 	else
 		value = mgCreateValueVoid();
 
@@ -374,7 +374,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 		MGValue *value = _mgListGet(test->data.a, i);
 		MG_ASSERT(value);
 
-		mgModuleSet(module, name, _mgReferenceValue(value));
+		mgModuleSet(module, name, mgReferenceValue(value));
 
 		for (size_t j = 2; j < _mgListLength(node->children); ++j)
 		{
@@ -455,7 +455,7 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 
 	free(name);
 
-	return _mgReferenceValue(proc);
+	return mgReferenceValue(proc);
 }
 
 
@@ -493,7 +493,7 @@ static inline size_t _mgResolveArrayIndex(MGModule *module, MGNode *node, MGValu
 
 static inline MGValue* _mgResolveArrayGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
 {
-	return _mgReferenceValue(_mgListGet(collection->data.a, _mgResolveArrayIndex(module, node, collection, index)));
+	return mgReferenceValue(_mgListGet(collection->data.a, _mgResolveArrayIndex(module, node, collection, index)));
 }
 
 
@@ -502,7 +502,7 @@ static inline void _mgResolveArraySet(MGModule *module, MGNode *node, MGValue *c
 	const size_t i = _mgResolveArrayIndex(module, node, collection, index);
 
 	mgDestroyValue(_mgListGet(collection->data.a, i));
-	_mgListSet(collection->data.a, i, _mgReferenceValue(value));
+	_mgListSet(collection->data.a, i, mgReferenceValue(value));
 }
 
 
@@ -519,7 +519,7 @@ static inline MGValue* _mgResolveMapGet(MGModule *module, MGNode *node, MGValue 
 	if (value == NULL)
 		MG_FAIL("Error: Undefined key \"%s\"", key->data.s);
 
-	return _mgReferenceValue(value);
+	return mgReferenceValue(value);
 }
 
 
@@ -595,7 +595,7 @@ static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 
 	free(name);
 
-	return _mgReferenceValue(value);
+	return mgReferenceValue(value);
 }
 
 
@@ -727,7 +727,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		char *name = mgStringDuplicateFixed(lhs->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
-		mgModuleSet(module, name, _mgReferenceValue(value));
+		mgModuleSet(module, name, mgReferenceValue(value));
 
 		free(name);
 	}
@@ -739,7 +739,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		MG_ASSERT(collection);
 		MG_ASSERT(index);
 
-		_mgResolveSubscriptSet(module, lhs, collection, index, _mgReferenceValue(value));
+		_mgResolveSubscriptSet(module, lhs, collection, index, mgReferenceValue(value));
 
 		mgDestroyValue(collection);
 		mgDestroyValue(index);
@@ -776,7 +776,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 			strncpy(name, nameNode->token->begin.string, nameLength);
 			name[nameLength] = '\0';
 
-			mgModuleSet(module, name, _mgReferenceValue(mgListGet(value, i)));
+			mgModuleSet(module, name, mgReferenceValue(mgListGet(value, i)));
 		}
 
 		free(name);
@@ -907,10 +907,10 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value->type = (lhs->type == MG_VALUE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
 
 				for (size_t i = 0; i < mgListLength(lhs); ++i)
-					mgTupleAdd(value, _mgReferenceValue(mgListGet(lhs, i)));
+					mgTupleAdd(value, mgReferenceValue(mgListGet(lhs, i)));
 
 				for (size_t i = 0; i < mgListLength(rhs); ++i)
-					mgTupleAdd(value, _mgReferenceValue(mgListGet(rhs, i)));
+					mgTupleAdd(value, mgReferenceValue(mgListGet(rhs, i)));
 			}
 			break;
 		default:
@@ -985,7 +985,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, _mgReferenceValue(mgListGet(rhs, i % mgListLength(rhs))));
+					mgTupleAdd(value, mgReferenceValue(mgListGet(rhs, i % mgListLength(rhs))));
 
 				break;
 			}
@@ -1028,7 +1028,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, _mgReferenceValue(mgListGet(lhs, i % mgListLength(lhs))));
+					mgTupleAdd(value, mgReferenceValue(mgListGet(lhs, i % mgListLength(lhs))));
 			}
 			break;
 		default:

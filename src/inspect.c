@@ -328,17 +328,17 @@ void mgInspectModule(const MGModule *module)
 {
 	if (module->filename)
 		printf("Module [%zu:%zu] \"%s\"\n",
-		       _mgListLength(module->names), _mgListCapacity(module->names), mgBasename(module->filename));
+		       _mgListLength(module->globals->data.m), _mgListCapacity(module->globals->data.m), mgBasename(module->filename));
 	else
 		printf("Module [%zu:%zu]\n",
-		       _mgListLength(module->names), _mgListCapacity(module->names));
+		       _mgListLength(module->globals->data.m), _mgListCapacity(module->globals->data.m));
 
 	_MGInspectValueMetadata metadata;
 
-	for (size_t i = 0; i < _mgListLength(module->names); ++i)
+	for (size_t i = 0; i < _mgListLength(module->globals->data.m); ++i)
 	{
 		_mgCreateInspectValueMetadata(&metadata);
-		_mgInspectName(&_mgListGet(module->names, i), 0, &metadata);
+		_mgInspectName(&_mgListGet(module->globals->data.m, i), 0, &metadata);
 		_mgDestroyInspectValueMetadata(&metadata);
 	}
 }

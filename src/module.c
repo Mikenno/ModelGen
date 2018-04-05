@@ -14,7 +14,7 @@ void mgCreateModule(MGModule *module)
 	memset(module, 0, sizeof(MGModule));
 
 	mgCreateParser(&module->parser);
-	_mgCreateMap(&module->names, 1 << 4);
+	module->globals = mgCreateValueMap(1 << 4);
 }
 
 
@@ -23,7 +23,7 @@ void mgDestroyModule(MGModule *module)
 	MG_ASSERT(module);
 
 	mgDestroyParser(&module->parser);
-	_mgDestroyMap(&module->names);
+	mgDestroyValue(module->globals);
 
 	free(module->filename);
 }
@@ -34,7 +34,7 @@ void mgModuleSet(MGModule *module, const char *name, MGValue *value)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	_mgMapSet(&module->names, name, value);
+	_mgMapSet(&module->globals->data.m, name, value);
 }
 
 
@@ -43,7 +43,7 @@ inline MGValue* mgModuleGet(MGModule *module, const char *name)
 	MG_ASSERT(module);
 	MG_ASSERT(name);
 
-	return _mgMapGet(&module->names, name);
+	return _mgMapGet(&module->globals->data.m, name);
 }
 
 

@@ -32,6 +32,9 @@ MGValue* _mgMapGet(const MGValueMap *map, const char *key);
 MGValue* mgCreateValue(MGValueType type);
 void mgDestroyValue(MGValue *value);
 
+MGValue* mgDeepCopyValue(const MGValue *value);
+MGValue* mgReferenceValue(MGValue *value);
+
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);
 MGValue* mgCreateValueString(const char *s);
