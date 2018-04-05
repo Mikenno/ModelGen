@@ -72,11 +72,20 @@ void mgDestroyInstance(MGInstance *instance)
 }
 
 
-void mgCreateStackFrame(MGStackFrame *frame)
+inline void mgCreateStackFrame(MGStackFrame *frame)
+{
+	mgCreateStackFrameEx(frame, mgCreateValueMap(1 << 4));
+}
+
+
+void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *locals)
 {
 	MG_ASSERT(frame);
+	MG_ASSERT(locals);
 
 	memset(frame, 0, sizeof(MGStackFrame));
+
+	frame->locals = locals;
 }
 
 
@@ -86,6 +95,8 @@ void mgDestroyStackFrame(MGStackFrame *frame)
 
 	if (frame->value)
 		mgDestroyValue(frame->value);
+
+	mgDestroyValue(frame->locals);
 }
 
 
@@ -231,7 +242,7 @@ static inline void _mgRunModule(MGInstance *instance, MGModule *module)
 	mgLoadBaseLib(module);
 
 	MGStackFrame frame;
-	mgCreateStackFrame(&frame);
+	mgCreateStackFrameEx(&frame, mgReferenceValue(module->globals));
 
 	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 	frame.module = module;

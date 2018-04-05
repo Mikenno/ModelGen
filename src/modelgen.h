@@ -109,6 +109,7 @@ typedef struct MGStackFrame {
 	const MGNode *caller;
 	const char *callerName;
 	MGValue *value;
+	MGValue *locals;
 } MGStackFrame;
 
 typedef _MGPair(char*, MGModule) MGNameModule;
@@ -154,6 +155,7 @@ void mgCreateInstance(MGInstance *instance);
 void mgDestroyInstance(MGInstance *instance);
 
 void mgCreateStackFrame(MGStackFrame *frame);
+void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *locals);
 void mgDestroyStackFrame(MGStackFrame *frame);
 
 void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame);

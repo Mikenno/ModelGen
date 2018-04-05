@@ -33,6 +33,7 @@ static inline void _mgFail(const char *file, int line, MGModule *module, MGNode 
 }
 
 #define MG_FAIL(...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
+#define _MG_FAIL(module, node, ...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
 inline MGValue* mgDeepCopyValue(const MGValue *value)
@@ -92,6 +93,36 @@ inline MGValue* mgReferenceValue(MGValue *value)
 }
 
 
+static inline void _mgSetValue(MGModule *module, const char *name, MGValue *value)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->instance->callStackTop->locals);
+
+	mgMapSet(module->instance->callStackTop->locals, name, value);
+}
+
+
+static inline MGValue* _mgGetValue(MGModule *module, const char *name)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->instance->callStackTop->locals);
+
+	MGValue *value = mgMapGet(module->instance->callStackTop->locals, name);
+
+	if (!value)
+		value = mgModuleGet(module, name);
+
+	if (!value)
+		_MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", name);
+
+	return value;
+}
+
+
 static MGValue* _mgVisitNode(MGModule *module, MGNode *node);
 
 
@@ -134,7 +165,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
 
-	MGValue *func = NULL;
+	const MGValue *func = NULL;
 	char *name = NULL;
 
 	if (nameNode->type == MG_NODE_IDENTIFIER)
@@ -145,7 +176,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		MG_ASSERT(nameLength > 0);
 		name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 
-		func = mgModuleGet(module, name);
+		func = _mgGetValue(module, name);
 
 		if (!func)
 			MG_FAIL("Error: Undefined name \"%s\"", name);
@@ -249,13 +280,13 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				MG_ASSERT(procParameterName);
 
 				if (i < _mgListLength(args))
-					mgModuleSet(module, procParameterName, mgReferenceValue(_mgListGet(args, i)));
+					_mgSetValue(module, procParameterName, mgReferenceValue(_mgListGet(args, i)));
 				else
 				{
 					if (procParameterNode->type != MG_NODE_BIN_OP)
 						MG_FAIL("Error: Expected argument \"%s\"", procParameterName);
 
-					mgModuleSet(module, procParameterName, _mgVisitNode(module, _mgListGet(procParameterNode->children, 1)));
+					_mgSetValue(module, procParameterName, _mgVisitNode(module, _mgListGet(procParameterNode->children, 1)));
 				}
 
 				free(procParameterName);
@@ -374,7 +405,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 		MGValue *value = _mgListGet(test->data.a, i);
 		MG_ASSERT(value);
 
-		mgModuleSet(module, name, mgReferenceValue(value));
+		_mgSetValue(module, name, mgReferenceValue(value));
 
 		for (size_t j = 2; j < _mgListLength(node->children); ++j)
 		{
@@ -384,7 +415,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 		}
 	}
 
-	mgModuleSet(module, name, NULL);
+	_mgSetValue(module, name, NULL);
 
 	mgDestroyValue(test);
 
@@ -451,7 +482,7 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	mgModuleSet(module, name, proc);
+	_mgSetValue(module, name, proc);
 
 	free(name);
 
@@ -588,10 +619,7 @@ static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(node->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	MGValue *value = mgModuleGet(module, name);
-
-	if (!value)
-		MG_FAIL("Error: Undefined name \"%s\"", name);
+	MGValue *value = _mgGetValue(module, name);
 
 	free(name);
 
@@ -727,7 +755,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		char *name = mgStringDuplicateFixed(lhs->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
-		mgModuleSet(module, name, mgReferenceValue(value));
+		_mgSetValue(module, name, mgReferenceValue(value));
 
 		free(name);
 	}
@@ -776,7 +804,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 			strncpy(name, nameNode->token->begin.string, nameLength);
 			name[nameLength] = '\0';
 
-			mgModuleSet(module, name, mgReferenceValue(mgListGet(value, i)));
+			_mgSetValue(module, name, mgReferenceValue(mgListGet(value, i)));
 		}
 
 		free(name);
