@@ -143,6 +143,18 @@ static MGValue* mg_globals(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_locals(MGModule *module, size_t argc, MGValue **argv)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->instance->callStackTop->last);
+	MG_ASSERT(module->instance->callStackTop->last->locals);
+
+	return mgReferenceValue(module->instance->callStackTop->last->locals);
+}
+
+
 void mgLoadBaseLib(MGModule *module)
 {
 	mgModuleSetInteger(module, "false", 0);
@@ -159,4 +171,5 @@ void mgLoadBaseLib(MGModule *module)
 	mgModuleSetCFunction(module, "type", mg_type);
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 	mgModuleSetCFunction(module, "globals", mg_globals);
+	mgModuleSetCFunction(module, "locals", mg_locals);
 }
