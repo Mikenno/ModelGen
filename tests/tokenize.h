@@ -56,22 +56,22 @@ static void _mgTestTokenizer(const char *in, const char *out)
 				break;
 
 			printf("Error: Unexpected token...\n");
-			mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+			mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 			goto fail;
 		}
 		else if (outToken->type != MG_TOKEN_STRING)
 		{
 			printf("Error: Token type must be a string\n");
-			mgInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+			mgInspectTokenEx(outToken, outTokenizer.filename, MG_FALSE);
 			goto fail;
 		}
 
 		if (!outToken->value.s || strcmp(_MG_TOKEN_NAMES[inToken->type], outToken->value.s))
 		{
 			printf("Error: Unexpected token type...\n");
-			mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+			mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 			printf("Expected...\n");
-			mgInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+			mgInspectTokenEx(outToken, outTokenizer.filename, MG_FALSE);
 			goto fail;
 		}
 
@@ -116,9 +116,9 @@ static void _mgTestTokenizer(const char *in, const char *out)
 			if (strcmp(inTokenValue, outTokenValue))
 			{
 				printf("Error: Unexpected token value...\n");
-				mgInspectToken(inToken, mgBasename(inTokenizer.filename), MG_FALSE);
+				mgInspectTokenEx(inToken, mgBasename(inTokenizer.filename), MG_FALSE);
 				printf("Expected...\n");
-				mgInspectToken(outToken, mgBasename(outTokenizer.filename), MG_FALSE);
+				mgInspectTokenEx(outToken, mgBasename(outTokenizer.filename), MG_FALSE);
 				goto fail;
 			}
 
@@ -134,7 +134,7 @@ static void _mgTestTokenizer(const char *in, const char *out)
 			{
 				printf("Error: Unexpected begin line %u, expected %.*s\n",
 				       inToken->begin.line, outToken->end.string - outToken->begin.string, outToken->begin.string);
-				mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+				mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 				goto fail;
 			}
 
@@ -155,7 +155,7 @@ static void _mgTestTokenizer(const char *in, const char *out)
 				{
 					printf("Error: Unexpected begin character %u, expected %.*s\n",
 					       inToken->begin.character, outToken->end.string - outToken->begin.string, outToken->begin.string);
-					mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+					mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 					goto fail;
 				}
 
@@ -172,7 +172,7 @@ static void _mgTestTokenizer(const char *in, const char *out)
 			{
 				printf("Error: Unexpected end line %u, expected %.*s\n",
 				       inToken->end.line, outToken->end.string - outToken->begin.string, outToken->begin.string);
-				mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+				mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 				goto fail;
 			}
 
@@ -193,7 +193,7 @@ static void _mgTestTokenizer(const char *in, const char *out)
 				{
 					printf("Error: Unexpected end character %u, expected %.*s\n",
 					       inToken->end.character, outToken->end.string - outToken->begin.string, outToken->begin.string);
-					mgInspectToken(inToken, inTokenizer.filename, MG_FALSE);
+					mgInspectTokenEx(inToken, inTokenizer.filename, MG_FALSE);
 					goto fail;
 				}
 
@@ -212,7 +212,7 @@ static void _mgTestTokenizer(const char *in, const char *out)
 	if (outToken->type != MG_TOKEN_EOF)
 	{
 		printf("Error: Expected token of type...\n");
-		mgInspectToken(outToken, outTokenizer.filename, MG_FALSE);
+		mgInspectTokenEx(outToken, outTokenizer.filename, MG_FALSE);
 		goto fail;
 	}
 
@@ -227,7 +227,7 @@ fail:
 		if (!_MG_IS_TESTABLE_TOKEN(inToken))
 			continue;
 
-		mgInspectToken(inToken, mgBasename(inTokenizer.filename), MG_TRUE);
+		mgInspectTokenEx(inToken, mgBasename(inTokenizer.filename), MG_TRUE);
 
 		if (inToken->type == MG_TOKEN_EOF)
 			break;

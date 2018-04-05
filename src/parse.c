@@ -724,7 +724,7 @@ static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 #endif
 
 		printf("Error: Unexpected token, expected %s\n", _MG_TOKEN_NAMES[MG_TOKEN_EOF]);
-		mgInspectToken(token, parser->tokenizer.filename, MG_FALSE);
+		mgInspectTokenEx(token, parser->tokenizer.filename, MG_FALSE);
 
 #if MG_ANSI_COLORS
 		fputs("\e[0m", stdout);

@@ -17,7 +17,13 @@
 #define _MG_NODE_INDENT_LENGTH     3
 
 
-void mgInspectToken(const MGToken *token, const char *filename, MGbool justify)
+void mgInspectToken(const MGToken *token)
+{
+	mgInspectTokenEx(token, NULL, MG_FALSE);
+}
+
+
+void mgInspectTokenEx(const MGToken *token, const char *filename, MGbool justify)
 {
 	const unsigned int len = token->end.string - token->begin.string;
 
@@ -123,7 +129,7 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 #endif
 
 	if (node->token && (node->tokenBegin == node->tokenEnd))
-		mgInspectToken(node->token, NULL, MG_FALSE);
+		mgInspectTokenEx(node->token, NULL, MG_FALSE);
 	else if (node->tokenBegin && node->tokenEnd)
 		printf("%u:%u->%u:%u\n",
 		       node->tokenBegin->begin.line, node->tokenBegin->begin.character,
@@ -168,6 +174,10 @@ void mgInspectNode(const MGNode *node)
 }
 
 
+static void _mgInspectName(const MGValueMapPair *name, unsigned int depth);
+static void _mgInspectValue(const MGValue *value, unsigned int depth);
+
+
 static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth)
 {
 	for (unsigned int i = 0; i < depth; ++i)
@@ -187,7 +197,7 @@ static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth
 }
 
 
-void _mgInspectValue(const MGValue *value, unsigned int depth)
+static void _mgInspectValue(const MGValue *value, unsigned int depth)
 {
 	switch (value->type)
 	{
@@ -245,8 +255,16 @@ void _mgInspectValue(const MGValue *value, unsigned int depth)
 
 void mgInspectValue(const MGValue *value)
 {
+	mgInspectValueEx(value, MG_TRUE);
+}
+
+
+void mgInspectValueEx(const MGValue *value, MGbool end)
+{
 	_mgInspectValue(value, 0);
-	putchar('\n');
+
+	if (end)
+		putchar('\n');
 }
 
 
@@ -356,7 +374,7 @@ void _mgDebugTokenizePrint(const char *filename, char *str, size_t len)
 		do
 		{
 			mgTokenizeNext(&token);
-			mgInspectToken(&token, filename, MG_TRUE);
+			mgInspectTokenEx(&token, filename, MG_TRUE);
 		}
 		while (token.type != MG_TOKEN_EOF);
 	}

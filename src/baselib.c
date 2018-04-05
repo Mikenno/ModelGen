@@ -34,10 +34,10 @@ static MGValue* mg_print(MGModule *module, size_t argc, MGValue **argv)
 		if (i > 0)
 			putchar(' ');
 
-		MGValue *value = argv[i];
+		const MGValue *value = argv[i];
 
 		if (value->type != MG_VALUE_STRING)
-			_mgInspectValue(argv[i], 0);
+			mgInspectValueEx(argv[i], MG_FALSE);
 		else if (value->data.s)
 			fputs(value->data.s, stdout);
 	}
