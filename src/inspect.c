@@ -174,11 +174,49 @@ void mgInspectNode(const MGNode *node)
 }
 
 
-static void _mgInspectName(const MGValueMapPair *name, unsigned int depth);
-static void _mgInspectValue(const MGValue *value, unsigned int depth);
+typedef struct _MGInspectValueMetadata {
+	_MGList(const MGValue*) references;
+} _MGInspectValueMetadata;
 
 
-static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth)
+static inline void _mgCreateInspectValueMetadata(_MGInspectValueMetadata *metadata)
+{
+	MG_ASSERT(metadata);
+
+	memset(metadata, 0, sizeof(_MGInspectValueMetadata));
+}
+
+
+static inline void _mgDestroyInspectValueMetadata(_MGInspectValueMetadata *metadata)
+{
+	MG_ASSERT(metadata);
+
+	_mgListDestroy(metadata->references);
+}
+
+
+static inline MGbool _mgMetadataContains(const _MGInspectValueMetadata *metadata, const MGValue *value)
+{
+	for (size_t i = 0; i < _mgListLength(metadata->references); ++i)
+		if (_mgListGet(metadata->references, i) == value)
+			return MG_TRUE;
+
+	return MG_FALSE;
+}
+
+
+static inline void _mgMetadataAdd(_MGInspectValueMetadata *metadata, const MGValue *value)
+{
+	if (!_mgMetadataContains(metadata, value))
+		_mgListAdd(const MGValue*, metadata->references, value);
+}
+
+
+static void _mgInspectName(const MGValueMapPair *name, unsigned int depth, _MGInspectValueMetadata *metadata);
+static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspectValueMetadata *metadata);
+
+
+static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth, _MGInspectValueMetadata *metadata)
 {
 	for (unsigned int i = 0; i < depth; ++i)
 		fputs("    ", stdout);
@@ -192,13 +230,22 @@ static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth
 
 	fputs(" = ", stdout);
 
-	_mgInspectValue(name->value, depth);
+	_mgInspectValue(name->value, depth, metadata);
 	putchar('\n');
 }
 
 
-static void _mgInspectValue(const MGValue *value, unsigned int depth)
+static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspectValueMetadata *metadata)
 {
+	MG_ASSERT(value);
+	MG_ASSERT(metadata);
+
+	if (_mgMetadataContains(metadata, value))
+	{
+		fputs("<Circular Reference>", stdout);
+		return;
+	}
+
 	switch (value->type)
 	{
 	case MG_VALUE_INTEGER:
@@ -218,11 +265,15 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth)
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
 		putchar((value->type == MG_VALUE_TUPLE) ? '(' : '[');
-		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+		if (_mgListLength(value->data.m))
 		{
-			if (i > 0)
-				fputs(", ", stdout);
-			_mgInspectValue(_mgListGet(value->data.a, i), depth);
+			_mgMetadataAdd(metadata, value);
+			for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+			{
+				if (i > 0)
+					fputs(", ", stdout);
+				_mgInspectValue(_mgListGet(value->data.a, i), depth, metadata);
+			}
 		}
 		if ((_mgListLength(value->data.a) == 1) && (value->type == MG_VALUE_TUPLE))
 			putchar(',');
@@ -232,9 +283,10 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth)
 		putchar('{');
 		if (_mgListLength(value->data.m))
 		{
+			_mgMetadataAdd(metadata, value);
 			putchar('\n');
 			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
-				_mgInspectName(&_mgListGet(value->data.m, i), depth + 1);
+				_mgInspectName(&_mgListGet(value->data.m, i), depth + 1, metadata);
 			for (unsigned int i = 0; i < depth; ++i)
 				fputs("    ", stdout);
 		}
@@ -261,7 +313,11 @@ void mgInspectValue(const MGValue *value)
 
 void mgInspectValueEx(const MGValue *value, MGbool end)
 {
-	_mgInspectValue(value, 0);
+	_MGInspectValueMetadata metadata;
+
+	_mgCreateInspectValueMetadata(&metadata);
+	_mgInspectValue(value, 0, &metadata);
+	_mgDestroyInspectValueMetadata(&metadata);
 
 	if (end)
 		putchar('\n');
@@ -277,8 +333,14 @@ void mgInspectModule(const MGModule *module)
 		printf("Module [%zu:%zu]\n",
 		       _mgListLength(module->names), _mgListCapacity(module->names));
 
+	_MGInspectValueMetadata metadata;
+
 	for (size_t i = 0; i < _mgListLength(module->names); ++i)
-		_mgInspectName(&_mgListGet(module->names, i), 0);
+	{
+		_mgCreateInspectValueMetadata(&metadata);
+		_mgInspectName(&_mgListGet(module->names, i), 0, &metadata);
+		_mgDestroyInspectValueMetadata(&metadata);
+	}
 }
 
 
