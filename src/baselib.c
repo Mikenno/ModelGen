@@ -134,6 +134,15 @@ static MGValue* mg_traceback(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_globals(MGModule *module, size_t argc, MGValue **argv)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->globals);
+
+	return mgReferenceValue(module->globals);
+}
+
+
 void mgLoadBaseLib(MGModule *module)
 {
 	mgModuleSetInteger(module, "false", 0);
@@ -149,4 +158,5 @@ void mgLoadBaseLib(MGModule *module)
 	mgModuleSetCFunction(module, "range", mg_range);
 	mgModuleSetCFunction(module, "type", mg_type);
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
+	mgModuleSetCFunction(module, "globals", mg_globals);
 }
