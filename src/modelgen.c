@@ -29,7 +29,8 @@ void usage(void)
 		"\n"
 		"Formats:\n"
 		"\n"
-		"    obj Wavefront .obj format\n"
+		"    obj       Wavefront .obj format\n"
+		"    triangles Tightly packed triangles (xyz) 32-bit floats\n"
 		"\n"
 		"Introspection:\n"
 		"\n"
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
 	MGbool dumpModule = MG_FALSE;
 
 	MGbool exportOBJ = MG_FALSE;
+	MGbool exportTriangles = MG_FALSE;
 	const char *exportFilename = NULL;
 
 	int i = 1;
@@ -123,6 +125,8 @@ int main(int argc, char *argv[])
 
 			if (!strcmp(format, "obj"))
 				exportOBJ = MG_TRUE;
+			else if (!strcmp(format, "triangles"))
+				exportTriangles = MG_TRUE;
 			else
 			{
 				fprintf(stderr, "Error: Unknown format \"%s\"\n", format);
@@ -229,24 +233,30 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if (exportOBJ)
+		if (exportFilename)
 		{
-			if (exportFilename)
-			{
-				FILE *f = fopen(exportFilename, "w");
+			FILE *f = fopen(exportFilename, "w");
 
-				if (f)
-				{
+			if (f)
+			{
+				if (exportOBJ)
 					mgExportOBJ(&instance, f);
-					fclose(f);
-				}
-				else
-				{
-					fprintf(stderr, "Error: Failed opening file \"%s\"\n", exportFilename);
-				}
+				else if (exportTriangles)
+					mgExportTriangles(&instance, f);
+
+				fclose(f);
 			}
 			else
+			{
+				fprintf(stderr, "Error: Failed opening file \"%s\"\n", exportFilename);
+			}
+		}
+		else
+		{
+			if (exportOBJ)
 				mgExportOBJ(&instance, stdout);
+			else if (exportTriangles)
+				mgExportTriangles(&instance, stdout);
 		}
 
 		mgDestroyInstance(&instance);

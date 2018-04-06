@@ -5,7 +5,6 @@
 void mgExportOBJ(MGInstance *instance, FILE *file)
 {
 	const size_t vertexCount = _mgListLength(instance->vertices);
-
 	MGVertex *const vertices = _mgListItems(instance->vertices);
 
 	for (size_t j = 0; j < vertexCount; ++j)
@@ -13,4 +12,13 @@ void mgExportOBJ(MGInstance *instance, FILE *file)
 
 	for (size_t j = 0; j < vertexCount / 3; ++j)
 		fprintf(file, "f %zu %zu %zu\n", j * 3 + 1, j * 3 + 2, j * 3 + 3);
+}
+
+
+void mgExportTriangles(MGInstance *instance, FILE *file)
+{
+	const size_t vertexCount = _mgListLength(instance->vertices);
+	MGVertex *const vertices = _mgListItems(instance->vertices);
+
+	fwrite(vertices, vertexCount, sizeof(MGVertex), file);
 }

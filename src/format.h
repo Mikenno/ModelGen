@@ -4,5 +4,6 @@
 #include "modelgen.h"
 
 void mgExportOBJ(MGInstance *instance, FILE *file);
+void mgExportTriangles(MGInstance *instance, FILE *file);
 
 #endif
