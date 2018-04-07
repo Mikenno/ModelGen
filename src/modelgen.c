@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 			{
 				putchar('\n');
 				printf("%s: ", _mgListGet(instance.modules, j).key);
-				mgInspectModule(&_mgListGet(instance.modules, j).value);
+				mgInspectModule(_mgListGet(instance.modules, j).value);
 			}
 		}
 

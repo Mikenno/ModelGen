@@ -6,7 +6,7 @@
 
 #include "modelgen.h"
 
-void mgCreateModule(MGModule *module);
+MGModule* mgCreateModule(void);
 void mgDestroyModule(MGModule *module);
 
 void mgModuleSet(MGModule *module, const char *name, MGValue *value);

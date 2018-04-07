@@ -27,7 +27,7 @@ static inline void _mgFail(const char *format, ...)
 #define MG_FAIL(...) _mgFail(__VA_ARGS__)
 
 
-static MGValue* mg_print(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_print(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	for (size_t i = 0; i < argc; ++i)
 	{
@@ -71,7 +71,7 @@ MGValue* _mg_rangei(int start, int stop, int step)
 }
 
 
-static MGValue* mg_range(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_range(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: range expected at least 1 argument, received %zu", argc);
@@ -98,7 +98,7 @@ static MGValue* mg_range(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_type(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_type(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: type expects exactly 1 argument, received %zu", argc);
@@ -107,13 +107,12 @@ static MGValue* mg_type(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_traceback(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(instance);
+	MG_ASSERT(instance->callStackTop);
 
-	const MGStackFrame *frame = module->instance->callStackTop;
+	const MGStackFrame *frame = instance->callStackTop;
 
 	while (frame->last)
 		frame = frame->last;
@@ -134,24 +133,52 @@ static MGValue* mg_traceback(MGModule *module, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_globals(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_globals(MGInstance *instance, size_t argc, MGValue **argv)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(module->globals);
+	MG_ASSERT(instance);
+	MG_ASSERT(instance->callStackTop);
+	MG_ASSERT(instance->callStackTop->module);
+	MG_ASSERT(instance->callStackTop->module->globals);
 
-	return mgReferenceValue(module->globals);
+	return mgReferenceValue(instance->callStackTop->module->globals);
 }
 
 
-static MGValue* mg_locals(MGModule *module, size_t argc, MGValue **argv)
+static MGValue* mg_locals(MGInstance *instance, size_t argc, MGValue **argv)
 {
-	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
-	MG_ASSERT(module->instance->callStackTop->last);
-	MG_ASSERT(module->instance->callStackTop->last->locals);
+	MG_ASSERT(instance);
+	MG_ASSERT(instance->callStackTop);
+	MG_ASSERT(instance->callStackTop->last);
+	MG_ASSERT(instance->callStackTop->last->locals);
 
-	return mgReferenceValue(module->instance->callStackTop->last->locals);
+	return mgReferenceValue(instance->callStackTop->last->locals);
+}
+
+
+static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
+{
+	MG_ASSERT(instance);
+
+	MGValue *modules = mgCreateValueTuple(argc);
+
+	for (size_t i = 0; i < argc; ++i)
+	{
+		if (argv[i]->type != MG_VALUE_STRING)
+			MG_FAIL("Error: import expected argument %zu as \"%s\", received \"%s\"",
+			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING], _MG_VALUE_TYPE_NAMES[argv[i]->type]);
+
+		const MGModule *importedModule = mgImportModule(instance, argv[i]->data.s);
+		mgTupleAdd(modules, mgReferenceValue(importedModule->globals));
+	}
+
+	if (mgTupleLength(modules) == 1)
+	{
+		MGValue *importedModule = mgReferenceValue(mgTupleGet(modules, 0));
+		mgDestroyValue(modules);
+		return importedModule;
+	}
+
+	return modules;
 }
 
 
@@ -172,4 +199,5 @@ void mgLoadBaseLib(MGModule *module)
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 	mgModuleSetCFunction(module, "globals", mg_globals);
 	mgModuleSetCFunction(module, "locals", mg_locals);
+	mgModuleSetCFunction(module, "import", mg_import);
 }

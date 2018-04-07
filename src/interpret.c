@@ -209,13 +209,16 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	frame.caller = node;
 	frame.callerName = name;
 
-	mgPushStackFrame(module->instance, &frame);
+	mgPushStackFrame(frame.module->instance, &frame);
 
 	if (func->type == MG_VALUE_CFUNCTION)
-		frame.value = func->data.cfunc(module, _mgListLength(args), _mgListItems(args));
+		frame.value = func->data.cfunc(frame.module->instance, _mgListLength(args), _mgListItems(args));
 	else
 	{
-		MGNode *procNode = func->data.func;
+		MG_ASSERT(func->data.func.module);
+		MG_ASSERT(func->data.func.node);
+
+		MGNode *procNode = func->data.func.node;
 
 		if (procNode)
 		{
@@ -293,7 +296,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 			}
 
 			if (_mgListLength(procNode->children) == 3)
-				_mgVisitNode(module, _mgListGet(procNode->children, 2));
+				_mgVisitNode(func->data.func.module, _mgListGet(procNode->children, 2));
 		}
 	}
 
@@ -304,8 +307,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	else
 		value = mgCreateValueVoid();
 
-	mgPopStackFrame(module->instance, &frame);
-
+	mgPopStackFrame(frame.module->instance, &frame);
 	mgDestroyStackFrame(&frame);
 
 	for (size_t i = 0; i < _mgListLength(args); ++i)
@@ -469,7 +471,8 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
 
 	MGValue *proc = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
-	proc->data.func = node;
+	proc->data.func.module = module;
+	proc->data.func.node = node;
 
 	if (nameNode->type == MG_NODE_INVALID)
 		return proc;

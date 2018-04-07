@@ -46,7 +46,7 @@ static inline void _mgDestroyNameModule(MGNameModule *pair)
 	MG_ASSERT(pair->key);
 
 	free(pair->key);
-	mgDestroyModule(&pair->value);
+	mgDestroyModule(pair->value);
 }
 
 
@@ -65,7 +65,7 @@ void mgDestroyInstance(MGInstance *instance)
 	MG_ASSERT(instance);
 
 	for (size_t i = 0; i < _mgListLength(instance->modules); ++i)
-		_mgDestroyNameModule(&_mgListItems(instance->modules)[i]);
+		_mgDestroyNameModule(&_mgListGet(instance->modules, i));
 	_mgListDestroy(instance->modules);
 
 	_mgListDestroy(instance->vertices);
@@ -104,11 +104,14 @@ void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(frame);
+	MG_ASSERT(instance->callStackTop != frame);
+	MG_ASSERT(frame->last == NULL);
+	MG_ASSERT(frame->next == NULL);
+
+	frame->last = instance->callStackTop;
 
 	if (instance->callStackTop)
 		instance->callStackTop->next = frame;
-
-	frame->last = instance->callStackTop;
 
 	instance->callStackTop = frame;
 }
@@ -118,15 +121,19 @@ void mgPopStackFrame(MGInstance *instance, MGStackFrame *frame)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(frame);
+	MG_ASSERT(instance->callStackTop == frame);
+	MG_ASSERT(frame->next == NULL);
 
 	instance->callStackTop = frame->last;
 
-	if (frame->last)
-		frame->last->next = NULL;
+	if (instance->callStackTop)
+		instance->callStackTop->next = NULL;
+
+	frame->last = NULL;
 }
 
 
-static MGModule* _mgInstanceSet(MGInstance *instance, const char *name, MGModule *module)
+static void _mgInstanceSet(MGInstance *instance, const char *name, MGModule *module)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(name);
@@ -147,9 +154,7 @@ static MGModule* _mgInstanceSet(MGInstance *instance, const char *name, MGModule
 		}
 
 		pair->key = mgStringDuplicate(name);
-		pair->value = *module;
-
-		return &pair->value;
+		pair->value = module;
 	}
 	else if (pair)
 	{
@@ -160,8 +165,6 @@ static MGModule* _mgInstanceSet(MGInstance *instance, const char *name, MGModule
 
 		--_mgListLength(instance->modules);
 	}
-
-	return NULL;
 }
 
 
@@ -172,7 +175,7 @@ static inline MGModule* _mgInstanceGet(MGInstance *instance, const char *name)
 
 	for (size_t i = 0; i < _mgListLength(instance->modules); ++i)
 		if (strcmp(_mgListGet(instance->modules, i).key, name) == 0)
-			return &_mgListGet(instance->modules, i).value;
+			return _mgListGet(instance->modules, i).value;
 
 	return NULL;
 }
@@ -184,16 +187,28 @@ static inline MGModule* _mgModuleLoadFile(MGInstance *instance, const char *file
 	MG_ASSERT(filename);
 	MG_ASSERT(name);
 
-	MGModule module;
-	mgCreateModule(&module);
+	MGModule *module = _mgInstanceGet(instance, name);
 
-	module.instance = instance;
-	module.filename = mgStringDuplicate(filename);
+	if (module == NULL)
+	{
+		module = mgCreateModule();
 
-	mgParseFile(&module.parser, filename);
-	MG_ASSERT(module.parser.root);
+		module->instance = instance;
+		module->filename = mgStringDuplicate(filename);
 
-	return _mgInstanceSet(instance, name, &module);
+		if (mgParseFile(&module->parser, filename))
+			_mgInstanceSet(instance, name, module);
+		else
+		{
+			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
+			mgDestroyModule(module);
+			module = NULL;
+		}
+	}
+
+	MG_ASSERT(module);
+
+	return module;
 }
 
 
@@ -203,15 +218,27 @@ static inline MGModule* _mgModuleLoadFileHandle(MGInstance *instance, FILE *file
 	MG_ASSERT(file);
 	MG_ASSERT(name);
 
-	MGModule module;
-	mgCreateModule(&module);
+	MGModule *module = _mgInstanceGet(instance, name);
 
-	module.instance = instance;
+	if (module == NULL)
+	{
+		module = mgCreateModule();
 
-	mgParseFileHandle(&module.parser, file);
-	MG_ASSERT(module.parser.root);
+		module->instance = instance;
 
-	return _mgInstanceSet(instance, name, &module);
+		if (mgParseFileHandle(&module->parser, file))
+			_mgInstanceSet(instance, name, module);
+		else
+		{
+			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
+			mgDestroyModule(module);
+			module = NULL;
+		}
+	}
+
+	MG_ASSERT(module);
+
+	return module;
 }
 
 
@@ -221,35 +248,44 @@ static inline MGModule* _mgModuleLoadString(MGInstance *instance, const char *st
 	MG_ASSERT(string);
 	MG_ASSERT(name);
 
-	MGModule module;
-	mgCreateModule(&module);
+	MGModule *module = _mgInstanceGet(instance, name);
 
-	module.instance = instance;
+	if (module == NULL)
+	{
+		module = mgCreateModule();
 
-	mgParseString(&module.parser, string);
-	MG_ASSERT(module.parser.root);
+		module->instance = instance;
 
-	return _mgInstanceSet(instance, name, &module);
+		if (mgParseString(&module->parser, string))
+			_mgInstanceSet(instance, name, module);
+		else
+		{
+			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
+			mgDestroyModule(module);
+			module = NULL;
+		}
+	}
+
+	MG_ASSERT(module);
+
+	return module;
 }
 
 
 static inline void _mgRunModule(MGInstance *instance, MGModule *module)
 {
-	MG_ASSERT(module);
 	MG_ASSERT(instance);
+	MG_ASSERT(module);
 	MG_ASSERT(module->instance == instance);
-
-	mgLoadBaseLib(module);
 
 	MGStackFrame frame;
 	mgCreateStackFrameEx(&frame, mgReferenceValue(module->globals));
 
 	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 	frame.module = module;
-	frame.caller = NULL;
-	frame.callerName = NULL;
 
 	mgPushStackFrame(instance, &frame);
+	mgLoadBaseLib(module);
 	mgInterpret(module);
 	mgPopStackFrame(instance, &frame);
 
@@ -257,14 +293,37 @@ static inline void _mgRunModule(MGInstance *instance, MGModule *module)
 }
 
 
-static inline void _mgRunFile(MGInstance *instance, const char *filename, const char *name)
+static inline MGModule* _mgImportModuleFile(MGInstance *instance, const char *filename, const char *name)
 {
+	MG_ASSERT(instance);
+	MG_ASSERT(filename);
+	MG_ASSERT(name);
+
 	MGModule *module = _mgInstanceGet(instance, name);
 
 	if (module == NULL)
-		module = _mgModuleLoadFile(instance, filename, name);
+	{
+		module = mgCreateModule();
 
-	_mgRunModule(instance, module);
+		module->instance = instance;
+		module->filename = mgStringDuplicate(filename);
+
+		if (mgParseFile(&module->parser, filename))
+		{
+			_mgInstanceSet(instance, name, module);
+			_mgRunModule(instance, module);
+		}
+		else
+		{
+			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
+			mgDestroyModule(module);
+			module = NULL;
+		}
+	}
+
+	MG_ASSERT(module);
+
+	return module;
 }
 
 
@@ -274,7 +333,7 @@ void mgRunFile(MGInstance *instance, const char *filename, const char *name)
 	MG_ASSERT(filename);
 
 	char *_name = NULL;
-	_mgRunFile(instance, filename, name ? name : (_name = _mgFilenameToImportName(filename)));
+	_mgRunModule(instance, _mgModuleLoadFile(instance, filename, name ? name : (_name = _mgFilenameToImportName(filename))));
 	free(_name);
 }
 
@@ -299,12 +358,16 @@ void mgRunString(MGInstance *instance, const char *string, const char *name)
 }
 
 
-void mgImportModule(MGInstance *instance, const char *name)
+MGModule* mgImportModule(MGInstance *instance, const char *name)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(name);
 
 	char *filename = _mgImportNameToFilename(name);
-	_mgRunFile(instance, filename, name);
+	MGModule *module = _mgImportModuleFile(instance, filename, name);
 	free(filename);
+
+	MG_ASSERT(module);
+
+	return module;
 }

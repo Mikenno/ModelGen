@@ -353,7 +353,7 @@ void mgInspectInstance(const MGInstance *instance)
 	{
 		putchar('\n');
 		printf("%s: ", _mgListGet(instance->modules, i).key);
-		mgInspectModule(&_mgListGet(instance->modules, i).value);
+		mgInspectModule(_mgListGet(instance->modules, i).value);
 	}
 }
 
@@ -368,7 +368,7 @@ void mgInspectStackFrame(const MGStackFrame *frame)
 	if (frame->callerName)
 		printf("Callee: %s\n", frame->callerName);
 
-	if (frame->caller)
+	if (frame->caller && frame->caller->tokenBegin)
 	{
 		MGToken *token = frame->caller->tokenBegin ? frame->caller->tokenBegin : frame->caller->token;
 

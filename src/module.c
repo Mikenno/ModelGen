@@ -7,25 +7,33 @@
 #include "utilities.h"
 
 
-void mgCreateModule(MGModule *module)
+MGModule* mgCreateModule(void)
 {
+	MGModule *module = (MGModule*) calloc(1, sizeof(MGModule));
 	MG_ASSERT(module);
-
-	memset(module, 0, sizeof(MGModule));
 
 	mgCreateParser(&module->parser);
 	module->globals = mgCreateValueMap(1 << 4);
+
+	return module;
 }
 
 
 void mgDestroyModule(MGModule *module)
 {
 	MG_ASSERT(module);
+	MG_ASSERT(module->globals);
+
+	// If refCount > 1 that implies the module is still in use
+	// However modules are only destroyed when destroying the
+	// instance, so this currently isn't a problem
+	// MG_ASSERT(module->globals->refCount == 1);
 
 	mgDestroyParser(&module->parser);
 	mgDestroyValue(module->globals);
-
 	free(module->filename);
+
+	free(module);
 }
 
 

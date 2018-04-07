@@ -24,6 +24,12 @@
 
 typedef unsigned char MGbool;
 
+typedef struct MGInstance MGInstance;
+typedef struct MGModule MGModule;
+typedef struct MGValue MGValue;
+
+typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, MGValue **argv);
+
 typedef struct MGToken {
 	MGTokenType type;
 	struct {
@@ -65,16 +71,10 @@ typedef struct MGParser {
 	MGNode *root;
 } MGParser;
 
-typedef struct MGValue MGValue;
-
 typedef _MGList(MGValue*) MGValueList;
 
 typedef _MGPair(char*, MGValue*) MGValueMapPair;
 typedef _MGList(MGValueMapPair) MGValueMap;
-
-typedef struct MGModule MGModule;
-
-typedef MGValue* (*MGCFunction)(MGModule *module, size_t argc, MGValue **argv);
 
 typedef struct MGValue {
 	MGValueType type;
@@ -86,11 +86,12 @@ typedef struct MGValue {
 		MGCFunction cfunc;
 		MGValueList a;
 		MGValueMap m;
-		MGNode *func;
+		struct {
+			MGModule *module;
+			MGNode *node;
+		} func;
 	} data;
 } MGValue;
-
-typedef struct MGInstance MGInstance;
 
 typedef struct MGModule {
 	MGInstance *instance;
@@ -112,13 +113,13 @@ typedef struct MGStackFrame {
 	MGValue *locals;
 } MGStackFrame;
 
-typedef _MGPair(char*, MGModule) MGNameModule;
+typedef _MGPair(char*, MGModule*) MGNameModule;
 
 typedef float MGVertex[3];
 
 typedef struct MGInstance {
-	_MGList(MGNameModule) modules;
 	MGStackFrame *callStackTop;
+	_MGList(MGNameModule) modules;
 	_MGList(MGVertex) vertices;
 } MGInstance;
 
@@ -165,6 +166,6 @@ void mgRunFile(MGInstance *instance, const char *filename, const char *name);
 void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name);
 void mgRunString(MGInstance *instance, const char *string, const char *name);
 
-void mgImportModule(MGInstance *instance, const char *name);
+MGModule* mgImportModule(MGInstance *instance, const char *name);
 
 #endif
