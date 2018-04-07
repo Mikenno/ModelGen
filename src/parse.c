@@ -144,9 +144,6 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 
 	while (indentation == token->begin.character)
 	{
-		if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA))
-			break;
-
 		MGNode *expr = _mgParseAssignmentOrExpression(parser, token);
 		MG_ASSERT(expr);
 		_mgAddChild(node, expr);
@@ -173,6 +170,9 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 			token = node->tokenEnd + 1;
 			_MG_TOKEN_SCAN_LINES(token);
 		}
+
+		if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA))
+			break;
 	}
 }
 
