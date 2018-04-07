@@ -552,6 +552,21 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 			token = node->tokenEnd + 1;
 		}
+		else if (token->type == MG_TOKEN_DOT)
+		{
+			node = _mgWrapNode(token, node);
+			node->type = MG_NODE_ATTRIBUTE;
+			++token;
+
+			_MG_TOKEN_SCAN_LINE(token);
+			MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+
+			MGNode *attribute = mgCreateNode(token);
+			attribute->type = MG_NODE_IDENTIFIER;
+			_mgAddChild(node, attribute);
+
+			token = node->tokenEnd + 1;
+		}
 		else
 			break;
 	}

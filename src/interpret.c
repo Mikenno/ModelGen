@@ -613,6 +613,36 @@ static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) == 2);
+
+	MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(object);
+	MG_ASSERT(object->type == MG_VALUE_MAP);
+
+	const MGNode *attribute = _mgListGet(node->children, 1);
+	MG_ASSERT(attribute);
+	MG_ASSERT(attribute->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(attribute->token);
+
+	const size_t nameLength = attribute->token->end.string - attribute->token->begin.string;
+	MG_ASSERT(nameLength > 0);
+	char *name = mgStringDuplicateFixed(attribute->token->begin.string, nameLength);
+	MG_ASSERT(name);
+
+	MGValue *value = mgMapGet(object, name);
+
+	if (value == NULL)
+		MG_FAIL("Error: \"%s\" has no attribute \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[object->type], name);
+
+	free(name);
+
+	return mgReferenceValue(value);
+}
+
+
 static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
@@ -747,7 +777,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 	MGNode *lhs = _mgListGet(node->children, 0);
 	MG_ASSERT(lhs);
-	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_TUPLE));
+	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_ATTRIBUTE) || (lhs->type == MG_NODE_TUPLE));
 
 	if (lhs->type == MG_NODE_IDENTIFIER)
 	{
@@ -764,6 +794,8 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 	}
 	else if (lhs->type == MG_NODE_SUBSCRIPT)
 	{
+		MG_ASSERT(_mgListLength(lhs->children) == 2);
+
 		MGValue *index = _mgVisitNode(module, _mgListGet(lhs->children, 1));
 		MGValue *collection = _mgVisitNode(module, _mgListGet(lhs->children, 0));
 
@@ -774,6 +806,29 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 		mgDestroyValue(collection);
 		mgDestroyValue(index);
+	}
+	else if (lhs->type == MG_NODE_ATTRIBUTE)
+	{
+		MG_ASSERT(_mgListLength(lhs->children) == 2);
+
+		MGValue *object = _mgVisitNode(module, _mgListGet(lhs->children, 0));
+		MG_ASSERT(object);
+		MG_ASSERT(object->type == MG_VALUE_MAP);
+
+		MGNode *attributeNode = _mgListGet(lhs->children, 1);
+		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->token);
+
+		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		mgMapSet(object, name, mgReferenceValue(value));
+
+		free(name);
+
+		mgDestroyValue(object);
 	}
 	else if (lhs->type == MG_NODE_TUPLE)
 	{
@@ -1597,6 +1652,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitReturn(module, node);
 	case MG_NODE_SUBSCRIPT:
 		return _mgVisitSubscript(module, node);
+	case MG_NODE_ATTRIBUTE:
+		return _mgVisitAttribute(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
