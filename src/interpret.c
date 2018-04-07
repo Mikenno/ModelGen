@@ -57,7 +57,7 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		{
 			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
 			for (size_t i = 0; i < mgListLength(value); ++i)
-				_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(mgListGet(value, i)));
+				_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(_mgListGet(value->data.a, i)));
 		}
 		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
@@ -227,85 +227,85 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 			}
 		}
 
-		MGNode *procNode = func->data.func.node;
+		MGNode *funcNode = func->data.func.node;
 
-		if (procNode)
+		if (funcNode)
 		{
-			MG_ASSERT((procNode->type == MG_NODE_PROCEDURE) || procNode->type == MG_NODE_FUNCTION);
-			MG_ASSERT((_mgListLength(procNode->children) == 2) || (_mgListLength(procNode->children) == 3));
+			MG_ASSERT((funcNode->type == MG_NODE_PROCEDURE) || funcNode->type == MG_NODE_FUNCTION);
+			MG_ASSERT((_mgListLength(funcNode->children) == 2) || (_mgListLength(funcNode->children) == 3));
 
-			MGNode *procParametersNode = _mgListGet(procNode->children, 1);
-			MG_ASSERT(procParametersNode->type == MG_NODE_TUPLE);
+			MGNode *funcParametersNode = _mgListGet(funcNode->children, 1);
+			MG_ASSERT(funcParametersNode->type == MG_NODE_TUPLE);
 
-			if (_mgListLength(procParametersNode->children) < _mgListLength(args))
+			if (_mgListLength(funcParametersNode->children) < _mgListLength(args))
 			{
-				MGNode *procNameNode = _mgListGet(procNode->children, 0);
-				MG_ASSERT(procNameNode->type == MG_NODE_IDENTIFIER);
-				MG_ASSERT(procNameNode->token);
+				MGNode *funcNameNode = _mgListGet(funcNode->children, 0);
+				MG_ASSERT(funcNameNode->type == MG_NODE_IDENTIFIER);
+				MG_ASSERT(funcNameNode->token);
 
-				const size_t procNameLength = procNameNode->token->end.string - procNameNode->token->begin.string;
-				MG_ASSERT(procNameLength > 0);
-				char *procName = mgStringDuplicateFixed(procNameNode->token->begin.string, procNameLength);
-				MG_ASSERT(procName);
+				const size_t funcNameLength = funcNameNode->token->end.string - funcNameNode->token->begin.string;
+				MG_ASSERT(funcNameLength > 0);
+				char *funcName = mgStringDuplicateFixed(funcNameNode->token->begin.string, funcNameLength);
+				MG_ASSERT(funcName);
 
-				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", procName, _mgListLength(procParametersNode->children), _mgListLength(args));
+				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", funcName, _mgListLength(funcParametersNode->children), _mgListLength(args));
 
-				free(procName);
+				free(funcName);
 			}
 
-			for (size_t i = 0; i < _mgListLength(procParametersNode->children); ++i)
+			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
 			{
-				MGNode *procParameterNode = _mgListGet(procParametersNode->children, i);
-				MG_ASSERT((procParameterNode->type == MG_NODE_IDENTIFIER) || (procParameterNode->type == MG_NODE_BIN_OP));
+				MGNode *funcParameterNode = _mgListGet(funcParametersNode->children, i);
+				MG_ASSERT((funcParameterNode->type == MG_NODE_IDENTIFIER) || (funcParameterNode->type == MG_NODE_BIN_OP));
 
-				char *procParameterName = NULL;
+				char *funcParameterName = NULL;
 
-				if (procParameterNode->type == MG_NODE_IDENTIFIER)
+				if (funcParameterNode->type == MG_NODE_IDENTIFIER)
 				{
-					const size_t procParameterNameLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
-					MG_ASSERT(procParameterNameLength > 0);
-					procParameterName = mgStringDuplicateFixed(procParameterNode->token->begin.string, procParameterNameLength);
+					const size_t funcParameterNameLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
+					MG_ASSERT(funcParameterNameLength > 0);
+					funcParameterName = mgStringDuplicateFixed(funcParameterNode->token->begin.string, funcParameterNameLength);
 				}
-				else if (procParameterNode->type == MG_NODE_BIN_OP)
+				else if (funcParameterNode->type == MG_NODE_BIN_OP)
 				{
-					MG_ASSERT(_mgListLength(procParameterNode->children) == 2);
-					MG_ASSERT(procParameterNode->token);
+					MG_ASSERT(_mgListLength(funcParameterNode->children) == 2);
+					MG_ASSERT(funcParameterNode->token);
 
-					const size_t opLength = procParameterNode->token->end.string - procParameterNode->token->begin.string;
+					const size_t opLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
 					MG_ASSERT(opLength > 0);
-					char *op = mgStringDuplicateFixed(procParameterNode->token->begin.string, opLength);
+					char *op = mgStringDuplicateFixed(funcParameterNode->token->begin.string, opLength);
 					MG_ASSERT(op);
 
 					MG_ASSERT(strcmp(op, "=") == 0);
 
 					free(op);
 
-					MGNode *procParameterNameNode = _mgListGet(procParameterNode->children, 0);
-					MG_ASSERT(procParameterNameNode->type == MG_NODE_IDENTIFIER);
-					MG_ASSERT(procParameterNameNode->token);
+					MGNode *funcParameterNameNode = _mgListGet(funcParameterNode->children, 0);
+					MG_ASSERT(funcParameterNameNode->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT(funcParameterNameNode->token);
 
-					const size_t procParameterNameLength = procParameterNameNode->token->end.string - procParameterNameNode->token->begin.string;
-					MG_ASSERT(procParameterNameLength > 0);
-					procParameterName = mgStringDuplicateFixed(procParameterNameNode->token->begin.string, procParameterNameLength);
+					const size_t funcParameterNameLength = funcParameterNameNode->token->end.string - funcParameterNameNode->token->begin.string;
+					MG_ASSERT(funcParameterNameLength > 0);
+					funcParameterName = mgStringDuplicateFixed(funcParameterNameNode->token->begin.string, funcParameterNameLength);
 				}
 
-				MG_ASSERT(procParameterName);
+				MG_ASSERT(funcParameterName);
 
 				if (i < _mgListLength(args))
-					_mgSetValue(module, procParameterName, mgReferenceValue(_mgListGet(args, i)));
+					_mgSetValue(module, funcParameterName, mgReferenceValue(_mgListGet(args, i)));
 				else
 				{
-					if (procParameterNode->type != MG_NODE_BIN_OP)
-						MG_FAIL("Error: Expected argument \"%s\"", procParameterName);
+					if (funcParameterNode->type != MG_NODE_BIN_OP)
+						MG_FAIL("Error: Expected argument \"%s\"", funcParameterName);
 
-					_mgSetValue(module, procParameterName, _mgVisitNode(module, _mgListGet(procParameterNode->children, 1)));
+					_mgSetValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
 				}
 
-				free(procParameterName);
+				free(funcParameterName);
 			}
 
-			if (_mgListLength(procNode->children) == 3)
-				_mgVisitNode(func->data.func.module, _mgListGet(procNode->children, 2));
+			if (_mgListLength(funcNode->children) == 3)
+				_mgVisitNode(func->data.func.module, _mgListGet(funcNode->children, 2));
 		}
 	}
 
@@ -472,7 +472,7 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
+static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->instance);
@@ -481,10 +481,10 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
 
-	MGValue *proc = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
+	MGValue *func = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
 
-	proc->data.func.module = module;
-	proc->data.func.node = node;
+	func->data.func.module = module;
+	func->data.func.node = node;
 
 	MGbool isClosure = MG_FALSE;
 
@@ -501,12 +501,12 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	}
 
 	if (isClosure && module->instance->callStackTop && module->instance->callStackTop->locals)
-		proc->data.func.locals = mgReferenceValue(module->instance->callStackTop->locals);
+		func->data.func.locals = mgReferenceValue(module->instance->callStackTop->locals);
 	else
-		proc->data.func.locals = NULL;
+		func->data.func.locals = NULL;
 
 	if (nameNode->type == MG_NODE_INVALID)
-		return proc;
+		return func;
 
 	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 	MG_ASSERT(nameNode->token);
@@ -516,11 +516,11 @@ static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	_mgSetValue(module, name, proc);
+	_mgSetValue(module, name, func);
 
 	free(name);
 
-	return mgReferenceValue(proc);
+	return mgReferenceValue(func);
 }
 
 
@@ -893,7 +893,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 			strncpy(name, nameNode->token->begin.string, nameLength);
 			name[nameLength] = '\0';
 
-			_mgSetValue(module, name, mgReferenceValue(mgListGet(value, i)));
+			_mgSetValue(module, name, mgReferenceValue(_mgListGet(value->data.a, i)));
 		}
 
 		free(name);
@@ -1024,10 +1024,10 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value->type = (lhs->type == MG_VALUE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
 
 				for (size_t i = 0; i < mgListLength(lhs); ++i)
-					mgTupleAdd(value, mgReferenceValue(mgListGet(lhs, i)));
+					mgTupleAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i)));
 
 				for (size_t i = 0; i < mgListLength(rhs); ++i)
-					mgTupleAdd(value, mgReferenceValue(mgListGet(rhs, i)));
+					mgTupleAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i)));
 			}
 			break;
 		default:
@@ -1102,7 +1102,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, mgReferenceValue(mgListGet(rhs, i % mgListLength(rhs))));
+					mgTupleAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i % mgListLength(rhs))));
 
 				break;
 			}
@@ -1145,7 +1145,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 				value = mgCreateValueTuple(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, mgReferenceValue(mgListGet(lhs, i % mgListLength(lhs))));
+					mgTupleAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i % mgListLength(lhs))));
 			}
 			break;
 		default:
@@ -1676,7 +1676,7 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitIf(module, node);
 	case MG_NODE_PROCEDURE:
 	case MG_NODE_FUNCTION:
-		return _mgVisitProcedure(module, node);
+		return _mgVisitFunction(module, node);
 	case MG_NODE_EMIT:
 		return _mgVisitEmit(module, node);
 	case MG_NODE_RETURN:

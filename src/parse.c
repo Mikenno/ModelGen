@@ -472,7 +472,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		}
 		else
 		{
-			// TODO: Invalid is not the best way to differentiate between anonymous procedures
+			// TODO: Invalid is not the best way to differentiate between anonymous functions
 			name = mgCreateNode(token);
 			name->type = MG_NODE_INVALID;
 			_mgAddChild(node, name);

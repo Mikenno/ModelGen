@@ -62,8 +62,8 @@ typedef struct MGNode {
 	MGToken *token;
 	MGToken *tokenBegin;
 	MGToken *tokenEnd;
-	_MGList(MGNode*) children;
 	MGNode *parent;
+	_MGList(MGNode*) children;
 } MGNode;
 
 typedef struct MGParser {
