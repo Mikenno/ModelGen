@@ -218,6 +218,15 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 		MG_ASSERT(func->data.func.module);
 		MG_ASSERT(func->data.func.node);
 
+		if (func->data.func.locals)
+		{
+			for (size_t i = 0; i < mgListLength(func->data.func.locals); ++i)
+			{
+				const MGValueMapPair *pair = &_mgListGet(func->data.func.locals->data.m, i);
+				_mgSetValue(module, pair->key, mgReferenceValue(pair->value));
+			}
+		}
+
 		MGNode *procNode = func->data.func.node;
 
 		if (procNode)
@@ -465,14 +474,36 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitProcedure(MGModule *module, MGNode *node)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
 	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
 
 	MGValue *proc = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
+
 	proc->data.func.module = module;
 	proc->data.func.node = node;
+
+	MGbool isClosure = MG_FALSE;
+
+	if (module->instance->callStackTop && module->instance->callStackTop->last)
+	{
+		for (MGNode *parent = node->parent; parent; parent = parent->parent)
+		{
+			if ((parent->type == MG_NODE_PROCEDURE) || (parent->type == MG_NODE_FUNCTION))
+			{
+				isClosure = MG_TRUE;
+				break;
+			}
+		}
+	}
+
+	if (isClosure && module->instance->callStackTop && module->instance->callStackTop->locals)
+		proc->data.func.locals = mgReferenceValue(module->instance->callStackTop->locals);
+	else
+		proc->data.func.locals = NULL;
 
 	if (nameNode->type == MG_NODE_INVALID)
 		return proc;

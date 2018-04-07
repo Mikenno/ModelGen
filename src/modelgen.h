@@ -89,6 +89,7 @@ typedef struct MGValue {
 		struct {
 			MGModule *module;
 			MGNode *node;
+			MGValue *locals;
 		} func;
 	} data;
 } MGValue;
