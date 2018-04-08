@@ -18,14 +18,14 @@ test4 = (proc()
 )
 
 (proc(), proc(), proc())
-(proc() print(1), proc() print(2), proc() print(3))
+((proc() print(1)), (proc() print(2)), (proc() print(3)))
 
-(proc test1() print(1), proc test2() print(2), proc test3() print(3))
+((proc test1() print(1)), (proc test2() print(2)), (proc test3() print(3)))
 
 x = (
-	proc() print("Anonymous 1"),
-	proc() print("Anonymous 2"),
-	proc() print("Anonymous 3")
+	(proc() print("Anonymous 1")),
+	(proc() print("Anonymous 2")),
+	(proc() print("Anonymous 3"))
 )
 
 y = (

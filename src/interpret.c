@@ -836,7 +836,6 @@ static inline MGValue* _mgVisitString(MGModule *module, MGNode *node)
 
 static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 {
-	MG_ASSERT(node->token);
 	MG_ASSERT((node->type == MG_NODE_TUPLE) || (node->type == MG_NODE_LIST));
 
 	MGValue *value = mgCreateValueTuple(_mgListLength(node->children));
