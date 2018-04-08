@@ -315,6 +315,8 @@ void mgTokenizeNext(MGToken *token)
 		case 6:
 			if (!strncmp("return", token->begin.string, 6))
 				token->type = MG_TOKEN_RETURN;
+			else if (!strncmp("delete", token->begin.string, 6))
+				token->type = MG_TOKEN_DELETE;
 		default:
 			break;
 		}

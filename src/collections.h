@@ -54,18 +54,18 @@
 		if ((_mgListLength(list) == (index)) || (_mgListLength(list) == 0)) \
 			_mgListAdd(type, list, item); \
 		else { \
-			size_t i = _mgListLength(list) - 1; \
-			_mgListAdd(type, list, _mgListGet(list, i)); \
-			for (i = _mgListLength(list) - 2; i > (index); --i) \
-				_mgListSet(list, i, _mgListGet(list, i - 1)); \
+			size_t _i = _mgListLength(list) - 1; \
+			_mgListAdd(type, list, _mgListGet(list, _i)); \
+			for (_i = _mgListLength(list) - 2; _i > (index); --_i) \
+				_mgListSet(list, _i, _mgListGet(list, _i - 1)); \
 			_mgListSet(list, index, item); \
 		} \
 	} while (0)
 
 #define _mgListRemove(list, index) \
 	do { \
-		for (size_t i = (index) + 1; i < _mgListLength(list); ++i) \
-			_mgListSet(list, i - 1, _mgListGet(list, i)); \
+		for (size_t _i = (index) + 1; _i < _mgListLength(list); ++_i) \
+			_mgListSet(list, _i - 1, _mgListGet(list, _i)); \
 		--(list).length; \
 	} while (0)
 
@@ -74,10 +74,10 @@
 		if (((begin) == 0) && ((end) == (_mgListLength(list) - 1))) \
 			_mgListClear(list); \
 		else { \
-			size_t move = (end) - (begin) + 1; \
-			for (size_t i = (end) + 1; i < _mgListLength(list); ++i) \
-				_mgListSet(list, i - move, _mgListGet(list, i)); \
-			(list).length -= move; \
+			size_t _move = (end) - (begin) + 1; \
+			for (size_t _i = (end) + 1; _i < _mgListLength(list); ++_i) \
+				_mgListSet(list, _i - _move, _mgListGet(list, _i)); \
+			(list).length -= _move; \
 		} \
 	} while (0)
 

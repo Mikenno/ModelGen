@@ -18,6 +18,7 @@
 	_MG_T(EMIT, "emit") \
 	_MG_T(FUNC, "func") \
 	_MG_T(RETURN, "return") \
+	_MG_T(DELETE, "delete") \
 	_MG_T(IN, "in") \
 	_MG_T(LPAREN, "(") \
 	_MG_T(RPAREN, ")") \

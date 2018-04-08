@@ -525,6 +525,17 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			token = node->tokenEnd + 1;
 		}
 	}
+	else if (token->type == MG_TOKEN_DELETE)
+	{
+		node = mgCreateNode(token);
+		node->type = MG_NODE_DELETE;
+		++token;
+
+		_mgAddChild(node, _mgParseSubexpression(parser, token));
+		MG_ASSERT(_mgListLength(node->children) == 1);
+
+		token = node->tokenEnd + 1;
+	}
 
 	MG_ASSERT(node);
 

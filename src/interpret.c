@@ -139,13 +139,13 @@ static inline size_t _mgResolveArrayIndex(MGModule *module, MGNode *node, MGValu
 	{
 		if (mgIntegerGet(index) >= 0)
 		{
-			MG_FAIL("Error: \"%s\" index out of range (0 <= %zu < %zu)",
+			MG_FAIL("Error: \"%s\" index out of range (0 <= %d < %zu)",
 			        _MG_VALUE_TYPE_NAMES[collection->type],
 			        mgIntegerGet(index), mgListLength(collection));
 		}
 		else
 		{
-			MG_FAIL("Error: \"%s\" index out of range (%zu <= %zu < 0)",
+			MG_FAIL("Error: \"%s\" index out of range (%zu <= %d < 0)",
 			        _MG_VALUE_TYPE_NAMES[collection->type],
 			        -mgListLength(collection), mgIntegerGet(index));
 		}
@@ -166,7 +166,11 @@ static inline void _mgResolveArraySet(MGModule *module, MGNode *node, MGValue *c
 	const size_t i = _mgResolveArrayIndex(module, node, collection, index);
 
 	mgDestroyValue(_mgListGet(collection->data.a, i));
-	_mgListSet(collection->data.a, i, mgReferenceValue(value));
+
+	if (value)
+		_mgListSet(collection->data.a, i, mgReferenceValue(value));
+	else
+		_mgListRemove(collection->data.a, i);
 }
 
 
@@ -489,6 +493,92 @@ static MGValue* _mgVisitReturn(MGModule *module, MGNode *node)
 	frame->state = MG_STACK_FRAME_STATE_UNWINDING;
 
 	return mgCreateValueInteger((_mgListLength(node->children) > 0) ? 1 : 0);
+}
+
+
+static void _mgDelete(MGModule *module, MGNode *node)
+{
+	if (node->type == MG_NODE_IDENTIFIER)
+	{
+		const size_t nameLength = node->token->end.string - node->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(node->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+#if MG_DEBUG
+		// Check if the name is defined
+		_mgGetValue(module, name);
+#endif
+
+		_mgSetValue(module, name, NULL);
+
+		free(name);
+	}
+	else if (node->type == MG_NODE_TUPLE)
+	{
+		for (size_t i = 0; i < _mgListLength(node->children); ++i)
+			_mgDelete(module, _mgListGet(node->children, i));
+	}
+	else if (node->type == MG_NODE_SUBSCRIPT)
+	{
+		MG_ASSERT(_mgListLength(node->children) == 2);
+
+		MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
+
+		MG_ASSERT(collection);
+		MG_ASSERT(index);
+
+#if MG_DEBUG
+		// Check if the name is defined
+		mgDestroyValue(_mgResolveSubscriptGet(module, node, collection, index));
+#endif
+
+		_mgResolveSubscriptSet(module, node, collection, index, NULL);
+
+		mgDestroyValue(collection);
+		mgDestroyValue(index);
+	}
+	else if (node->type == MG_NODE_ATTRIBUTE)
+	{
+		MG_ASSERT(_mgListLength(node->children) == 2);
+
+		MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
+		MG_ASSERT(object);
+		MG_ASSERT((object->type == MG_VALUE_TUPLE) || (object->type == MG_VALUE_LIST) || (object->type == MG_VALUE_MAP));
+
+		const MGNode *attributeNode = _mgListGet(node->children, 1);
+		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->token);
+
+		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+#if MG_DEBUG
+		// Check if the name is defined
+		mgMapGet(object, name);
+#endif
+
+		mgMapSet(object, name, NULL);
+
+		free(name);
+
+		mgDestroyValue(object);
+	}
+	else
+		MG_FAIL("Error: Cannot delete \"%s\"", _MG_NODE_NAMES[node->type]);
+}
+
+
+static inline MGValue* _mgVisitDelete(MGModule *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) == 1);
+
+	_mgDelete(module, _mgListGet(node->children, 0));
+
+	return mgCreateValueVoid();
 }
 
 
@@ -1680,6 +1770,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitEmit(module, node);
 	case MG_NODE_RETURN:
 		return _mgVisitReturn(module, node);
+	case MG_NODE_DELETE:
+		return _mgVisitDelete(module, node);
 	case MG_NODE_SUBSCRIPT:
 		return _mgVisitSubscript(module, node);
 	case MG_NODE_ATTRIBUTE:
