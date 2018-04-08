@@ -93,7 +93,7 @@ inline MGValue* mgReferenceValue(MGValue *value)
 }
 
 
-static inline void _mgSetValue(MGModule *module, const char *name, MGValue *value)
+static inline void _mgSetLocalValue(MGModule *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->instance);
@@ -101,6 +101,20 @@ static inline void _mgSetValue(MGModule *module, const char *name, MGValue *valu
 	MG_ASSERT(module->instance->callStackTop->locals);
 
 	mgMapSet(module->instance->callStackTop->locals, name, value);
+}
+
+
+static inline void _mgSetValue(MGModule *module, const char *name, MGValue *value)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->instance);
+	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->instance->callStackTop->locals);
+
+	if (mgMapGet(module->instance->callStackTop->locals, name) || !mgModuleGet(module, name))
+		_mgSetLocalValue(module, name, value);
+	else
+		mgModuleSet(module, name, value);
 }
 
 
@@ -396,13 +410,13 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 				MG_ASSERT(funcParameterName);
 
 				if (i < _mgListLength(args))
-					_mgSetValue(module, funcParameterName, mgReferenceValue(_mgListGet(args, i)));
+					_mgSetLocalValue(module, funcParameterName, mgReferenceValue(_mgListGet(args, i)));
 				else
 				{
 					if (funcParameterNode->type != MG_NODE_BIN_OP)
 						MG_FAIL("Error: Expected argument \"%s\"", funcParameterName);
 
-					_mgSetValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
+					_mgSetLocalValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
 				}
 
 				free(funcParameterName);
@@ -606,7 +620,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 		MGValue *value = _mgListGet(test->data.a, i);
 		MG_ASSERT(value);
 
-		_mgSetValue(module, name, mgReferenceValue(value));
+		_mgSetLocalValue(module, name, mgReferenceValue(value));
 
 		for (size_t j = 2; j < _mgListLength(node->children); ++j)
 		{
@@ -615,8 +629,6 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 			mgDestroyValue(result);
 		}
 	}
-
-	_mgSetValue(module, name, NULL);
 
 	mgDestroyValue(test);
 
