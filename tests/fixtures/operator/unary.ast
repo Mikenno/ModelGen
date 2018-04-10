@@ -1,31 +1,31 @@
 Module
-- UnaryOp -
+- UnaryOpNeg
 -- Integer 1
-- UnaryOp +
+- UnaryOpPos
 -- Integer 2
-- UnaryOp -
--- UnaryOp -
+- UnaryOpNeg
+-- UnaryOpNeg
 --- Integer 3
 
-- UnaryOp -
+- UnaryOpNeg
 -- Call
 --- Identifier test
 
-- BinOp +
--- UnaryOp -
+- BinOpAdd
+-- UnaryOpNeg
 --- Integer 1
 -- Integer 2
-- UnaryOp -
--- BinOp +
+- UnaryOpNeg
+-- BinOpAdd
 --- Integer 1
 --- Integer 2
 
-- BinOp +
+- BinOpAdd
 -- Integer 1
--- UnaryOp -
+-- UnaryOpNeg
 --- Integer 2
 
 - Integer 1
-- UnaryOp +
--- UnaryOp -
+- UnaryOpPos
+-- UnaryOpNeg
 --- Integer 2

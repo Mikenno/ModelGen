@@ -1,24 +1,23 @@
 Module
-
-- BinOp +
+- BinOpAdd
 -- Integer 1
--- BinOp *
+-- BinOpMul
 --- Integer 2
 --- Integer 3
 
-- BinOp +
--- BinOp *
+- BinOpAdd
+-- BinOpMul
 --- Integer 1
 --- Integer 2
 -- Integer 3
 
-- BinOp -
--- BinOp +
+- BinOpSub
+-- BinOpAdd
 --- Integer 1
 --- Integer 2
--- BinOp %
---- BinOp /
----- BinOp *
+-- BinOpMod
+--- BinOpDiv
+---- BinOpMul
 ----- Integer 3
 ----- Integer 4
 ---- Integer 5

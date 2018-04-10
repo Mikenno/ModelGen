@@ -36,7 +36,7 @@
 -- Integer 1
 -- Integer 2
 
-- BinOp =
+- Assign
 -- Identifier test1
 -- Procedure
 --- Invalid
@@ -45,7 +45,7 @@
 ---- Identifier print
 ---- String Anonymous
 
-- BinOp =
+- Assign
 -- Identifier test2
 -- Procedure
 --- Invalid
@@ -54,7 +54,7 @@
 ---- Identifier print
 ---- String Anonymous
 
-- BinOp =
+- Assign
 -- Identifier test3
 -- Procedure
 --- Invalid
@@ -67,7 +67,7 @@
 ----- Identifier print
 ----- String Anonymous
 
-- BinOp =
+- Assign
 -- Identifier test4
 -- Procedure
 --- Invalid
@@ -131,7 +131,7 @@
 ---- Identifier print
 ---- Integer 3
 
-- BinOp =
+- Assign
 -- Identifier x
 -- Tuple
 --- Procedure
@@ -153,7 +153,7 @@
 ----- Identifier print
 ----- String Anonymous 3
 
-- BinOp =
+- Assign
 -- Identifier y
 -- Tuple
 --- Procedure
@@ -175,7 +175,7 @@
 ----- Identifier print
 ----- String Anonymous 3
 
-- BinOp =
+- Assign
 -- Identifier z
 -- Tuple
 --- Call

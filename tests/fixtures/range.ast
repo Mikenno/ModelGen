@@ -41,26 +41,26 @@ Module
 --- Identifier print
 --- Identifier i
 
-- BinOp =
+- Assign
 -- Identifier x
 -- Range
 --- Integer 10
 --- Integer 20
 
-- BinOp =
+- Assign
 -- Identifier y
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 
-- BinOp =
+- Assign
 -- Identifier z
 -- Range
 --- Integer 10
 --- Integer 20
 
-- BinOp =
+- Assign
 -- Identifier w
 -- Range
 --- Integer 10

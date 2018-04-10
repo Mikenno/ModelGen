@@ -54,10 +54,10 @@ Module
 -- Identifier print
 -- String "end"
 
-- BinOp =
+- Assign
 -- Identifier x
 -- Integer 1
-- BinOp =
+- Assign
 -- Identifier y
 -- Integer 1
 
@@ -65,7 +65,7 @@ Module
 -- Identifier print
 -- String "begin"
 - If
--- BinOp ==
+-- BinOpEq
 --- Identifier x
 --- Identifier y
 -- Call
@@ -82,7 +82,7 @@ Module
 -- Identifier print
 -- String "begin"
 - If
--- BinOp ==
+-- BinOpEq
 --- Identifier x
 --- Identifier y
 -- Block
@@ -90,7 +90,7 @@ Module
 ---- Identifier print
 ---- String "true"
 --- If
----- BinOp ==
+---- BinOpEq
 ----- Identifier x
 ----- Identifier y
 ---- Call
@@ -104,7 +104,7 @@ Module
 ---- Identifier print
 ---- String "false"
 --- If
----- BinOp ==
+---- BinOpEq
 ----- Identifier x
 ----- Identifier y
 ---- Call
@@ -130,7 +130,7 @@ Module
 ---- Identifier print
 ---- Identifier i
 --- If
----- BinOp >
+---- BinOpGreater
 ----- Identifier i
 ----- Integer 1
 ---- Block
@@ -139,7 +139,7 @@ Module
 ------ Identifier i
 ------ Integer 1
 ----- If
------- BinOp >
+------ BinOpGreater
 ------- Identifier i
 ------- Integer 2
 ------ Call
@@ -153,7 +153,7 @@ Module
 ------ Identifier i
 ------ Integer 0
 ----- If
------- BinOp >
+------ BinOpGreater
 ------- Identifier i
 ------- Integer 0
 ------ Call

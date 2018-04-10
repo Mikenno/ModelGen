@@ -5,9 +5,9 @@ Module
 -- Integer 2
 - Call
 -- Identifier test
--- BinOp +
+-- BinOpAdd
 --- Integer 1
 --- Integer 2
--- BinOp *
+-- BinOpMul
 --- Integer 3
 --- Integer 4

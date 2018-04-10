@@ -18,7 +18,7 @@ Module
 - Tuple
 -- Integer 1
 -- Integer 2
-- BinOp =
+- Assign
 -- Tuple
 --- Identifier a
 --- Identifier b
@@ -27,7 +27,7 @@ Module
 --- Integer 1
 --- Integer 2
 --- Integer 3
-- BinOp =
+- Assign
 -- Tuple
 --- Identifier a
 --- Identifier b
@@ -36,7 +36,7 @@ Module
 --- Integer 1
 --- Integer 2
 --- Integer 3
-- BinOp =
+- Assign
 -- Tuple
 --- Identifier a
 --- Identifier b
@@ -45,7 +45,7 @@ Module
 --- Integer 1
 --- Integer 2
 --- Integer 3
-- BinOp =
+- Assign
 -- Tuple
 --- Identifier a
 --- Identifier b
@@ -54,7 +54,7 @@ Module
 --- Integer 1
 --- Integer 2
 --- Integer 3
-- BinOp =
+- Assign
 -- Identifier a
 -- Tuple
 --- Integer 1

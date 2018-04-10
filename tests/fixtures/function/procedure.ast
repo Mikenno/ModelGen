@@ -60,12 +60,12 @@ Module
 -- Identifier test6
 -- Tuple
 --- Identifier x
---- BinOp =
+--- Assign
 ---- Identifier y
 ---- Integer 1
---- BinOp =
+--- Assign
 ---- Identifier z
----- BinOp +
+---- BinOpAdd
 ----- Integer 1
 ----- Integer 2
 -- Call
