@@ -33,6 +33,11 @@
 	_MG_N(FOR, "For") \
 	_MG_N(IF, "If") \
 	_MG_N(ASSIGN, "Assign") \
+	_MG_N(ASSIGN_ADD, "AssignAdd") \
+	_MG_N(ASSIGN_SUB, "AssignSub") \
+	_MG_N(ASSIGN_MUL, "AssignMul") \
+	_MG_N(ASSIGN_DIV, "AssignDiv") \
+	_MG_N(ASSIGN_MOD, "AssignMod") \
 	_MG_N(SUBSCRIPT, "Subscript") \
 	_MG_N(ATTRIBUTE, "Attribute") \
 	_MG_N(PROCEDURE, "Procedure") \

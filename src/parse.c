@@ -64,6 +64,14 @@ static const MGNodeType _MG_BIN_OP_NODE_TYPES[_MG_OPERATOR_PRECEDENCE_LEVELS][_M
 	{ MG_NODE_BIN_OP_MUL, MG_NODE_BIN_OP_DIV, MG_NODE_BIN_OP_MOD }
 };
 
+static const MGNodeType _MG_ASSIGN_NODE_TYPES[] = {
+	MG_NODE_ASSIGN, MG_NODE_ASSIGN_ADD, MG_NODE_ASSIGN_SUB, MG_NODE_ASSIGN_MUL, MG_NODE_ASSIGN_DIV, MG_NODE_ASSIGN_MOD
+};
+
+static const MGNodeType _MG_AUG_TO_BIN_OP_TYPES[] = {
+		MG_NODE_INVALID, MG_NODE_BIN_OP_ADD, MG_NODE_BIN_OP_SUB, MG_NODE_BIN_OP_MUL, MG_NODE_BIN_OP_DIV, MG_NODE_BIN_OP_MOD
+};
+
 
 void mgCreateParser(MGParser *parser)
 {
@@ -141,6 +149,28 @@ static inline MGNode* _mgDestroyNodeExtractFirst(MGNode *node)
 	mgDestroyNode(node);
 
 	return child;
+}
+
+
+static inline MGNode* _mgDeepCopyNode(const MGNode *node)
+{
+	MG_ASSERT(node);
+
+	MGNode *copy = (MGNode*) malloc(sizeof(MGNode));
+	MG_ASSERT(copy);
+
+	*copy = *node;
+
+	if (_mgListLength(node->children))
+	{
+		_mgListCreate(MGNode*, copy->children, _mgListCapacity(node->children));
+		for (size_t i = 0; i < _mgListCapacity(node->children); ++i)
+			_mgListAdd(MGNode*, copy->children, _mgDeepCopyNode(_mgListGet(node->children, i)));
+	}
+	else if (_mgListCapacity(node->children))
+		_mgListInitialize(copy->children);
+
+	return copy;
 }
 
 
@@ -716,7 +746,6 @@ static MGNode* _mgParseBinaryOperation(MGParser *parser, MGToken *token, int lev
 
 		node = _mgWrapNode(token, node);
 		node->type = _MG_BIN_OP_NODE_TYPES[level][type];
-		node->token = token;
 		node->tokenEnd = token;
 
 		++token;
@@ -787,23 +816,22 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 		token = node->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINE(token);
 
-		MGbool match = MG_FALSE;
+		int type = -1;
 
 		for (int i = 0; i < _MG_OPERATOR_PRECEDENCE_TYPE_COUNT[level]; ++i)
 		{
 			if (token->type == _MG_OPERATOR_PRECEDENCE_TYPES[level][i])
 			{
-				match = MG_TRUE;
+				type = i;
 				break;
 			}
 		}
 
-		if (!match)
+		if (type == -1)
 			break;
 
 		node = _mgWrapNode(token, node);
-		node->type = MG_NODE_ASSIGN;
-		node->token = token;
+		node->type = _MG_ASSIGN_NODE_TYPES[type];
 		node->tokenEnd = token;
 
 		++token;
@@ -815,6 +843,19 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 		_mgAddChild(node, child);
 
 		MG_ASSERT(_mgListLength(node->children) == 2);
+
+		if (node->type != MG_NODE_ASSIGN)
+		{
+			MGNode *augmented = mgCreateNode(token);
+			augmented->type = MG_NODE_ASSIGN;
+
+			_mgAddChild(augmented, _mgDeepCopyNode(_mgListGet(node->children, 0)));
+			_mgAddChild(augmented, node);
+
+			node->type = _MG_AUG_TO_BIN_OP_TYPES[type];
+
+			node = augmented;
+		}
 	}
 
 	return node;
