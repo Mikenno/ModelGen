@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "inspect.h"
+#include "module.h"
 #include "utilities.h"
 
 
@@ -216,18 +217,25 @@ static void _mgInspectName(const MGValueMapPair *name, unsigned int depth, _MGIn
 static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspectValueMetadata *metadata);
 
 
+static inline void _mgInspectValueType(const MGValue *value)
+{
+	fputs(_MG_VALUE_TYPE_NAMES[value->type], stdout);
+
+	if ((value->type == MG_VALUE_TUPLE) || (value->type == MG_VALUE_LIST))
+		printf("[%zu]", _mgListLength(value->data.a));
+	else if (value->type == MG_VALUE_MAP)
+		printf("[%zu]", _mgListLength(value->data.m));
+}
+
+
 static inline void _mgInspectName(const MGValueMapPair *name, unsigned int depth, _MGInspectValueMetadata *metadata)
 {
 	for (unsigned int i = 0; i < depth; ++i)
 		fputs("    ", stdout);
 
-	printf("%s: %s", name->key, _MG_VALUE_TYPE_NAMES[name->value->type]);
-
-	if ((name->value->type == MG_VALUE_TUPLE) || (name->value->type == MG_VALUE_LIST))
-		printf("[%zu]", _mgListLength(name->value->data.a));
-	else if (name->value->type == MG_VALUE_MAP)
-		printf("[%zu]", _mgListLength(name->value->data.m));
-
+	fputs(name->key, stdout);
+	fputs(": ", stdout);
+	_mgInspectValueType(name->value);
 	fputs(" = ", stdout);
 
 	_mgInspectValue(name->value, depth, metadata);
@@ -242,7 +250,7 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 
 	if (_mgMetadataContains(metadata, value))
 	{
-		fputs("<Circular Reference>", stdout);
+		printf("<Circular Reference %p>", value);
 		return;
 	}
 
@@ -297,7 +305,14 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		break;
 	case MG_VALUE_PROCEDURE:
 	case MG_VALUE_FUNCTION:
-		printf("%p", value->data.func);
+		printf("%p", value->data.func.node);
+		if (value->data.func.locals && mgListLength(value->data.func.locals))
+		{
+			putchar(' ');
+			_mgInspectValueType(value->data.func.locals);
+			putchar(' ');
+			_mgInspectValue(value->data.func.locals, depth, metadata);
+		}
 		break;
 	default:
 		break;
