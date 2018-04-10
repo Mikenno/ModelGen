@@ -503,9 +503,28 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		{
 			name = mgCreateNode(token);
 			name->type = MG_NODE_IDENTIFIER;
-			_mgAddChild(node, name);
 
 			++token;
+			_MG_TOKEN_SCAN_LINE(token);
+
+			while (token->type == MG_TOKEN_DOT)
+			{
+				++token;
+				_MG_TOKEN_SCAN_LINE(token);
+				MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+
+				name = _mgWrapNode(token, name);
+				name->type = MG_NODE_ATTRIBUTE;
+
+				MGNode *attribute = mgCreateNode(token);
+				attribute->type = MG_NODE_IDENTIFIER;
+				_mgAddChild(name, attribute);
+
+				++token;
+			}
+
+			_mgAddChild(node, name);
+
 			_MG_TOKEN_SCAN_LINE(token);
 		}
 		else
@@ -633,7 +652,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 			attribute->type = MG_NODE_IDENTIFIER;
 			_mgAddChild(node, attribute);
 
-			token = node->tokenEnd + 1;
+			++token;
 		}
 		else
 			break;

@@ -39,6 +39,7 @@ static inline void _mgFail(const char *file, int line, MGModule *module, MGNode 
 inline MGValue* mgDeepCopyValue(const MGValue *value)
 {
 	MG_ASSERT(value);
+	MG_ASSERT((value->type != MG_VALUE_PROCEDURE) && (value->type != MG_VALUE_FUNCTION));
 
 	MGValue *copy = (MGValue*) malloc(sizeof(MGValue));
 	MG_ASSERT(copy);
@@ -685,7 +686,7 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
-	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER));
+	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
 	MGValue *func = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
 
@@ -714,19 +715,49 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 	if (nameNode->type == MG_NODE_INVALID)
 		return func;
 
-	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
-	MG_ASSERT(nameNode->token);
+	MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
-	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-	MG_ASSERT(nameLength > 0);
-	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
-	MG_ASSERT(name);
+	if (nameNode->type == MG_NODE_IDENTIFIER)
+	{
+		MG_ASSERT(nameNode->token);
 
-	_mgSetValue(module, name, func);
+		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
 
-	free(name);
+		_mgSetValue(module, name, mgReferenceValue(func));
 
-	return mgReferenceValue(func);
+		free(name);
+	}
+	else if (nameNode->type == MG_NODE_ATTRIBUTE)
+	{
+		MG_ASSERT(_mgListLength(nameNode->children) == 2);
+
+		MGValue *object = _mgVisitNode(module, _mgListGet(nameNode->children, 0));
+		MG_ASSERT(object);
+		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
+
+		MGNode *attributeNode = _mgListGet(nameNode->children, 1);
+		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->token);
+
+		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		if (object->type == MG_VALUE_MAP)
+			mgMapSet(object, name, mgReferenceValue(func));
+		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+			mgMapSet(object->data.func.locals, name, mgReferenceValue(func));
+
+		free(name);
+
+		mgDestroyValue(object);
+	}
+
+	return func;
 }
 
 
