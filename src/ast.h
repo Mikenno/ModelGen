@@ -9,7 +9,19 @@
 	_MG_N(INTEGER, "Integer") \
 	_MG_N(FLOAT, "Float") \
 	_MG_N(STRING, "String") \
-	_MG_N(BIN_OP, "BinOp") \
+	_MG_N(BIN_OP_ADD, "BinOpAdd") \
+	_MG_N(BIN_OP_SUB, "BinOpSub") \
+	_MG_N(BIN_OP_MUL, "BinOpMul") \
+	_MG_N(BIN_OP_DIV, "BinOpDiv") \
+	_MG_N(BIN_OP_MOD, "BinOpMod") \
+	_MG_N(BIN_OP_EQ, "BinOpEq") \
+	_MG_N(BIN_OP_NOT_EQ, "BinOpNotEq") \
+	_MG_N(BIN_OP_LESS, "BinOpLess") \
+	_MG_N(BIN_OP_GREATER, "BinOpGreater") \
+	_MG_N(BIN_OP_LESS_EQ, "BinOpLessEq") \
+	_MG_N(BIN_OP_GREATER_EQ, "BinOpGreaterEq") \
+	_MG_N(BIN_OP_AND, "BinOpAnd") \
+	_MG_N(BIN_OP_OR, "BinOpOr") \
 	_MG_N(UNARY_OP_POS, "UnaryOpPos") \
 	_MG_N(UNARY_OP_NEG, "UnaryOpNeg") \
 	_MG_N(UNARY_OP_NOT, "UnaryOpNot") \
@@ -30,7 +42,7 @@
 	_MG_N(DELETE, "Delete")
 
 
-#define _MG_LONGEST_NODE_NAME_LENGTH 10
+#define _MG_LONGEST_NODE_NAME_LENGTH 14
 
 
 typedef enum MGNodeType {

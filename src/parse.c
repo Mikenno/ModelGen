@@ -54,6 +54,16 @@ static const MGTokenType _MG_OPERATOR_PRECEDENCE_TYPES[_MG_OPERATOR_PRECEDENCE_L
 	/* Lowest Precedence */
 };
 
+static const MGNodeType _MG_BIN_OP_NODE_TYPES[_MG_OPERATOR_PRECEDENCE_LEVELS][_MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL] = {
+	{},
+	{ MG_NODE_BIN_OP_OR },
+	{ MG_NODE_BIN_OP_AND },
+	{ MG_NODE_BIN_OP_EQ, MG_NODE_BIN_OP_NOT_EQ },
+	{ MG_NODE_BIN_OP_LESS, MG_NODE_BIN_OP_LESS_EQ, MG_NODE_BIN_OP_GREATER, MG_NODE_BIN_OP_GREATER_EQ },
+	{ MG_NODE_BIN_OP_ADD, MG_NODE_BIN_OP_SUB },
+	{ MG_NODE_BIN_OP_MUL, MG_NODE_BIN_OP_DIV, MG_NODE_BIN_OP_MOD }
+};
+
 
 void mgCreateParser(MGParser *parser)
 {
@@ -690,22 +700,22 @@ static MGNode* _mgParseBinaryOperation(MGParser *parser, MGToken *token, int lev
 		token = node->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINE(token);
 
-		MGbool match = MG_FALSE;
+		int type = -1;
 
 		for (int i = 0; i < _MG_OPERATOR_PRECEDENCE_TYPE_COUNT[level]; ++i)
 		{
 			if (token->type == _MG_OPERATOR_PRECEDENCE_TYPES[level][i])
 			{
-				match = MG_TRUE;
+				type = i;
 				break;
 			}
 		}
 
-		if (!match)
+		if (type == -1)
 			break;
 
 		node = _mgWrapNode(token, node);
-		node->type = MG_NODE_BIN_OP;
+		node->type = _MG_BIN_OP_NODE_TYPES[level][type];
 		node->token = token;
 		node->tokenEnd = token;
 

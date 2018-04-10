@@ -1039,18 +1039,13 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
-	MG_ASSERT(node->token);
-
-	const size_t opLength = node->token->end.string - node->token->begin.string;
-	MG_ASSERT(opLength > 0);
-	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
-	MG_ASSERT(op);
+	MG_ASSERT(node->type != MG_NODE_INVALID);
 
 	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(lhs);
 	MGValue *rhs = NULL;
 
-	if ((strcmp(op, "and") != 0) && (strcmp(op, "or") != 0))
+	if ((node->type != MG_NODE_BIN_OP_AND) && (node->type != MG_NODE_BIN_OP_OR))
 	{
 		rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 		MG_ASSERT(rhs);
@@ -1058,8 +1053,9 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 
 	MGValue *value = NULL;
 
-	if (strcmp(op, "+") == 0)
+	switch (node->type)
 	{
+	case MG_NODE_BIN_OP_ADD:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1160,9 +1156,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "-") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_SUB:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1194,9 +1189,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "*") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_MUL:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1278,9 +1272,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "/") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_DIV:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1312,9 +1305,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "%") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_MOD:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1346,145 +1338,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, ">") == 0)
-	{
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i > rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i > rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f > rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f > rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	else if (strcmp(op, ">=") == 0)
-	{
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i >= rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i >= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f >= rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f >= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	else if (strcmp(op, "<") == 0)
-	{
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i < rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i < rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f < rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f < rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	else if (strcmp(op, "<=") == 0)
-	{
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i <= rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i <= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f <= rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f <= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	else if (strcmp(op, "==") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_EQ:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1528,9 +1383,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "!=") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_NOT_EQ:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1574,9 +1428,140 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "and") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_LESS:
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i < rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i < rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f < rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f < rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_LESS_EQ:
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i <= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i <= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f <= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f <= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_GREATER:
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i > rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i > rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f > rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f > rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_GREATER_EQ:
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.i >= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.i >= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger(lhs->data.f >= rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger(lhs->data.f >= rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_AND:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1624,9 +1609,8 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if (strcmp(op, "or") == 0)
-	{
+		break;
+	case MG_NODE_BIN_OP_OR:
 		switch (lhs->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1674,16 +1658,19 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
+		break;
+	default:
+		break;
 	}
 
 	if (value == NULL)
 	{
 		if (rhs)
 			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
-			        op, _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
+			        _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
 		else
 			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\"",
-			        op, _MG_VALUE_TYPE_NAMES[lhs->type]);
+			        _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[lhs->type]);
 	}
 
 	MG_ASSERT(value);
@@ -1692,8 +1679,6 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 
 	if (rhs)
 		mgDestroyValue(rhs);
-
-	free(op);
 
 	return value;
 }
@@ -1786,7 +1771,19 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitRange(module, node);
 	case MG_NODE_MAP:
 		return _mgVisitMap(module, node);
-	case MG_NODE_BIN_OP:
+	case MG_NODE_BIN_OP_ADD:
+	case MG_NODE_BIN_OP_SUB:
+	case MG_NODE_BIN_OP_MUL:
+	case MG_NODE_BIN_OP_DIV:
+	case MG_NODE_BIN_OP_MOD:
+	case MG_NODE_BIN_OP_EQ:
+	case MG_NODE_BIN_OP_NOT_EQ:
+	case MG_NODE_BIN_OP_LESS:
+	case MG_NODE_BIN_OP_GREATER:
+	case MG_NODE_BIN_OP_LESS_EQ:
+	case MG_NODE_BIN_OP_GREATER_EQ:
+	case MG_NODE_BIN_OP_AND:
+	case MG_NODE_BIN_OP_OR:
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_UNARY_OP_POS:
 	case MG_NODE_UNARY_OP_NEG:
