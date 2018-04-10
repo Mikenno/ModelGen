@@ -320,7 +320,11 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	}
 
 	MGStackFrame frame;
-	mgCreateStackFrame(&frame);
+
+	if ((func->type != MG_VALUE_CFUNCTION) && func->data.func.locals)
+		mgCreateStackFrameEx(&frame, mgReferenceValue(func->data.func.locals));
+	else
+		mgCreateStackFrame(&frame);
 
 	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 	frame.module = module;
@@ -751,7 +755,7 @@ static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
 
 	MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(object);
-	MG_ASSERT(object->type == MG_VALUE_MAP);
+	MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
 
 	const MGNode *attribute = _mgListGet(node->children, 1);
 	MG_ASSERT(attribute);
@@ -763,7 +767,12 @@ static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(attribute->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	MGValue *value = mgMapGet(object, name);
+	MGValue *value = NULL;
+
+	if (object->type == MG_VALUE_MAP)
+		value = mgMapGet(object, name);
+	else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+		value = mgMapGet(object->data.func.locals, name);
 
 	if (value == NULL)
 		MG_FAIL("Error: \"%s\" has no attribute \"%s\"",
@@ -944,7 +953,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(lhs->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT(object->type == MG_VALUE_MAP);
+		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
 
 		MGNode *attributeNode = _mgListGet(lhs->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
@@ -955,7 +964,10 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
-		mgMapSet(object, name, mgReferenceValue(value));
+		if (object->type == MG_VALUE_MAP)
+			mgMapSet(object, name, mgReferenceValue(value));
+		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+			mgMapSet(object->data.func.locals, name, mgReferenceValue(value));
 
 		free(name);
 
