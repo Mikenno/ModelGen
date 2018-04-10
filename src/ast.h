@@ -10,7 +10,9 @@
 	_MG_N(FLOAT, "Float") \
 	_MG_N(STRING, "String") \
 	_MG_N(BIN_OP, "BinOp") \
-	_MG_N(UNARY_OP, "UnaryOp") \
+	_MG_N(UNARY_OP_POS, "UnaryOpPos") \
+	_MG_N(UNARY_OP_NEG, "UnaryOpNeg") \
+	_MG_N(UNARY_OP_NOT, "UnaryOpNot") \
 	_MG_N(TUPLE, "Tuple") \
 	_MG_N(LIST, "List") \
 	_MG_N(RANGE, "Range") \

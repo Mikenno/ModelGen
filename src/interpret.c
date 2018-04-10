@@ -1702,34 +1702,16 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 1);
-	MG_ASSERT(node->token);
-
-	const size_t opLength = node->token->end.string - node->token->begin.string;
-	MG_ASSERT(opLength > 0);
-	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
-	MG_ASSERT(op);
+	MG_ASSERT(node->type != MG_NODE_INVALID);
 
 	MGValue *operand = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(operand);
 
 	MGValue *value = NULL;
 
-	if (strcmp(op, "-") == 0)
+	switch (node->type)
 	{
-		switch (operand->type)
-		{
-		case MG_VALUE_INTEGER:
-			value = mgCreateValueInteger(-operand->data.i);
-			break;
-		case MG_VALUE_FLOAT:
-			value = mgCreateValueFloat(-operand->data.f);
-			break;
-		default:
-			break;
-		}
-	}
-	else if (strcmp(op, "+") == 0)
-	{
+	case MG_NODE_UNARY_OP_POS:
 		switch (operand->type)
 		{
 		case MG_VALUE_INTEGER:
@@ -1741,28 +1723,41 @@ static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 		default:
 			break;
 		}
-	}
-	else if ((strcmp(op, "not") == 0) || strcmp(op, "!") == 0)
-	{
+		break;
+	case MG_NODE_UNARY_OP_NEG:
+		switch (operand->type)
+		{
+		case MG_VALUE_INTEGER:
+			value = mgCreateValueInteger(-operand->data.i);
+			break;
+		case MG_VALUE_FLOAT:
+			value = mgCreateValueFloat(-operand->data.f);
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_UNARY_OP_NOT:
 		switch (operand->type)
 		{
 		case MG_VALUE_INTEGER:
 			value = mgCreateValueInteger(!operand->data.i);
 			break;
 		case MG_VALUE_FLOAT:
-			value = mgCreateValueFloat(!operand->data.f);
+			value = mgCreateValueInteger(!operand->data.f);
 			break;
 		default:
 			break;
 		}
+		break;
+	default:
+		break;
 	}
 
 	if (value == NULL)
-		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", op, _MG_VALUE_TYPE_NAMES[operand->type]);
+		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[operand->type]);
 
 	mgDestroyValue(operand);
-
-	free(op);
 
 	return value;
 }
@@ -1793,7 +1788,9 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitMap(module, node);
 	case MG_NODE_BIN_OP:
 		return _mgVisitBinOp(module, node);
-	case MG_NODE_UNARY_OP:
+	case MG_NODE_UNARY_OP_POS:
+	case MG_NODE_UNARY_OP_NEG:
+	case MG_NODE_UNARY_OP_NOT:
 		return _mgVisitUnaryOp(module, node);
 	case MG_NODE_ASSIGN:
 		return _mgVisitAssignment(module, node);

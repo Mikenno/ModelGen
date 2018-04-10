@@ -273,7 +273,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		node->tokenEnd = token++;
 	}
 	else if ((token->type == MG_TOKEN_INTEGER) ||
-		(token->type == MG_TOKEN_FLOAT))
+	         (token->type == MG_TOKEN_FLOAT))
 	{
 		node = mgCreateNode(token);
 		node->type = (token->type == MG_TOKEN_INTEGER) ? MG_NODE_INTEGER : MG_NODE_FLOAT;
@@ -290,7 +290,23 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	         (token->type == MG_TOKEN_NOT))
 	{
 		node = mgCreateNode(token);
-		node->type = MG_NODE_UNARY_OP;
+
+		switch (token->type)
+		{
+		case MG_TOKEN_SUB:
+			node->type = MG_NODE_UNARY_OP_NEG;
+			break;
+		case MG_TOKEN_ADD:
+			node->type = MG_NODE_UNARY_OP_POS;
+			break;
+		case MG_TOKEN_NOT:
+			node->type = MG_NODE_UNARY_OP_NOT;
+			break;
+		default:
+			node->type = MG_NODE_INVALID;
+			break;
+		}
+
 		++token;
 
 		_mgAddChild(node, _mgParseSubexpression(parser, token, MG_FALSE));
