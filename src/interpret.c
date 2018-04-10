@@ -379,7 +379,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
 			{
 				MGNode *funcParameterNode = _mgListGet(funcParametersNode->children, i);
-				MG_ASSERT((funcParameterNode->type == MG_NODE_IDENTIFIER) || (funcParameterNode->type == MG_NODE_BIN_OP));
+				MG_ASSERT((funcParameterNode->type == MG_NODE_IDENTIFIER) || (funcParameterNode->type == MG_NODE_ASSIGN));
 
 				char *funcParameterName = NULL;
 
@@ -389,19 +389,9 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 					MG_ASSERT(funcParameterNameLength > 0);
 					funcParameterName = mgStringDuplicateFixed(funcParameterNode->token->begin.string, funcParameterNameLength);
 				}
-				else if (funcParameterNode->type == MG_NODE_BIN_OP)
+				else if (funcParameterNode->type == MG_NODE_ASSIGN)
 				{
 					MG_ASSERT(_mgListLength(funcParameterNode->children) == 2);
-					MG_ASSERT(funcParameterNode->token);
-
-					const size_t opLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
-					MG_ASSERT(opLength > 0);
-					char *op = mgStringDuplicateFixed(funcParameterNode->token->begin.string, opLength);
-					MG_ASSERT(op);
-
-					MG_ASSERT(strcmp(op, "=") == 0);
-
-					free(op);
 
 					MGNode *funcParameterNameNode = _mgListGet(funcParameterNode->children, 0);
 					MG_ASSERT(funcParameterNameNode->type == MG_NODE_IDENTIFIER);
@@ -418,7 +408,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 					_mgSetLocalValue(module, funcParameterName, mgReferenceValue(_mgListGet(args, i)));
 				else
 				{
-					if (funcParameterNode->type != MG_NODE_BIN_OP)
+					if (funcParameterNode->type != MG_NODE_ASSIGN)
 						MG_FAIL("Error: Expected argument \"%s\"", funcParameterName);
 
 					_mgSetLocalValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
@@ -1055,12 +1045,6 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 	MG_ASSERT(opLength > 0);
 	char *op = mgStringDuplicateFixed(node->token->begin.string, opLength);
 	MG_ASSERT(op);
-
-	if (strcmp(op, "=") == 0)
-	{
-		free(op);
-		return _mgVisitAssignment(module, node);
-	}
 
 	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(lhs);
@@ -1811,6 +1795,8 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_UNARY_OP:
 		return _mgVisitUnaryOp(module, node);
+	case MG_NODE_ASSIGN:
+		return _mgVisitAssignment(module, node);
 	case MG_NODE_CALL:
 		return _mgVisitCall(module, node);
 	case MG_NODE_FOR:

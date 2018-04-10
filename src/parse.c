@@ -776,7 +776,7 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 			break;
 
 		node = _mgWrapNode(token, node);
-		node->type = MG_NODE_BIN_OP;
+		node->type = MG_NODE_ASSIGN;
 		node->token = token;
 		node->tokenEnd = token;
 
