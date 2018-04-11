@@ -140,7 +140,7 @@ MGToken* mgTokenizeString(MGTokenizer *tokenizer, const char *string, size_t *to
 void mgCreateParser(MGParser *parser);
 void mgDestroyParser(MGParser *parser);
 
-MGNode* mgCreateNode(MGToken *token);
+MGNode* mgCreateNode(MGToken *token, MGNodeType type);
 void mgDestroyNode(MGNode *node);
 
 MGNode* mgParse(MGParser *parser);

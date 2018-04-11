@@ -90,10 +90,11 @@ void mgDestroyParser(MGParser *parser)
 }
 
 
-MGNode* mgCreateNode(MGToken *token)
+MGNode* mgCreateNode(MGToken *token, MGNodeType type)
 {
 	MGNode *node = (MGNode*) calloc(1, sizeof(MGNode));
 
+	node->type = type;
 	node->token = token;
 	node->tokenBegin = token;
 	node->tokenEnd = token;
@@ -126,11 +127,11 @@ static void _mgAddChild(MGNode *parent, MGNode *child)
 }
 
 
-static inline MGNode* _mgWrapNode(MGToken *token, MGNode *node)
+static inline MGNode* _mgWrapNode(MGNode *node, MGNodeType type)
 {
-	MGNode *parent = mgCreateNode(node->tokenBegin);
-	parent->tokenBegin = node->tokenBegin;
+	MGNode *parent = mgCreateNode(node->tokenBegin, type);
 	parent->token = NULL;
+	parent->tokenBegin = node->tokenBegin;
 
 	_mgAddChild(parent, node);
 
@@ -176,23 +177,23 @@ static inline MGNode* _mgDeepCopyNode(const MGNode *node)
 
 static inline int _mgTokenTypeIsSubexpression(MGTokenType type)
 {
-	return (type == MG_TOKEN_IDENTIFIER)
-	       || (type == MG_TOKEN_INTEGER)
-	       || (type == MG_TOKEN_FLOAT)
-	       || (type == MG_TOKEN_STRING)
-	       || (type == MG_TOKEN_LPAREN)
-	       || (type == MG_TOKEN_LSQUARE)
-	       || (type == MG_TOKEN_LBRACE)
-	       || (type == MG_TOKEN_FOR)
-	       || (type == MG_TOKEN_IF)
-	       || (type == MG_TOKEN_PROC)
-	       || (type == MG_TOKEN_EMIT)
-	       || (type == MG_TOKEN_FUNC)
-	       || (type == MG_TOKEN_RETURN)
-	       || (type == MG_TOKEN_DELETE)
-	       || (type == MG_TOKEN_SUB)
-	       || (type == MG_TOKEN_ADD)
-	       || (type == MG_TOKEN_NOT);
+	return (type == MG_TOKEN_IDENTIFIER) ||
+	       (type == MG_TOKEN_INTEGER) ||
+	       (type == MG_TOKEN_FLOAT) ||
+	       (type == MG_TOKEN_STRING) ||
+	       (type == MG_TOKEN_LPAREN) ||
+	       (type == MG_TOKEN_LSQUARE) ||
+	       (type == MG_TOKEN_LBRACE) ||
+	       (type == MG_TOKEN_FOR) ||
+	       (type == MG_TOKEN_IF) ||
+	       (type == MG_TOKEN_PROC) ||
+	       (type == MG_TOKEN_EMIT) ||
+	       (type == MG_TOKEN_FUNC) ||
+	       (type == MG_TOKEN_RETURN) ||
+	       (type == MG_TOKEN_DELETE) ||
+	       (type == MG_TOKEN_SUB) ||
+	       (type == MG_TOKEN_ADD) ||
+	       (type == MG_TOKEN_NOT);
 }
 
 
@@ -218,8 +219,7 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 			if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA))
 				break;
 
-			MGNode *block = mgCreateNode(token);
-			block->type = MG_NODE_BLOCK;
+			MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
 			block->token = NULL;
 
 			_mgParseBlock(parser, token, block, token->begin.character);
@@ -307,29 +307,20 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	MGNode *node = NULL;
 
 	if (token->type == MG_TOKEN_IDENTIFIER)
-	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_IDENTIFIER;
-		node->tokenEnd = token++;
-	}
+		node = mgCreateNode(token++, MG_NODE_IDENTIFIER);
 	else if ((token->type == MG_TOKEN_INTEGER) ||
 	         (token->type == MG_TOKEN_FLOAT))
 	{
-		node = mgCreateNode(token);
-		node->type = (token->type == MG_TOKEN_INTEGER) ? MG_NODE_INTEGER : MG_NODE_FLOAT;
-		node->tokenEnd = token++;
+		node = mgCreateNode(token, (token->type == MG_TOKEN_INTEGER) ? MG_NODE_INTEGER : MG_NODE_FLOAT);
+		++token;
 	}
 	else if (token->type == MG_TOKEN_STRING)
-	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_STRING;
-		node->tokenEnd = token++;
-	}
+		node = mgCreateNode(token++, MG_NODE_STRING);
 	else if ((token->type == MG_TOKEN_SUB) ||
 	         (token->type == MG_TOKEN_ADD) ||
 	         (token->type == MG_TOKEN_NOT))
 	{
-		node = mgCreateNode(token);
+		node = mgCreateNode(token, MG_NODE_INVALID);
 
 		switch (token->type)
 		{
@@ -343,7 +334,6 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 			node->type = MG_NODE_UNARY_OP_NOT;
 			break;
 		default:
-			node->type = MG_NODE_INVALID;
 			break;
 		}
 
@@ -356,9 +346,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if (token->type == MG_TOKEN_LPAREN)
 	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_TUPLE;
-		++token;
+		node = mgCreateNode(token++, MG_NODE_TUPLE);
 
 		if (!_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN) && (_mgListLength(node->children) == 1))
 			node = _mgDestroyNodeExtractFirst(node);
@@ -367,9 +355,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if (token->type == MG_TOKEN_LSQUARE)
 	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_LIST;
-		++token;
+		node = mgCreateNode(token++, MG_NODE_LIST);
 
 		_mgParseExpressionList(parser, token, node, MG_TOKEN_RSQUARE);
 
@@ -377,32 +363,26 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if (token->type == MG_TOKEN_LBRACE)
 	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_MAP;
+		node = mgCreateNode(token++, MG_NODE_MAP);
 
-		++token;
 		_MG_TOKEN_SCAN_LINES(token);
 
 		while (token->type != MG_TOKEN_RBRACE)
 		{
 			MG_ASSERT((token->type == MG_TOKEN_IDENTIFIER) || (token->type == MG_TOKEN_STRING));
 
-			MGNode *key = mgCreateNode(token);
-			key->type = (token->type == MG_TOKEN_IDENTIFIER) ? MG_NODE_IDENTIFIER : MG_NODE_STRING;
-			key->tokenEnd = token;
-			_mgAddChild(node, key);
+			_mgAddChild(node, mgCreateNode(token, (token->type == MG_TOKEN_IDENTIFIER) ? MG_NODE_IDENTIFIER : MG_NODE_STRING));
 
 			++token;
 			_MG_TOKEN_SCAN_LINE(token);
-			MG_ASSERT((token->type == MG_TOKEN_COLON));
+			MG_ASSERT(token->type == MG_TOKEN_COLON);
 
 			++token;
 			_MG_TOKEN_SCAN_LINES(token);
 
-			MGNode *value = _mgParseExpression(parser, token, MG_FALSE);
-			_mgAddChild(node, value);
+			_mgAddChild(node, _mgParseExpression(parser, token, MG_FALSE));
 
-			token = value->tokenEnd + 1;
+			token = node->tokenEnd + 1;
 			_MG_TOKEN_SCAN_LINES(token);
 
 			if (token->type == MG_TOKEN_RBRACE)
@@ -418,8 +398,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if (token->type == MG_TOKEN_FOR)
 	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_FOR;
+		node = mgCreateNode(token, MG_NODE_FOR);
 
 		MGNode *name = _mgParseSubexpression(parser, token + 1, MG_TRUE);
 		MG_ASSERT(name);
@@ -441,8 +420,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		if ((node->tokenBegin->begin.character < token->begin.character) &&
 			((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA)))
 		{
-			MGNode *block = mgCreateNode(token);
-			block->type = MG_NODE_BLOCK;
+			MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
 			block->token = NULL;
 
 			_mgParseBlock(parser, token, block, token->begin.character);
@@ -459,8 +437,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	{
 		MGToken *start = token;
 
-		node = mgCreateNode(token);
-		node->type = MG_NODE_IF;
+		node = mgCreateNode(token, MG_NODE_IF);
 
 		_mgAddChild(node, _mgParseExpression(parser, token + 1, MG_FALSE));
 
@@ -470,8 +447,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		if (start->begin.character >= token->begin.character)
 			MG_FAIL("Error: Expected indentation");
 
-		MGNode *block = mgCreateNode(token);
-		block->type = MG_NODE_BLOCK;
+		MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
 		block->token = NULL;
 
 		_mgParseBlock(parser, token, block, token->begin.character);
@@ -507,8 +483,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 			{
 				MGNode *parent = _node;
 
-				_node = mgCreateNode(token);
-				_node->type = MG_NODE_IF;
+				_node = mgCreateNode(token, MG_NODE_IF);
 
 				_mgAddChild(_node, _mgParseExpression(parser, token + 1, MG_FALSE));
 				_mgAddChild(parent, _node);
@@ -523,8 +498,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 			if (start->begin.character >= token->begin.character)
 				MG_FAIL("Error: Expected indentation");
 
-			block = mgCreateNode(token);
-			block->type = MG_NODE_BLOCK;
+			block = mgCreateNode(token, MG_NODE_BLOCK);
 			block->token = NULL;
 
 			_mgParseBlock(parser, token, block, token->begin.character);
@@ -542,14 +516,11 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		for (; _node->parent; _node = _node->parent)
 			_node->parent->tokenEnd = _node->tokenEnd;
 
-		// token = node->tokenEnd;
-
 		return node;
 	}
 	else if ((token->type == MG_TOKEN_PROC) || (token->type == MG_TOKEN_FUNC))
 	{
-		node = mgCreateNode(token);
-		node->type = (token->type == MG_TOKEN_PROC) ? MG_NODE_PROCEDURE : MG_NODE_FUNCTION;
+		node = mgCreateNode(token, (token->type == MG_TOKEN_PROC) ? MG_NODE_PROCEDURE : MG_NODE_FUNCTION);
 
 		++token;
 		_MG_TOKEN_SCAN_LINE(token);
@@ -557,10 +528,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		MGNode *name = NULL;
 		if (token->type == MG_TOKEN_IDENTIFIER)
 		{
-			name = mgCreateNode(token);
-			name->type = MG_NODE_IDENTIFIER;
+			name = mgCreateNode(token++, MG_NODE_IDENTIFIER);
 
-			++token;
 			_MG_TOKEN_SCAN_LINE(token);
 
 			while (token->type == MG_TOKEN_DOT)
@@ -569,14 +538,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 				_MG_TOKEN_SCAN_LINE(token);
 				MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
 
-				name = _mgWrapNode(token, name);
-				name->type = MG_NODE_ATTRIBUTE;
+				name = _mgWrapNode(name, MG_NODE_ATTRIBUTE);
 
-				MGNode *attribute = mgCreateNode(token);
-				attribute->type = MG_NODE_IDENTIFIER;
-				_mgAddChild(name, attribute);
-
-				++token;
+				_mgAddChild(name, mgCreateNode(token++, MG_NODE_IDENTIFIER));
 			}
 
 			_mgAddChild(node, name);
@@ -586,16 +550,13 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		else
 		{
 			// TODO: Invalid is not the best way to differentiate between anonymous functions
-			name = mgCreateNode(token);
-			name->type = MG_NODE_INVALID;
+			name = mgCreateNode(token, MG_NODE_INVALID);
 			_mgAddChild(node, name);
 		}
 
 		MG_ASSERT(token->type == MG_TOKEN_LPAREN);
 
-		MGNode *parameters = mgCreateNode(token);
-		parameters->type = MG_NODE_TUPLE;
-		++token;
+		MGNode *parameters = mgCreateNode(token++, MG_NODE_TUPLE);
 		_mgParseExpressionList(parser, token, parameters, MG_TOKEN_RPAREN);
 		_mgAddChild(node, parameters);
 
@@ -604,10 +565,12 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 
 		if ((token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA))
 		{
+			MG_ASSERT(node->token);
+			MG_ASSERT(name);
+
 			if ((node->token->begin.character < token->begin.character) || (name->type == MG_NODE_INVALID))
 			{
-				MGNode *block = mgCreateNode(token);
-				block->type = MG_NODE_BLOCK;
+				MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
 				block->token = NULL;
 
 				_mgParseBlock(parser, token, block, token->begin.character);
@@ -616,8 +579,6 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 					_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
 				else
 					_mgAddChild(node, block);
-
-				// token = node->tokenEnd + 1;
 			}
 		}
 
@@ -625,33 +586,22 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if ((token->type == MG_TOKEN_RETURN) || (token->type == MG_TOKEN_EMIT))
 	{
-		node = mgCreateNode(token);
-		node->type = (token->type == MG_TOKEN_RETURN) ? MG_NODE_RETURN : MG_NODE_EMIT;
-		node->tokenEnd = token++;
+		node = mgCreateNode(token, (token->type == MG_TOKEN_RETURN) ? MG_NODE_RETURN : MG_NODE_EMIT);
+		++token;
 
 		_MG_TOKEN_SCAN_LINE(token);
 
 		if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_NEWLINE))
-		{
-			MGNode *value = _mgParseExpression(parser, token, MG_TRUE);
-			MG_ASSERT(value);
-			_mgAddChild(node, value);
-
-			// token = node->tokenEnd + 1;
-		}
+			_mgAddChild(node, _mgParseExpression(parser, token, MG_TRUE));
 
 		return node;
 	}
 	else if (token->type == MG_TOKEN_DELETE)
 	{
-		node = mgCreateNode(token);
-		node->type = MG_NODE_DELETE;
-		++token;
-
+		node = mgCreateNode(++token, MG_NODE_DELETE);
 		_mgAddChild(node, _mgParseSubexpression(parser, token, MG_TRUE));
-		MG_ASSERT(_mgListLength(node->children) == 1);
 
-		// token = node->tokenEnd + 1;
+		MG_ASSERT(_mgListLength(node->children) == 1);
 
 		return node;
 	}
@@ -664,21 +614,17 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 
 		if (eatTuple && (token->type == MG_TOKEN_COMMA))
 		{
-			node = _mgWrapNode(token, node);
-			node->type = MG_NODE_TUPLE;
+			node = _mgWrapNode(node, MG_NODE_TUPLE);
 			node->tokenEnd = token++;
 
 			_mgParseTuple(parser, token, node);
-
-			// token = node->tokenEnd + 1;
 
 			return node;
 		}
 
 		if (token->type == MG_TOKEN_LPAREN)
 		{
-			node = _mgWrapNode(token, node);
-			node->type = MG_NODE_CALL;
+			node = _mgWrapNode(node, MG_NODE_CALL);
 			++token;
 
 			_mgParseExpressionList(parser, token, node, MG_TOKEN_RPAREN);
@@ -687,8 +633,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		}
 		else if (token->type == MG_TOKEN_LSQUARE)
 		{
-			node = _mgWrapNode(token, node);
-			node->type = MG_NODE_SUBSCRIPT;
+			node = _mgWrapNode(node, MG_NODE_SUBSCRIPT);
 			++token;
 
 			_mgParseExpressionList(parser, token, node, MG_TOKEN_RSQUARE);
@@ -697,18 +642,13 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		}
 		else if (token->type == MG_TOKEN_DOT)
 		{
-			node = _mgWrapNode(token, node);
-			node->type = MG_NODE_ATTRIBUTE;
+			node = _mgWrapNode(node, MG_NODE_ATTRIBUTE);
 			++token;
 
 			_MG_TOKEN_SCAN_LINE(token);
 			MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
 
-			MGNode *attribute = mgCreateNode(token);
-			attribute->type = MG_NODE_IDENTIFIER;
-			_mgAddChild(node, attribute);
-
-			++token;
+			_mgAddChild(node, mgCreateNode(token++, MG_NODE_IDENTIFIER));
 		}
 		else
 			break;
@@ -744,8 +684,7 @@ static MGNode* _mgParseBinaryOperation(MGParser *parser, MGToken *token, int lev
 		if (type == -1)
 			break;
 
-		node = _mgWrapNode(token, node);
-		node->type = _MG_BIN_OP_NODE_TYPES[level][type];
+		node = _mgWrapNode(node, _MG_BIN_OP_NODE_TYPES[level][type]);
 		node->tokenEnd = token;
 
 		++token;
@@ -772,33 +711,29 @@ static MGNode* _mgParseRange(MGParser *parser, MGToken *token, MGbool eatTuple)
 
 	if (token->type == MG_TOKEN_COLON)
 	{
-		node = _mgWrapNode(token, node);
-		node->type = MG_NODE_RANGE;
-
+		node = _mgWrapNode(node, MG_NODE_RANGE);
 		++token;
 
-		MGNode *stop = _mgParseBinaryOperation(parser, token, _MG_OPERATOR_PRECEDENCE_LEVEL_AFTER_RANGE, eatTuple);
-		_mgAddChild(node, stop);
+		_mgAddChild(node, _mgParseBinaryOperation(parser, token, _MG_OPERATOR_PRECEDENCE_LEVEL_AFTER_RANGE, eatTuple));
 
 		token = node->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINE(token);
 
 		if (token->type == MG_TOKEN_COLON)
-		{
-			++token;
-
-			MGNode *step = _mgParseBinaryOperation(parser, token, _MG_OPERATOR_PRECEDENCE_LEVEL_AFTER_RANGE, eatTuple);
-			_mgAddChild(node, step);
-
-			token = node->tokenEnd + 1;
-		}
+			_mgAddChild(node, _mgParseBinaryOperation(parser, ++token, _MG_OPERATOR_PRECEDENCE_LEVEL_AFTER_RANGE, eatTuple));
 	}
 
 	return node;
 }
 
 
+#if defined(__GNUC__)
+static inline __attribute__((always_inline)) MGNode* _mgParseExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#elif defined(_MSC_VER)
+static __forceinline MGNode* _mgParseExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#else
 static inline MGNode* _mgParseExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#endif
 {
 	return _mgParseRange(parser, token, eatTuple);
 }
@@ -830,8 +765,7 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 		if (type == -1)
 			break;
 
-		node = _mgWrapNode(token, node);
-		node->type = _MG_ASSIGN_NODE_TYPES[type];
+		node = _mgWrapNode(node, _MG_ASSIGN_NODE_TYPES[type]);
 		node->tokenEnd = token;
 
 		++token;
@@ -846,8 +780,7 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 
 		if (node->type != MG_NODE_ASSIGN)
 		{
-			MGNode *augmented = mgCreateNode(token);
-			augmented->type = MG_NODE_ASSIGN;
+			MGNode *augmented = mgCreateNode(token, MG_NODE_ASSIGN);
 
 			_mgAddChild(augmented, _mgDeepCopyNode(_mgListGet(node->children, 0)));
 			_mgAddChild(augmented, node);
@@ -862,7 +795,13 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 }
 
 
+#if defined(__GNUC__)
+static inline __attribute__((always_inline)) MGNode* _mgParseAssignmentOrExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#elif defined(_MSC_VER)
+static __forceinline MGNode* _mgParseAssignmentOrExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#else
 static inline MGNode* _mgParseAssignmentOrExpression(MGParser *parser, MGToken *token, MGbool eatTuple)
+#endif
 {
 	return _mgParseAssignment(parser, token, 0, eatTuple);
 }
@@ -870,8 +809,7 @@ static inline MGNode* _mgParseAssignmentOrExpression(MGParser *parser, MGToken *
 
 static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 {
-	MGNode *node = mgCreateNode(token);
-	node->type = MG_NODE_MODULE;
+	MGNode *node = mgCreateNode(token, MG_NODE_MODULE);
 	node->token = NULL;
 
 	_MG_TOKEN_SCAN_LINES(token);
