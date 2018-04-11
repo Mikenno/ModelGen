@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "modelgen.h"
-#include "module.h"
-#include "inspect.h"
-#include "utilities.h"
+#include "baselib.h"
+
+#include "../modelgen.h"
+#include "../module.h"
+#include "../inspect.h"
+#include "../utilities.h"
 
 
 static inline void _mgFail(const char *format, ...)

@@ -7,7 +7,7 @@
 #include "module.h"
 #include "inspect.h"
 #include "utilities.h"
-#include "baselib.h"
+#include "libs/baselib.h"
 
 
 static inline void _mgFail(const char *file, int line, MGModule *module, MGNode *node, const char *format, ...)

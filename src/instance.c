@@ -5,7 +5,8 @@
 #include "modelgen.h"
 #include "module.h"
 #include "utilities.h"
-#include "baselib.h"
+
+#include "libs/baselib.h"
 
 
 static inline char* _mgFilenameToImportName(const char *filename)

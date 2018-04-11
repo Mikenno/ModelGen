@@ -1,7 +1,7 @@
 #ifndef MODELGEN_BASELIB_H
 #define MODELGEN_BASELIB_H
 
-#include "modelgen.h"
+#include "../modelgen.h"
 
 MGValue* _mg_rangei(int start, int stop, int step);
 
