@@ -7,6 +7,7 @@
 #include "utilities.h"
 
 #include "libs/baselib.h"
+#include "libs/mathlib.h"
 
 
 static inline char* _mgFilenameToImportName(const char *filename)
@@ -287,6 +288,7 @@ static inline void _mgRunModule(MGInstance *instance, MGModule *module)
 
 	mgPushStackFrame(instance, &frame);
 	mgLoadBaseLib(module);
+	mgLoadMathLib(module);
 	mgInterpret(module);
 	mgPopStackFrame(instance, &frame);
 
