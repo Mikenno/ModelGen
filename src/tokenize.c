@@ -317,6 +317,8 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_RETURN;
 			else if (!strncmp("delete", token->begin.string, 6))
 				token->type = MG_TOKEN_DELETE;
+			else if (!strncmp("import", token->begin.string, 6))
+				token->type = MG_TOKEN_IMPORT;
 		default:
 			break;
 		}

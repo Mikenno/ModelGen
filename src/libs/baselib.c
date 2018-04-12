@@ -204,5 +204,6 @@ void mgLoadBaseLib(MGValue *module)
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 	mgModuleSetCFunction(module, "globals", mg_globals);
 	mgModuleSetCFunction(module, "locals", mg_locals);
-	mgModuleSetCFunction(module, "import", mg_import);
+
+	mgModuleSetCFunction(module, "__import", mg_import);
 }

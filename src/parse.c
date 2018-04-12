@@ -300,6 +300,27 @@ static void _mgParseTuple(MGParser *parser, MGToken *token, MGNode *tuple)
 }
 
 
+static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
+{
+	MG_ASSERT(token->type == MG_TOKEN_IMPORT);
+
+	MGNode *import = mgCreateNode(token, MG_NODE_IMPORT);
+
+	++token;
+	_MG_TOKEN_SCAN_LINE(token);
+
+	_mgParseTuple(parser, token, import);
+	MG_ASSERT(_mgListLength(import->children) > 0);
+
+#if MG_DEBUG
+	for (size_t i = 0; i < _mgListLength(import->children); ++i)
+		MG_ASSERT(_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER);
+#endif
+
+	return import;
+}
+
+
 static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool eatTuple)
 {
 	_MG_TOKEN_SCAN_LINES(token);
@@ -605,6 +626,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 
 		return node;
 	}
+	else if (token->type == MG_TOKEN_IMPORT)
+		return _mgParseImport(parser, token);
 
 	MG_ASSERT(node);
 

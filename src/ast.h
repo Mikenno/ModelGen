@@ -44,7 +44,8 @@
 	_MG_N(EMIT, "Emit") \
 	_MG_N(FUNCTION, "Function") \
 	_MG_N(RETURN, "Return") \
-	_MG_N(DELETE, "Delete")
+	_MG_N(DELETE, "Delete") \
+	_MG_N(IMPORT, "Import")
 
 
 #define _MG_LONGEST_NODE_NAME_LENGTH 14

@@ -1788,6 +1788,46 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(node);
+	MG_ASSERT(node->type == MG_NODE_IMPORT);
+
+	char *name = NULL;
+	size_t nameCapacity = 0;
+
+	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+	{
+		MG_ASSERT(_mgListGet(node->children, i)->type == MG_NODE_IDENTIFIER);
+
+		const MGNode *const nameNode = _mgListGet(node->children, i);
+		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(nameNode->token);
+
+		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+
+		if (nameLength >= nameCapacity)
+		{
+			nameCapacity = nameLength + 1;
+			name = (char*) realloc(name, nameCapacity * sizeof(char));
+			MG_ASSERT(name);
+		}
+
+		strncpy(name, nameNode->token->begin.string, nameLength);
+		name[nameLength] = '\0';
+
+		_mgSetValue(module, name, mgImportModule(module->data.module.instance, name));
+	}
+
+	free(name);
+
+	return mgCreateValueVoid();
+}
+
+
 static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 {
 	switch (node->type)
@@ -1850,6 +1890,8 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitSubscript(module, node);
 	case MG_NODE_ATTRIBUTE:
 		return _mgVisitAttribute(module, node);
+	case MG_NODE_IMPORT:
+		return _mgVisitImport(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
