@@ -1793,36 +1793,103 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
 	MG_ASSERT(node);
-	MG_ASSERT(node->type == MG_NODE_IMPORT);
+	MG_ASSERT((node->type == MG_NODE_IMPORT) || (node->type == MG_NODE_IMPORT_FROM));
+	MG_ASSERT(_mgListLength(node->children) > 0);
 
-	char *name = NULL;
-	size_t nameCapacity = 0;
-
-	for (size_t i = 0; i < _mgListLength(node->children); ++i)
+	if (node->type == MG_NODE_IMPORT)
 	{
-		MG_ASSERT(_mgListGet(node->children, i)->type == MG_NODE_IDENTIFIER);
+		char *name = NULL;
+		size_t nameCapacity = 0;
 
-		const MGNode *const nameNode = _mgListGet(node->children, i);
+		for (size_t i = 0; i < _mgListLength(node->children); ++i)
+		{
+			MG_ASSERT(_mgListGet(node->children, i)->type == MG_NODE_IDENTIFIER);
+
+			const MGNode *const nameNode = _mgListGet(node->children, i);
+			MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+			MG_ASSERT(nameNode->token);
+
+			const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+			MG_ASSERT(nameLength > 0);
+
+			if (nameLength >= nameCapacity)
+			{
+				nameCapacity = nameLength + 1;
+				name = (char*) realloc(name, nameCapacity * sizeof(char));
+				MG_ASSERT(name);
+			}
+
+			strncpy(name, nameNode->token->begin.string, nameLength);
+			name[nameLength] = '\0';
+
+			MGValue *importedModule = mgImportModule(module->data.module.instance, name);
+			MG_ASSERT(importedModule);
+			MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
+
+			_mgSetValue(module, name, importedModule);
+		}
+
+		free(name);
+	}
+	else if (node->type == MG_NODE_IMPORT_FROM)
+	{
+		const MGNode *nameNode = _mgListGet(node->children, 0);
 		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 		MG_ASSERT(nameNode->token);
 
-		const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+		size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 		MG_ASSERT(nameLength > 0);
 
-		if (nameLength >= nameCapacity)
+		char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		size_t nameCapacity = 0;
+
+		MGValue *importedModule = mgImportModule(module->data.module.instance, name);
+		MG_ASSERT(importedModule);
+		MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
+
+		if (_mgListLength(node->children) > 1)
 		{
-			nameCapacity = nameLength + 1;
-			name = (char*) realloc(name, nameCapacity * sizeof(char));
-			MG_ASSERT(name);
+			for (size_t i = 1; i < _mgListLength(node->children); ++i)
+			{
+				nameNode = _mgListGet(node->children, i);
+				MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+				MG_ASSERT(nameNode->token);
+
+				nameLength = nameNode->token->end.string - nameNode->token->begin.string;
+				MG_ASSERT(nameLength > 0);
+
+				if (nameLength >= nameCapacity)
+				{
+					nameCapacity = nameLength + 1;
+					name = (char*) realloc(name, nameCapacity * sizeof(char));
+					MG_ASSERT(name);
+				}
+
+				strncpy(name, nameNode->token->begin.string, nameLength);
+				name[nameLength] = '\0';
+
+				MGValue *value = mgModuleGet(importedModule, name);
+
+				if (!value)
+					_MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", name);
+
+				_mgSetValue(module, name, mgReferenceValue(value));
+			}
+		}
+		else
+		{
+			for (size_t i = 0; i < mgListLength(importedModule->data.module.globals); ++i)
+			{
+				MGValueMapPair *pair = &_mgListGet(importedModule->data.module.globals->data.m, i);
+
+				_mgSetValue(module, pair->key, mgReferenceValue(pair->value));
+			}
 		}
 
-		strncpy(name, nameNode->token->begin.string, nameLength);
-		name[nameLength] = '\0';
-
-		_mgSetValue(module, name, mgImportModule(module->data.module.instance, name));
+		free(name);
 	}
-
-	free(name);
 
 	return mgCreateValueVoid();
 }
@@ -1891,6 +1958,7 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_ATTRIBUTE:
 		return _mgVisitAttribute(module, node);
 	case MG_NODE_IMPORT:
+	case MG_NODE_IMPORT_FROM:
 		return _mgVisitImport(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);

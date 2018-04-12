@@ -311,6 +311,8 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_EMIT;
 			else if (!strncmp("func", token->begin.string, 4))
 				token->type = MG_TOKEN_FUNC;
+			else if (!strncmp("from", token->begin.string, 4))
+				token->type = MG_TOKEN_FROM;
 			break;
 		case 6:
 			if (!strncmp("return", token->begin.string, 6))
