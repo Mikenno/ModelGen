@@ -21,6 +21,7 @@
 	_MG_T(DELETE, "delete") \
 	_MG_T(IMPORT, "import") \
 	_MG_T(FROM, "from") \
+	_MG_T(AS, "as") \
 	_MG_T(IN, "in") \
 	_MG_T(LPAREN, "(") \
 	_MG_T(RPAREN, ")") \

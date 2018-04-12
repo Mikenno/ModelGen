@@ -316,7 +316,7 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 
 #if MG_DEBUG
 		for (size_t i = 0; i < _mgListLength(import->children); ++i)
-			MG_ASSERT(_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER);
+			MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER) || _mgListGet(import->children, i)->type == MG_NODE_AS);
 #endif
 	}
 	else
@@ -345,7 +345,7 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 
 #if MG_DEBUG
 				for (size_t i = 0; i < _mgListLength(import->children); ++i)
-					MG_ASSERT(_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER) || _mgListGet(import->children, i)->type == MG_NODE_AS);
 #endif
 			}
 		}
@@ -700,6 +700,16 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 		else if (token->type == MG_TOKEN_DOT)
 		{
 			node = _mgWrapNode(node, MG_NODE_ATTRIBUTE);
+			++token;
+
+			_MG_TOKEN_SCAN_LINE(token);
+			MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+
+			_mgAddChild(node, mgCreateNode(token++, MG_NODE_IDENTIFIER));
+		}
+		else if (token->type == MG_TOKEN_AS)
+		{
+			node = _mgWrapNode(node, MG_NODE_AS);
 			++token;
 
 			_MG_TOKEN_SCAN_LINE(token);

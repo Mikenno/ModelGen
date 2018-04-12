@@ -287,12 +287,14 @@ void mgTokenizeNext(MGToken *token)
 		switch (len)
 		{
 		case 2:
-			if (!strncmp("in", token->begin.string, 2))
-				token->type = MG_TOKEN_IN;
-			else if (!strncmp("if", token->begin.string, 2))
+			if (!strncmp("if", token->begin.string, 2))
 				token->type = MG_TOKEN_IF;
 			else if (!strncmp("or", token->begin.string, 2))
 				token->type = MG_TOKEN_OR;
+			else if (!strncmp("in", token->begin.string, 2))
+				token->type = MG_TOKEN_IN;
+			else if (!strncmp("as", token->begin.string, 2))
+				token->type = MG_TOKEN_AS;
 			break;
 		case 3:
 			if (!strncmp("for", token->begin.string, 3))

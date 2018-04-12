@@ -1788,6 +1788,34 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 }
 
 
+static void _mgResolveImportAs(MGValue *module, MGToken *name, MGToken *alias)
+{
+	MG_ASSERT(name);
+	MG_ASSERT(name->type == MG_TOKEN_IDENTIFIER);
+	MG_ASSERT(alias);
+	MG_ASSERT(alias->type == MG_TOKEN_IDENTIFIER);
+
+	const size_t _nameLength = name->end.string - name->begin.string;
+	MG_ASSERT(_nameLength > 0);
+	char *_name = mgStringDuplicateFixed(name->begin.string, _nameLength);
+	MG_ASSERT(_name);
+
+	const size_t _aliasLength = alias->end.string - alias->begin.string;
+	MG_ASSERT(_aliasLength > 0);
+	char *_alias = mgStringDuplicateFixed(alias->begin.string, _aliasLength);
+	MG_ASSERT(_alias);
+
+	MGValue *importedModule = mgImportModule(module->data.module.instance, _name);
+	MG_ASSERT(importedModule);
+	MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
+
+	_mgSetValue(module, _alias, importedModule);
+
+	free(_alias);
+	free(_name);
+}
+
+
 static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
@@ -1798,52 +1826,37 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 
 	if (node->type == MG_NODE_IMPORT)
 	{
-		char *name = NULL;
-		size_t nameCapacity = 0;
-
 		for (size_t i = 0; i < _mgListLength(node->children); ++i)
 		{
-			MG_ASSERT(_mgListGet(node->children, i)->type == MG_NODE_IDENTIFIER);
-
 			const MGNode *const nameNode = _mgListGet(node->children, i);
-			MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
-			MG_ASSERT(nameNode->token);
+			MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_AS));
 
-			const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-			MG_ASSERT(nameLength > 0);
-
-			if (nameLength >= nameCapacity)
+			if (nameNode->type == MG_NODE_IDENTIFIER)
+				_mgResolveImportAs(module, nameNode->token, nameNode->token);
+			else if (nameNode->type == MG_NODE_AS)
 			{
-				nameCapacity = nameLength + 1;
-				name = (char*) realloc(name, nameCapacity * sizeof(char));
-				MG_ASSERT(name);
+				MG_ASSERT(_mgListLength(nameNode->children) == 2);
+				_mgResolveImportAs(module, _mgListGet(nameNode->children, 0)->token, _mgListGet(nameNode->children, 1)->token);
 			}
-
-			strncpy(name, nameNode->token->begin.string, nameLength);
-			name[nameLength] = '\0';
-
-			MGValue *importedModule = mgImportModule(module->data.module.instance, name);
-			MG_ASSERT(importedModule);
-			MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
-
-			_mgSetValue(module, name, importedModule);
 		}
-
-		free(name);
 	}
 	else if (node->type == MG_NODE_IMPORT_FROM)
 	{
 		const MGNode *nameNode = _mgListGet(node->children, 0);
+		const MGNode *aliasNode = NULL;
 		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 		MG_ASSERT(nameNode->token);
 
 		size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
 		MG_ASSERT(nameLength > 0);
-
 		char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
+		size_t aliasLength = 0;
+		char *alias = NULL;
+
 		size_t nameCapacity = 0;
+		size_t aliasCapacity = 0;
 
 		MGValue *importedModule = mgImportModule(module->data.module.instance, name);
 		MG_ASSERT(importedModule);
@@ -1854,6 +1867,18 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 			for (size_t i = 1; i < _mgListLength(node->children); ++i)
 			{
 				nameNode = _mgListGet(node->children, i);
+				aliasNode = NULL;
+
+				MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_AS));
+
+				if (nameNode->type == MG_NODE_AS)
+				{
+					MG_ASSERT(_mgListLength(nameNode->children) == 2);
+
+					aliasNode = _mgListGet(nameNode->children, 1);
+					nameNode = _mgListGet(nameNode->children, 0);
+				}
+
 				MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
 				MG_ASSERT(nameNode->token);
 
@@ -1870,12 +1895,34 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 				strncpy(name, nameNode->token->begin.string, nameLength);
 				name[nameLength] = '\0';
 
+				if (aliasNode)
+				{
+					MG_ASSERT(aliasNode->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT(aliasNode->token);
+
+					aliasLength = aliasNode->token->end.string - aliasNode->token->begin.string;
+					MG_ASSERT(aliasLength > 0);
+
+					if (aliasLength >= aliasCapacity)
+					{
+						aliasCapacity = aliasLength + 1;
+						alias = (char*) realloc(alias, aliasCapacity * sizeof(char));
+						MG_ASSERT(alias);
+					}
+
+					strncpy(alias, aliasNode->token->begin.string, aliasLength);
+					alias[aliasLength] = '\0';
+				}
+
 				MGValue *value = mgModuleGet(importedModule, name);
 
 				if (!value)
 					_MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", name);
 
-				_mgSetValue(module, name, mgReferenceValue(value));
+				if (aliasNode)
+					_mgSetValue(module, alias, mgReferenceValue(value));
+				else
+					_mgSetValue(module, name, mgReferenceValue(value));
 			}
 		}
 		else
@@ -1888,6 +1935,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 			}
 		}
 
+		free(alias);
 		free(name);
 	}
 
