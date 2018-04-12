@@ -225,12 +225,8 @@ int main(int argc, char *argv[])
 
 		if (dumpModule)
 		{
-			for (size_t j = 0; j < _mgListLength(instance.modules); ++j)
-			{
-				putchar('\n');
-				printf("%s: ", _mgListGet(instance.modules, j).key);
-				mgInspectModule(_mgListGet(instance.modules, j).value);
-			}
+			putchar('\n');
+			mgInspectInstance(&instance);
 		}
 
 		if (exportFilename)

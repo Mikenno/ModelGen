@@ -10,16 +10,19 @@
 #include "libs/baselib.h"
 
 
-static inline void _mgFail(const char *file, int line, MGModule *module, MGNode *node, const char *format, ...)
+static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *node, const char *format, ...)
 {
 	fflush(stdout);
 
 	fprintf(stderr, "%s:%d: ", file, line);
 
-	if (module && module->filename)
-		fprintf(stderr, "%s:", module->filename);
+	if (module && module->data.module.filename)
+		fprintf(stderr, "%s:", module->data.module.filename);
+
 	if (node && node->tokenBegin)
 		fprintf(stderr, "%u:%u: ", node->tokenBegin->begin.line, node->tokenBegin->begin.character);
+	else if (module && module->data.module.filename)
+		putchar(' ');
 
 	va_list args;
 	va_start(args, format);
@@ -94,39 +97,42 @@ inline MGValue* mgReferenceValue(MGValue *value)
 }
 
 
-static inline void _mgSetLocalValue(MGModule *module, const char *name, MGValue *value)
+static inline void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
-	MG_ASSERT(module->instance->callStackTop->locals);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
+	MG_ASSERT(module->data.module.instance->callStackTop->locals);
 
-	mgMapSet(module->instance->callStackTop->locals, name, value);
+	mgMapSet(module->data.module.instance->callStackTop->locals, name, value);
 }
 
 
-static inline void _mgSetValue(MGModule *module, const char *name, MGValue *value)
+static inline void _mgSetValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
-	MG_ASSERT(module->instance->callStackTop->locals);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
+	MG_ASSERT(module->data.module.instance->callStackTop->locals);
 
-	if (mgMapGet(module->instance->callStackTop->locals, name) || !mgModuleGet(module, name))
+	if (mgMapGet(module->data.module.instance->callStackTop->locals, name) || !mgModuleGet(module, name))
 		_mgSetLocalValue(module, name, value);
 	else
 		mgModuleSet(module, name, value);
 }
 
 
-static inline MGValue* _mgGetValue(MGModule *module, const char *name)
+static inline MGValue* _mgGetValue(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
-	MG_ASSERT(module->instance->callStackTop->locals);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
+	MG_ASSERT(module->data.module.instance->callStackTop->locals);
 
-	MGValue *value = mgMapGet(module->instance->callStackTop->locals, name);
+	MGValue *value = mgMapGet(module->data.module.instance->callStackTop->locals, name);
 
 	if (!value)
 		value = mgModuleGet(module, name);
@@ -138,7 +144,7 @@ static inline MGValue* _mgGetValue(MGModule *module, const char *name)
 }
 
 
-static inline size_t _mgResolveArrayIndex(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
+static inline size_t _mgResolveArrayIndex(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
 	MG_ASSERT(collection);
 	MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
@@ -170,13 +176,13 @@ static inline size_t _mgResolveArrayIndex(MGModule *module, MGNode *node, MGValu
 }
 
 
-static inline MGValue* _mgResolveArrayGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
+static inline MGValue* _mgResolveArrayGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
 	return mgReferenceValue(_mgListGet(collection->data.a, _mgResolveArrayIndex(module, node, collection, index)));
 }
 
 
-static inline void _mgResolveArraySet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
+static inline void _mgResolveArraySet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
 {
 	const size_t i = _mgResolveArrayIndex(module, node, collection, index);
 
@@ -189,7 +195,7 @@ static inline void _mgResolveArraySet(MGModule *module, MGNode *node, MGValue *c
 }
 
 
-static inline MGValue* _mgResolveMapGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *key)
+static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *key)
 {
 	MG_ASSERT(collection);
 	MG_ASSERT(collection->type == MG_VALUE_MAP);
@@ -218,12 +224,14 @@ static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *
 }
 
 
-static inline MGValue* _mgResolveSubscriptGet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index)
+static inline MGValue* _mgResolveSubscriptGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
 	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
 		return _mgResolveArrayGet(module, node, collection, index);
 	else if (collection->type == MG_VALUE_MAP)
 		return _mgResolveMapGet(module, node, collection, index);
+	else if (collection->type == MG_VALUE_MODULE)
+		return _mgResolveMapGet(module, node, collection->data.module.globals, index);
 	else
 		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
 
@@ -231,27 +239,30 @@ static inline MGValue* _mgResolveSubscriptGet(MGModule *module, MGNode *node, MG
 }
 
 
-static inline void _mgResolveSubscriptSet(MGModule *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
+static inline void _mgResolveSubscriptSet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
 {
 	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
 		_mgResolveArraySet(module, node, collection, index, value);
 	else if (collection->type == MG_VALUE_MAP)
 		_mgResolveMapSet(collection, index, value);
+	else if (collection->type == MG_VALUE_MODULE)
+		_mgResolveMapSet(collection->data.module.globals, index, value);
 	else
 		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
 }
 
 
-static MGValue* _mgVisitNode(MGModule *module, MGNode *node);
+static MGValue* _mgVisitNode(MGValue *module, MGNode *node);
 
 
-static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
+static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
 
-	MGStackFrame *frame = module->instance->callStackTop;
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
 	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 	{
@@ -270,16 +281,22 @@ static MGValue* _mgVisitChildren(MGModule *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgVisitModule(MGModule *module, MGNode *node)
+#if defined(__GNUC__)
+static inline __attribute__((always_inline)) MGValue* _mgVisitModule(MGValue *module, MGNode *node)
+#elif defined(_MSC_VER)
+static __forceinline MGValue* _mgVisitModule(MGValue *module, MGNode *node)
+#else
+static inline MGValue* _mgVisitModule(MGValue *module, MGNode *node)
+#endif
 {
 	return _mgVisitChildren(module, node);
 }
 
 
-static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
+static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
+	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(_mgListLength(node->children) > 0);
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
@@ -323,19 +340,18 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	MGStackFrame frame;
 
 	if ((func->type != MG_VALUE_CFUNCTION) && func->data.func.locals)
-		mgCreateStackFrameEx(&frame, mgReferenceValue(func->data.func.locals));
+		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(func->data.func.locals));
 	else
-		mgCreateStackFrame(&frame);
+		mgCreateStackFrame(&frame, mgReferenceValue(module));
 
 	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
-	frame.module = module;
 	frame.caller = node;
 	frame.callerName = name;
 
-	mgPushStackFrame(frame.module->instance, &frame);
+	mgPushStackFrame(frame.module->data.module.instance, &frame);
 
 	if (func->type == MG_VALUE_CFUNCTION)
-		frame.value = func->data.cfunc(frame.module->instance, _mgListLength(args), _mgListItems(args));
+		frame.value = func->data.cfunc(frame.module->data.module.instance, _mgListLength(args), _mgListItems(args));
 	else
 	{
 		MG_ASSERT(func->data.func.module);
@@ -429,7 +445,7 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 	else
 		value = mgCreateValueVoid();
 
-	mgPopStackFrame(frame.module->instance, &frame);
+	mgPopStackFrame(frame.module->data.module.instance, &frame);
 	mgDestroyStackFrame(&frame);
 
 	for (size_t i = 0; i < _mgListLength(args); ++i)
@@ -444,10 +460,10 @@ static MGValue* _mgVisitCall(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitEmit(MGModule *module, MGNode *node)
+static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
+	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(node->type == MG_NODE_EMIT);
 	MG_ASSERT(_mgListLength(node->children) == 1);
 
@@ -461,10 +477,10 @@ static MGValue* _mgVisitEmit(MGModule *module, MGNode *node)
 		MG_FAIL("Error: Expected tuple with a length of 3, received a tuple with a length of %zu",
 		        mgTupleLength(tuple));
 
-	const size_t vertexCount = _mgListLength(module->instance->vertices);
+	const size_t vertexCount = _mgListLength(module->data.module.instance->vertices);
 
-	_mgListAddUninitialized(MGVertex, module->instance->vertices);
-	MGVertex *vertices = _mgListItems(module->instance->vertices);
+	_mgListAddUninitialized(MGVertex, module->data.module.instance->vertices);
+	MGVertex *vertices = _mgListItems(module->data.module.instance->vertices);
 
 	for (size_t i = 0; i < 3; ++i)
 	{
@@ -478,7 +494,7 @@ static MGValue* _mgVisitEmit(MGModule *module, MGNode *node)
 			        _MG_VALUE_TYPE_NAMES[tuple->type]);
 	}
 
-	++_mgListLength(module->instance->vertices);
+	++_mgListLength(module->data.module.instance->vertices);
 
 	mgDestroyValue(tuple);
 
@@ -486,13 +502,13 @@ static MGValue* _mgVisitEmit(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitReturn(MGModule *module, MGNode *node)
+static MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->instance->callStackTop);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
 
-	MGStackFrame *frame = module->instance->callStackTop;
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
@@ -505,7 +521,7 @@ static MGValue* _mgVisitReturn(MGModule *module, MGNode *node)
 }
 
 
-static void _mgDelete(MGModule *module, MGNode *node)
+static void _mgDelete(MGValue *module, MGNode *node)
 {
 	if (node->type == MG_NODE_IDENTIFIER)
 	{
@@ -554,7 +570,7 @@ static void _mgDelete(MGModule *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_TUPLE) || (object->type == MG_VALUE_LIST) || (object->type == MG_VALUE_MAP));
+		MG_ASSERT((object->type == MG_VALUE_MAP) || (object->type == MG_VALUE_MODULE));
 
 		const MGNode *attributeNode = _mgListGet(node->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
@@ -565,12 +581,24 @@ static void _mgDelete(MGModule *module, MGNode *node)
 		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
 		MG_ASSERT(name);
 
+		if (object->type == MG_VALUE_MAP)
+		{
 #if MG_DEBUG
-		// Check if the name is defined
-		mgMapGet(object, name);
+			// Check if the name is defined
+			mgMapGet(object, name);
 #endif
 
-		mgMapSet(object, name, NULL);
+			mgMapSet(object, name, NULL);
+		}
+		else if (object->type == MG_VALUE_MODULE)
+		{
+#if MG_DEBUG
+			// Check if the name is defined
+			mgMapGet(object->data.module.globals, name);
+#endif
+
+			mgMapSet(object->data.module.globals, name, NULL);
+		}
 
 		free(name);
 
@@ -581,7 +609,7 @@ static void _mgDelete(MGModule *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgVisitDelete(MGModule *module, MGNode *node)
+static inline MGValue* _mgVisitDelete(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 1);
 
@@ -591,7 +619,7 @@ static inline MGValue* _mgVisitDelete(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
+static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) >= 2);
 
@@ -633,7 +661,7 @@ static MGValue* _mgVisitFor(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
+static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) >= 2);
 
@@ -669,10 +697,10 @@ static MGValue* _mgVisitIf(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
+static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
+	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
@@ -685,7 +713,7 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 
 	MGbool isClosure = MG_FALSE;
 
-	if (module->instance->callStackTop && module->instance->callStackTop->last)
+	if (module->data.module.instance->callStackTop && module->data.module.instance->callStackTop->last)
 	{
 		for (MGNode *parent = node->parent; parent; parent = parent->parent)
 		{
@@ -697,8 +725,8 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 		}
 	}
 
-	if (isClosure && module->instance->callStackTop && module->instance->callStackTop->locals)
-		func->data.func.locals = mgReferenceValue(module->instance->callStackTop->locals);
+	if (isClosure && module->data.module.instance->callStackTop && module->data.module.instance->callStackTop->locals)
+		func->data.func.locals = mgReferenceValue(module->data.module.instance->callStackTop->locals);
 	else
 		func->data.func.locals = NULL;
 
@@ -726,7 +754,7 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(nameNode->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
+		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(nameNode->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
@@ -741,6 +769,8 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 			mgMapSet(object, name, mgReferenceValue(func));
 		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
 			mgMapSet(object->data.func.locals, name, mgReferenceValue(func));
+		else if (object->type == MG_VALUE_MODULE)
+			mgMapSet(object->data.module.globals, name, mgReferenceValue(func));
 
 		free(name);
 
@@ -751,7 +781,7 @@ static MGValue* _mgVisitFunction(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
+static MGValue* _mgVisitSubscript(MGValue *module, MGNode *node)
 {
 	MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
@@ -770,13 +800,13 @@ static MGValue* _mgVisitSubscript(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
+static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
 	MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(object);
-	MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
+	MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
 
 	const MGNode *attribute = _mgListGet(node->children, 1);
 	MG_ASSERT(attribute);
@@ -794,6 +824,8 @@ static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
 		value = mgMapGet(object, name);
 	else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
 		value = mgMapGet(object->data.func.locals, name);
+	else if (object->type == MG_VALUE_MODULE)
+		value = mgMapGet(object->data.module.globals, name);
 
 	if (value == NULL)
 		MG_FAIL("Error: \"%s\" has no attribute \"%s\"",
@@ -805,7 +837,7 @@ static MGValue* _mgVisitAttribute(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
+static MGValue* _mgVisitIdentifier(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
@@ -822,7 +854,7 @@ static MGValue* _mgVisitIdentifier(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitInteger(MGModule *module, MGNode *node)
+static MGValue* _mgVisitInteger(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
@@ -839,7 +871,7 @@ static MGValue* _mgVisitInteger(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitFloat(MGModule *module, MGNode *node)
+static MGValue* _mgVisitFloat(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
@@ -856,7 +888,13 @@ static MGValue* _mgVisitFloat(MGModule *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgVisitString(MGModule *module, MGNode *node)
+#if defined(__GNUC__)
+static inline __attribute__((always_inline)) MGValue* _mgVisitString(MGValue *module, MGNode *node)
+#elif defined(_MSC_VER)
+static __forceinline MGValue* _mgVisitString(MGValue *module, MGNode *node)
+#else
+static inline MGValue* _mgVisitString(MGValue *module, MGNode *node)
+#endif
 {
 	MG_ASSERT(node->token);
 
@@ -864,7 +902,7 @@ static inline MGValue* _mgVisitString(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
+static MGValue* _mgVisitTuple(MGValue *module, MGNode *node)
 {
 	MG_ASSERT((node->type == MG_NODE_TUPLE) || (node->type == MG_NODE_LIST));
 
@@ -878,7 +916,7 @@ static MGValue* _mgVisitTuple(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
+static MGValue* _mgVisitRange(MGValue *module, MGNode *node)
 {
 	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
@@ -903,7 +941,7 @@ static MGValue* _mgVisitRange(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitMap(MGModule *module, MGNode *node)
+static MGValue* _mgVisitMap(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->type == MG_NODE_MAP);
 	MG_ASSERT((_mgListLength(node->children) % 2) == 0);
@@ -929,7 +967,7 @@ static MGValue* _mgVisitMap(MGModule *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
+static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
@@ -974,7 +1012,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(lhs->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals));
+		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(lhs->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
@@ -989,6 +1027,8 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 			mgMapSet(object, name, mgReferenceValue(value));
 		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
 			mgMapSet(object->data.func.locals, name, mgReferenceValue(value));
+		else if (object->type == MG_VALUE_MODULE)
+			mgMapSet(object->data.module.globals, name, mgReferenceValue(value));
 
 		free(name);
 
@@ -1036,7 +1076,7 @@ static inline MGValue* _mgVisitAssignment(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
+static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 	MG_ASSERT(node->type != MG_NODE_INVALID);
@@ -1684,7 +1724,7 @@ static MGValue* _mgVisitBinOp(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
+static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 1);
 	MG_ASSERT(node->type != MG_NODE_INVALID);
@@ -1748,7 +1788,7 @@ static MGValue* _mgVisitUnaryOp(MGModule *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
+static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 {
 	switch (node->type)
 	{
@@ -1818,84 +1858,85 @@ static MGValue* _mgVisitNode(MGModule *module, MGNode *node)
 }
 
 
-inline MGValue* mgInterpret(MGModule *module)
+inline MGValue* mgInterpret(MGValue *module)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->instance);
-	MG_ASSERT(module->parser.root);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.parser.root);
 
-	return _mgVisitNode(module, module->parser.root);
+	return _mgVisitNode(module, module->data.module.parser.root);
 }
 
 
-MGValue* mgInterpretFile(MGModule *module, const char *filename)
+MGValue* mgInterpretFile(MGValue *module, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(filename);
 
-	if (module->filename)
+	if (module->data.module.filename)
 	{
-		free(module->filename);
-		module->filename = NULL;
+		free(module->data.module.filename);
+		module->data.module.filename = NULL;
 	}
 
-	module->filename = mgStringDuplicate(filename);
+	module->data.module.filename = mgStringDuplicate(filename);
 
-	mgDestroyParser(&module->parser);
-	mgCreateParser(&module->parser);
+	mgDestroyParser(&module->data.module.parser);
+	mgCreateParser(&module->data.module.parser);
 
 	MGValue *result = NULL;
-	if (mgParseFile(&module->parser, filename))
+	if (mgParseFile(&module->data.module.parser, filename))
 		result = mgInterpret(module);
 
 	return result;
 }
 
 
-MGValue* mgInterpretFileHandle(MGModule *module, FILE *file, const char *filename)
+MGValue* mgInterpretFileHandle(MGValue *module, FILE *file, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(file);
 
-	if (module->filename)
+	if (module->data.module.filename)
 	{
-		free(module->filename);
-		module->filename = NULL;
+		free(module->data.module.filename);
+		module->data.module.filename = NULL;
 	}
 
 	if (filename)
-		module->filename = mgStringDuplicate(filename);
+		module->data.module.filename = mgStringDuplicate(filename);
 
-	mgDestroyParser(&module->parser);
-	mgCreateParser(&module->parser);
+	mgDestroyParser(&module->data.module.parser);
+	mgCreateParser(&module->data.module.parser);
 
 	MGValue *result = NULL;
-	if (mgParseFileHandle(&module->parser, file))
+	if (mgParseFileHandle(&module->data.module.parser, file))
 		result = mgInterpret(module);
 
 	return result;
 }
 
 
-MGValue* mgInterpretString(MGModule *module, const char *string, const char *filename)
+MGValue* mgInterpretString(MGValue *module, const char *string, const char *filename)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(string);
 
-	if (module->filename)
+	if (module->data.module.filename)
 	{
-		free(module->filename);
-		module->filename = NULL;
+		free(module->data.module.filename);
+		module->data.module.filename = NULL;
 	}
 
 	if (filename)
-		module->filename = mgStringDuplicate(filename);
+		module->data.module.filename = mgStringDuplicate(filename);
 
-	mgDestroyParser(&module->parser);
-	mgCreateParser(&module->parser);
+	mgDestroyParser(&module->data.module.parser);
+	mgCreateParser(&module->data.module.parser);
 
 	MGValue *result = NULL;
-	if (mgParseString(&module->parser, string))
+	if (mgParseString(&module->data.module.parser, string))
 		result = mgInterpret(module);
 
 	return result;

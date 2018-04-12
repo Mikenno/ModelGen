@@ -7,69 +7,100 @@
 #include "utilities.h"
 
 
-MGModule* mgCreateModule(void)
+inline MGValue* mgCreateValue(MGValueType type)
 {
-	MGModule *module = (MGModule*) calloc(1, sizeof(MGModule));
+	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
+	MG_ASSERT(value);
+
+	value->type = type;
+	value->refCount = 1;
+
+	return value;
+}
+
+
+void mgDestroyValue(MGValue *value)
+{
+	MG_ASSERT(value);
+
+	if (--value->refCount > 0)
+		return;
+
+	switch (value->type)
+	{
+	case MG_VALUE_STRING:
+		free(value->data.s);
+		break;
+	case MG_VALUE_TUPLE:
+	case MG_VALUE_LIST:
+		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+			mgDestroyValue(_mgListGet(value->data.a, i));
+		_mgListDestroy(value->data.a);
+		break;
+	case MG_VALUE_MAP:
+		_mgDestroyMap(&value->data.m);
+		break;
+	case MG_VALUE_MODULE:
+		MG_ASSERT(value->data.module.globals);
+		mgDestroyParser(&value->data.module.parser);
+		free(value->data.module.filename);
+		mgDestroyValue(value->data.module.globals);
+		break;
+	default:
+		break;
+	}
+
+	free(value);
+}
+
+
+inline MGValue* mgCreateValueModule(void)
+{
+	MGValue *module = mgCreateValue(MG_VALUE_MODULE);
 	MG_ASSERT(module);
 
-	mgCreateParser(&module->parser);
-	module->globals = mgCreateValueMap(1 << 4);
+	mgCreateParser(&module->data.module.parser);
+	module->data.module.globals = mgCreateValueMap(1 << 4);
 
 	return module;
 }
 
 
-void mgDestroyModule(MGModule *module)
+inline void mgModuleSet(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->globals);
-
-	// If refCount > 1 that implies the module is still in use
-	// However modules are only destroyed when destroying the
-	// instance, so this currently isn't a problem
-	// MG_ASSERT(module->globals->refCount == 1);
-
-	mgDestroyParser(&module->parser);
-	mgDestroyValue(module->globals);
-	free(module->filename);
-
-	free(module);
-}
-
-
-void mgModuleSet(MGModule *module, const char *name, MGValue *value)
-{
-	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
 	MG_ASSERT(name);
 
-	_mgMapSet(&module->globals->data.m, name, value);
+	_mgMapSet(&module->data.module.globals->data.m, name, value);
 }
 
 
-inline MGValue* mgModuleGet(MGModule *module, const char *name)
+inline MGValue* mgModuleGet(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
 	MG_ASSERT(name);
 
-	return _mgMapGet(&module->globals->data.m, name);
+	return _mgMapGet(&module->data.module.globals->data.m, name);
 }
 
 
-inline int mgModuleGetInteger(MGModule *module, const char *name, int defaultValue)
+inline int mgModuleGetInteger(MGValue *module, const char *name, int defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_INTEGER)) ? value->data.i : defaultValue;
 }
 
 
-inline float mgModuleGetFloat(MGModule *module, const char *name, float defaultValue)
+inline float mgModuleGetFloat(MGValue *module, const char *name, float defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_FLOAT)) ? value->data.f : defaultValue;
 }
 
 
-inline const char* mgModuleGetString(MGModule *module, const char *name, const char *defaultValue)
+inline const char* mgModuleGetString(MGValue *module, const char *name, const char *defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
 	return (value && (value->type == MG_VALUE_STRING)) ? value->data.s : defaultValue;
@@ -189,47 +220,6 @@ MGValue* _mgMapGet(const MGValueMap *map, const char *key)
 			return _mgListGet(*map, i).value;
 
 	return NULL;
-}
-
-
-inline MGValue* mgCreateValue(MGValueType type)
-{
-	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
-	MG_ASSERT(value);
-
-	value->type = type;
-	value->refCount = 1;
-
-	return value;
-}
-
-
-void mgDestroyValue(MGValue *value)
-{
-	MG_ASSERT(value);
-
-	if (--value->refCount > 0)
-		return;
-
-	switch (value->type)
-	{
-	case MG_VALUE_STRING:
-		free(value->data.s);
-		break;
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
-		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
-			mgDestroyValue(_mgListGet(value->data.a, i));
-		_mgListDestroy(value->data.a);
-		break;
-	case MG_VALUE_MAP:
-		_mgDestroyMap(&value->data.m);
-		break;
-	default:
-		break;
-	}
-
-	free(value);
 }
 
 

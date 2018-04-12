@@ -578,8 +578,11 @@ static MGValue* mg_min(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-void mgLoadMathLib(MGModule *module)
+void mgLoadMathLib(MGValue *module)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+
 	mgModuleSetFloat(module, "inf", INFINITY);
 	mgModuleSetFloat(module, "nan", NAN);
 	mgModuleSetFloat(module, "pi", _MG_PI);

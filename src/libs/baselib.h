@@ -5,6 +5,6 @@
 
 MGValue* _mg_rangei(int start, int stop, int step);
 
-void mgLoadBaseLib(MGModule *module);
+void mgLoadBaseLib(MGValue *module);
 
 #endif

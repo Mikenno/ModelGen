@@ -8,7 +8,6 @@
 void mgInspectToken(const MGToken *token);
 void mgInspectNode(const MGNode *node);
 void mgInspectValue(const MGValue *value);
-void mgInspectModule(const MGModule *module);
 void mgInspectInstance(const MGInstance *instance);
 void mgInspectStackFrame(const MGStackFrame *frame);
 

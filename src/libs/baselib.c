@@ -140,9 +140,10 @@ static MGValue* mg_globals(MGInstance *instance, size_t argc, MGValue **argv)
 	MG_ASSERT(instance);
 	MG_ASSERT(instance->callStackTop);
 	MG_ASSERT(instance->callStackTop->module);
-	MG_ASSERT(instance->callStackTop->module->globals);
+	MG_ASSERT(instance->callStackTop->module->type == MG_VALUE_MODULE);
+	MG_ASSERT(instance->callStackTop->module->data.module.globals);
 
-	return mgReferenceValue(instance->callStackTop->module->globals);
+	return mgReferenceValue(instance->callStackTop->module->data.module.globals);
 }
 
 
@@ -169,8 +170,7 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
 			MG_FAIL("Error: import expected argument %zu as \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING], _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 
-		const MGModule *importedModule = mgImportModule(instance, argv[i]->data.s);
-		mgTupleAdd(modules, mgReferenceValue(importedModule->globals));
+		mgTupleAdd(modules, mgImportModule(instance, argv[i]->data.s));
 	}
 
 	if (mgTupleLength(modules) == 1)
@@ -184,8 +184,11 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-void mgLoadBaseLib(MGModule *module)
+void mgLoadBaseLib(MGValue *module)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+
 	mgModuleSetInteger(module, "false", 0);
 	mgModuleSetInteger(module, "true", 1);
 

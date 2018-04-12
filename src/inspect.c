@@ -6,6 +6,7 @@
 #include "inspect.h"
 #include "module.h"
 #include "utilities.h"
+#include "modelgen.h"
 
 
 #define _MG_FILENAME_PADDING 4
@@ -225,6 +226,8 @@ static inline void _mgInspectValueType(const MGValue *value)
 		printf("[%zu]", _mgListLength(value->data.a));
 	else if (value->type == MG_VALUE_MAP)
 		printf("[%zu]", _mgListLength(value->data.m));
+	else if ((value->type == MG_VALUE_MODULE) && value->data.module.filename)
+		printf(" \"%s\"", value->data.module.filename);
 }
 
 
@@ -314,6 +317,9 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 			_mgInspectValue(value->data.func.locals, depth, metadata);
 		}
 		break;
+	case MG_VALUE_MODULE:
+		_mgInspectValue(value->data.module.globals, depth, metadata);
+		break;
 	default:
 		break;
 	}
@@ -339,37 +345,11 @@ void mgInspectValueEx(const MGValue *value, MGbool end)
 }
 
 
-void mgInspectModule(const MGModule *module)
+inline void mgInspectInstance(const MGInstance *instance)
 {
-	if (module->filename)
-		printf("Module [%zu:%zu] \"%s\"\n",
-		       _mgListLength(module->globals->data.m), _mgListCapacity(module->globals->data.m), mgBasename(module->filename));
-	else
-		printf("Module [%zu:%zu]\n",
-		       _mgListLength(module->globals->data.m), _mgListCapacity(module->globals->data.m));
+	printf("Instance [%zu:%zu] ", mgListLength(instance->modules), mgListCapacity(instance->modules));
 
-	_MGInspectValueMetadata metadata;
-
-	for (size_t i = 0; i < _mgListLength(module->globals->data.m); ++i)
-	{
-		_mgCreateInspectValueMetadata(&metadata);
-		_mgInspectName(&_mgListGet(module->globals->data.m, i), 0, &metadata);
-		_mgDestroyInspectValueMetadata(&metadata);
-	}
-}
-
-
-void mgInspectInstance(const MGInstance *instance)
-{
-	printf("Instance [%zu:%zu]\n",
-	       _mgListLength(instance->modules), _mgListCapacity(instance->modules));
-
-	for (size_t i = 0; i < _mgListLength(instance->modules); ++i)
-	{
-		putchar('\n');
-		printf("%s: ", _mgListGet(instance->modules, i).key);
-		mgInspectModule(_mgListGet(instance->modules, i).value);
-	}
+	mgInspectValue(instance->modules);
 }
 
 
@@ -389,10 +369,12 @@ void mgInspectStackFrame(const MGStackFrame *frame)
 
 		if (token)
 		{
-			MG_ASSERT(frame->module->filename);
+			MG_ASSERT(frame->module);
+			MG_ASSERT(frame->module->type == MG_VALUE_MODULE);
+			MG_ASSERT(frame->module->data.module.filename);
 
 			printf("Caller: %s:%u:%u\n",
-			       frame->module->filename,
+			       frame->module->data.module.filename,
 			       frame->caller->tokenBegin->begin.line,
 			       frame->caller->tokenBegin->begin.character);
 		}

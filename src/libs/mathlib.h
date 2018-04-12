@@ -3,6 +3,6 @@
 
 #include "../modelgen.h"
 
-void mgLoadMathLib(MGModule *module);
+void mgLoadMathLib(MGValue *module);
 
 #endif

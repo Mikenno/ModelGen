@@ -6,20 +6,25 @@
 
 #include "modelgen.h"
 
-MGModule* mgCreateModule(void);
-void mgDestroyModule(MGModule *module);
+MGValue* mgCreateValue(MGValueType type);
+void mgDestroyValue(MGValue *value);
 
-void mgModuleSet(MGModule *module, const char *name, MGValue *value);
-MGValue* mgModuleGet(MGModule *module, const char *name);
+MGValue* mgDeepCopyValue(const MGValue *value);
+MGValue* mgReferenceValue(MGValue *value);
+
+MGValue* mgCreateValueModule(void);
+
+void mgModuleSet(MGValue *module, const char *name, MGValue *value);
+MGValue* mgModuleGet(MGValue *module, const char *name);
 
 #define mgModuleSetInteger(module, name, i) mgModuleSet(module, name, mgCreateValueInteger(i))
 #define mgModuleSetFloat(module, name, f) mgModuleSet(module, name, mgCreateValueFloat(f))
 #define mgModuleSetString(module, name, s) mgModuleSet(module, name, mgCreateValueString(s))
 #define mgModuleSetCFunction(module, name, cfunc) mgModuleSet(module, name, mgCreateValueCFunction(cfunc))
 
-int mgModuleGetInteger(MGModule *module, const char *name, int defaultValue);
-float mgModuleGetFloat(MGModule *module, const char *name, float defaultValue);
-const char* mgModuleGetString(MGModule *module, const char *name, const char *defaultValue);
+int mgModuleGetInteger(MGValue *module, const char *name, int defaultValue);
+float mgModuleGetFloat(MGValue *module, const char *name, float defaultValue);
+const char* mgModuleGetString(MGValue *module, const char *name, const char *defaultValue);
 
 void _mgCreateMap(MGValueMap *map, size_t capacity);
 void _mgDestroyMap(MGValueMap *map);
@@ -28,12 +33,6 @@ void _mgMapClear(MGValueMap *map);
 
 void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
 MGValue* _mgMapGet(const MGValueMap *map, const char *key);
-
-MGValue* mgCreateValue(MGValueType type);
-void mgDestroyValue(MGValue *value);
-
-MGValue* mgDeepCopyValue(const MGValue *value);
-MGValue* mgReferenceValue(MGValue *value);
 
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);

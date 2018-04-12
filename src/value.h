@@ -3,7 +3,6 @@
 
 #define _MG_VALUES \
 	_MG_V(INVALID, "Invalid") \
-	_MG_V(MODULE, "Module") \
 	_MG_V(INTEGER, "Integer") \
 	_MG_V(FLOAT, "Float") \
 	_MG_V(STRING, "String") \
@@ -12,7 +11,8 @@
 	_MG_V(MAP, "Map") \
 	_MG_V(CFUNCTION, "CFunction") \
 	_MG_V(PROCEDURE, "Procedure") \
-	_MG_V(FUNCTION, "Function")
+	_MG_V(FUNCTION, "Function") \
+	_MG_V(MODULE, "Module")
 
 
 #define _MG_LONGEST_VALUE_NAME_LENGTH 9

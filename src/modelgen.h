@@ -25,7 +25,6 @@
 typedef unsigned char MGbool;
 
 typedef struct MGInstance MGInstance;
-typedef struct MGModule MGModule;
 typedef struct MGValue MGValue;
 
 typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, MGValue **argv);
@@ -87,19 +86,18 @@ typedef struct MGValue {
 		MGValueList a;
 		MGValueMap m;
 		struct {
-			MGModule *module;
+			MGValue *module;
 			MGNode *node;
 			MGValue *locals;
 		} func;
+		struct {
+			MGInstance *instance;
+			MGParser parser;
+			char *filename;
+			MGValue *globals;
+		} module;
 	} data;
 } MGValue;
-
-typedef struct MGModule {
-	MGInstance *instance;
-	MGParser parser;
-	char *filename;
-	MGValue *globals;
-} MGModule;
 
 typedef struct MGStackFrame MGStackFrame;
 
@@ -107,20 +105,18 @@ typedef struct MGStackFrame {
 	MGStackFrameState state;
 	MGStackFrame *last;
 	MGStackFrame *next;
-	const MGModule *module;
+	MGValue *module;
 	const MGNode *caller;
 	const char *callerName;
 	MGValue *value;
 	MGValue *locals;
 } MGStackFrame;
 
-typedef _MGPair(char*, MGModule*) MGNameModule;
-
 typedef float MGVertex[3];
 
 typedef struct MGInstance {
 	MGStackFrame *callStackTop;
-	_MGList(MGNameModule) modules;
+	MGValue *modules;
 	_MGList(MGVertex) vertices;
 } MGInstance;
 
@@ -148,16 +144,16 @@ MGNode* mgParseFile(MGParser *parser, const char *filename);
 MGNode* mgParseFileHandle(MGParser *parser, FILE *file);
 MGNode* mgParseString(MGParser *parser, const char *string);
 
-MGValue* mgInterpret(MGModule *module);
-MGValue* mgInterpretFile(MGModule *module, const char *filename);
-MGValue* mgInterpretFileHandle(MGModule *module, FILE *file, const char *filename);
-MGValue* mgInterpretString(MGModule *module, const char *string, const char *filename);
+MGValue* mgInterpret(MGValue *module);
+MGValue* mgInterpretFile(MGValue *module, const char *filename);
+MGValue* mgInterpretFileHandle(MGValue *module, FILE *file, const char *filename);
+MGValue* mgInterpretString(MGValue *module, const char *string, const char *filename);
 
 void mgCreateInstance(MGInstance *instance);
 void mgDestroyInstance(MGInstance *instance);
 
-void mgCreateStackFrame(MGStackFrame *frame);
-void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *locals);
+void mgCreateStackFrame(MGStackFrame *frame, MGValue *module);
+void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *module, MGValue *locals);
 void mgDestroyStackFrame(MGStackFrame *frame);
 
 void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame);
@@ -167,6 +163,6 @@ void mgRunFile(MGInstance *instance, const char *filename, const char *name);
 void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name);
 void mgRunString(MGInstance *instance, const char *string, const char *name);
 
-MGModule* mgImportModule(MGInstance *instance, const char *name);
+MGValue* mgImportModule(MGInstance *instance, const char *name);
 
 #endif
