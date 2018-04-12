@@ -34,8 +34,8 @@ void usage(void)
 		"\n"
 		"Introspection:\n"
 		"\n"
-		"    --profile     Print elapsed time\n"
-		"    --dump-module Print module contents on exit\n"
+		"    --profile Print elapsed time\n"
+		"    --inspect Print modules and their contents on exit\n"
 		"\n"
 		"Debugging:\n"
 		"\n"
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	MGbool debugTokens = MG_FALSE;
 	MGbool debugAST = MG_FALSE;
 	MGbool profileTime = MG_FALSE;
-	MGbool dumpModule = MG_FALSE;
+	MGbool inspectModules = MG_FALSE;
 
 	MGbool exportOBJ = MG_FALSE;
 	MGbool exportTriangles = MG_FALSE;
@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
 		}
 		else if (!strcmp("--profile", arg))
 			profileTime = MG_TRUE;
-		else if (!strcmp("--dump-module", arg))
-			dumpModule = MG_TRUE;
+		else if (!strcmp("--inspect", arg))
+			inspectModules = MG_TRUE;
 		else if (!strcmp("--", arg))
 		{
 			++i;
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 		for (; i < argc; ++i)
 			mgRunFile(&instance, argv[i], NULL);
 
-		if (dumpModule)
+		if (inspectModules)
 		{
 			putchar('\n');
 			mgInspectInstance(&instance);
