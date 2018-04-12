@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "modelgen.h"
 
@@ -52,6 +53,8 @@ MGValue* mgCreateValueMap(size_t capacity);
 void mgStringSet(MGValue *value, const char *s);
 const char* mgStringGet(MGValue *value);
 
+#define mgStringLength(str) strlen((str)->data.s)
+
 #define mgTupleClear mgListClear
 
 #define mgTupleLength mgListLength
@@ -85,5 +88,7 @@ void mgListClear(MGValue *list);
 #define mgMapClear(map) _mgMapClear(&(map)->data.m)
 #define mgMapSet(map, key, value) _mgMapSet(&(map)->data.m, key, value)
 #define mgMapGet(map, key) _mgMapGet(&(map)->data.m, key)
+
+#define mgMapSize(map) _mgMapSize((map)->data.m)
 
 #endif

@@ -109,6 +109,28 @@ static MGValue* mg_type(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: len expects exactly 1 argument, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_TUPLE:
+	case MG_VALUE_LIST:
+		return mgCreateValueInteger((int) mgListLength(argv[0]));
+	case MG_VALUE_MAP:
+		return mgCreateValueInteger((int) mgMapSize(argv[0]));
+	case MG_VALUE_STRING:
+		return mgCreateValueInteger((int) mgStringLength(argv[0]));
+	default:
+		MG_FAIL("Error: \"%s\" has no length", _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	}
+
+	return mgCreateValueVoid();
+}
+
+
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	MG_ASSERT(instance);
@@ -201,6 +223,7 @@ void mgLoadBaseLib(MGValue *module)
 	mgModuleSetCFunction(module, "print", mg_print);
 	mgModuleSetCFunction(module, "range", mg_range);
 	mgModuleSetCFunction(module, "type", mg_type);
+	mgModuleSetCFunction(module, "len", mg_len);
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 	mgModuleSetCFunction(module, "globals", mg_globals);
 	mgModuleSetCFunction(module, "locals", mg_locals);

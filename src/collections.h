@@ -87,4 +87,7 @@
 
 #define _MGPair(k, v) struct { k key; v value; }
 
+
+#define _mgMapSize(map) _mgListLength(map)
+
 #endif
