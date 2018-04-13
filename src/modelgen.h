@@ -95,6 +95,7 @@ typedef struct MGValue {
 			MGParser parser;
 			char *filename;
 			MGValue *globals;
+			MGbool isStatic;
 		} module;
 	} data;
 } MGValue;
@@ -117,6 +118,7 @@ typedef float MGVertex[3];
 typedef struct MGInstance {
 	MGStackFrame *callStackTop;
 	MGValue *modules;
+	MGValue *staticModules;
 	_MGList(MGVertex) vertices;
 } MGInstance;
 

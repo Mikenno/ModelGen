@@ -3,8 +3,6 @@
 #include <math.h>
 #include <limits.h>
 
-#include "mathlib.h"
-
 #include "../modelgen.h"
 #include "../module.h"
 
@@ -578,8 +576,10 @@ static MGValue* mg_min(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-void mgLoadMathLib(MGValue *module)
+MGValue* mgCreateMathLib(void)
 {
+	MGValue *module = mgCreateValueModule();
+
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
 
@@ -616,4 +616,6 @@ void mgLoadMathLib(MGValue *module)
 
 	mgModuleSetCFunction(module, "max", mg_max);
 	mgModuleSetCFunction(module, "min", mg_min);
+
+	return module;
 }

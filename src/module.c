@@ -59,8 +59,11 @@ inline MGValue* mgCreateValueModule(void)
 	MGValue *module = mgCreateValue(MG_VALUE_MODULE);
 	MG_ASSERT(module);
 
+	module->data.module.instance = NULL;
 	mgCreateParser(&module->data.module.parser);
+	module->data.module.filename = NULL;
 	module->data.module.globals = mgCreateValueMap(1 << 4);
+	module->data.module.isStatic = MG_FALSE;
 
 	return module;
 }

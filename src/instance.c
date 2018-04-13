@@ -6,8 +6,19 @@
 #include "module.h"
 #include "utilities.h"
 
-#include "libs/baselib.h"
-#include "libs/mathlib.h"
+
+extern MGValue* mgCreateBaseLib(void);
+extern MGValue* mgCreateMathLib(void);
+
+
+struct {
+	const char *name;
+	MGValue* (*create)(void);
+} _mgStaticModules[] = {
+	{ "base", mgCreateBaseLib },
+	{ "math", mgCreateMathLib },
+	{ NULL, NULL }
+};
 
 
 static inline char* _mgFilenameToImportName(const char *filename)
@@ -49,8 +60,23 @@ void mgCreateInstance(MGInstance *instance)
 	memset(instance, 0, sizeof(MGInstance));
 
 	instance->modules = mgCreateValueMap(1 << 3);
+	instance->staticModules = mgCreateValueMap(1 << 3);
 
 	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
+
+	for (int i = 0; _mgStaticModules[i].name; ++i)
+	{
+		MG_ASSERT(_mgStaticModules[i].create);
+
+		MGValue *module = _mgStaticModules[i].create();
+		MG_ASSERT(module);
+		MG_ASSERT(module->type == MG_VALUE_MODULE);
+
+		module->data.module.isStatic = MG_TRUE;
+		MG_ASSERT(mgMapGet(instance->staticModules, _mgStaticModules[i].name) == NULL);
+
+		mgMapSet(instance->staticModules, _mgStaticModules[i].name, module);
+	}
 }
 
 
@@ -59,6 +85,7 @@ void mgDestroyInstance(MGInstance *instance)
 	MG_ASSERT(instance);
 
 	mgDestroyValue(instance->modules);
+	mgDestroyValue(instance->staticModules);
 
 	_mgListDestroy(instance->vertices);
 }
@@ -220,6 +247,21 @@ static inline MGValue* _mgModuleLoadString(MGInstance *instance, const char *str
 }
 
 
+static inline void _mgImportDefaultInto(MGInstance *instance, MGValue *module)
+{
+	MGValue *base = mgMapGet(instance->staticModules, "base");
+	MG_ASSERT(base);
+	MG_ASSERT(base->type == MG_VALUE_MODULE);
+
+	for (size_t i = 0; i < mgMapSize(base->data.module.globals); ++i)
+	{
+		MGValueMapPair *pair = &_mgListGet(base->data.module.globals->data.m, i);
+
+		mgModuleSet(module, pair->key, mgReferenceValue(pair->value));
+	}
+}
+
+
 static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 {
 	MG_ASSERT(instance);
@@ -233,8 +275,7 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 
 	mgPushStackFrame(instance, &frame);
-	mgLoadBaseLib(module);
-	mgLoadMathLib(module);
+	_mgImportDefaultInto(instance, module);
 	mgInterpret(module);
 	mgPopStackFrame(instance, &frame);
 
@@ -249,6 +290,9 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *fil
 	MG_ASSERT(name);
 
 	MGValue *module = mgMapGet(instance->modules, name);
+
+	if (module == NULL)
+		module = mgMapGet(instance->staticModules, name);
 
 	if (module == NULL)
 	{

@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "baselib.h"
-
 #include "../modelgen.h"
 #include "../module.h"
 #include "../inspect.h"
@@ -206,8 +204,10 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-void mgLoadBaseLib(MGValue *module)
+MGValue* mgCreateBaseLib(void)
 {
+	MGValue *module = mgCreateValueModule();
+
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
 
@@ -229,4 +229,6 @@ void mgLoadBaseLib(MGValue *module)
 	mgModuleSetCFunction(module, "locals", mg_locals);
 
 	mgModuleSetCFunction(module, "__import", mg_import);
+
+	return module;
 }

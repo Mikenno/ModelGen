@@ -7,7 +7,9 @@
 #include "module.h"
 #include "inspect.h"
 #include "utilities.h"
-#include "libs/baselib.h"
+
+
+extern MGValue* _mg_rangei(int start, int stop, int step);
 
 
 static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *node, const char *format, ...)
@@ -70,7 +72,7 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		if (_mgListLength(value->data.m))
 		{
 			_mgCreateMap(&copy->data.m, _mgListLength(value->data.m));
-			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
+			for (size_t i = 0; i < _mgMapSize(value->data.m); ++i)
 			{
 				const MGValueMapPair *pair = &_mgListGet(value->data.m, i);
 				mgMapSet(copy, pair->key, mgDeepCopyValue(pair->value));
@@ -359,7 +361,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 
 		if (func->data.func.locals)
 		{
-			for (size_t i = 0; i < mgListLength(func->data.func.locals); ++i)
+			for (size_t i = 0; i < mgMapSize(func->data.func.locals); ++i)
 			{
 				const MGValueMapPair *pair = &_mgListGet(func->data.func.locals->data.m, i);
 				_mgSetValue(module, pair->key, mgReferenceValue(pair->value));
@@ -783,6 +785,8 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 
 static MGValue* _mgVisitSubscript(MGValue *module, MGNode *node)
 {
+	MG_ASSERT(_mgListLength(node->children) == 2);
+
 	MGValue *index = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
 
@@ -1927,7 +1931,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 		}
 		else
 		{
-			for (size_t i = 0; i < mgListLength(importedModule->data.module.globals); ++i)
+			for (size_t i = 0; i < mgMapSize(importedModule->data.module.globals); ++i)
 			{
 				MGValueMapPair *pair = &_mgListGet(importedModule->data.module.globals->data.m, i);
 

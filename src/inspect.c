@@ -292,11 +292,11 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		break;
 	case MG_VALUE_MAP:
 		putchar('{');
-		if (_mgListLength(value->data.m))
+		if (_mgMapSize(value->data.m))
 		{
 			_mgMetadataAdd(metadata, value);
 			putchar('\n');
-			for (size_t i = 0; i < _mgListLength(value->data.m); ++i)
+			for (size_t i = 0; i < _mgMapSize(value->data.m); ++i)
 				_mgInspectName(&_mgListGet(value->data.m, i), depth + 1, metadata);
 			for (unsigned int i = 0; i < depth; ++i)
 				fputs("    ", stdout);
