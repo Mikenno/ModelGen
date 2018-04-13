@@ -23,6 +23,7 @@
 	_MG_T(FROM, "from") \
 	_MG_T(AS, "as") \
 	_MG_T(IN, "in") \
+	_MG_T(ASSERT, "assert") \
 	_MG_T(LPAREN, "(") \
 	_MG_T(RPAREN, ")") \
 	_MG_T(LSQUARE, "[") \

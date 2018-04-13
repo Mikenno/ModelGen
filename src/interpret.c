@@ -1943,6 +1943,38 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
+{
+#if MG_DEBUG
+	MG_ASSERT(node);
+	MG_ASSERT(node->type == MG_NODE_ASSERT);
+	MG_ASSERT((_mgListLength(node->children) == 1) || (_mgListLength(node->children) == 2));
+
+	MGValue *expression = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(expression->type == MG_VALUE_INTEGER);
+
+	if (!expression->data.i)
+	{
+		if (_mgListLength(node->children) == 2)
+		{
+			MGValue *message = _mgVisitNode(module, _mgListGet(node->children, 1));
+			MG_ASSERT(message->type == MG_VALUE_STRING);
+
+			MG_FAIL("Error: %s", message->data.s);
+
+			mgDestroyValue(message);
+		}
+		else
+			MG_FAIL("Error: Assertion");
+	}
+
+	mgDestroyValue(expression);
+
+#endif
+	return mgCreateValueVoid();
+}
+
+
 static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 {
 	switch (node->type)
@@ -2008,6 +2040,8 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_IMPORT:
 	case MG_NODE_IMPORT_FROM:
 		return _mgVisitImport(module, node);
+	case MG_NODE_ASSERT:
+		return _mgVisitAssert(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}

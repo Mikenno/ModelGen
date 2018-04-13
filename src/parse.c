@@ -662,6 +662,23 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token, MGbool ea
 	}
 	else if ((token->type == MG_TOKEN_IMPORT) || (token->type == MG_TOKEN_FROM))
 		return _mgParseImport(parser, token);
+	else if (token->type == MG_TOKEN_ASSERT)
+	{
+		node = mgCreateNode(token, MG_NODE_ASSERT);
+		node->token = NULL;
+
+		_mgAddChild(node, _mgParseExpression(parser, ++token, MG_FALSE));
+
+		token = node->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINE(token);
+
+		if (token->type == MG_TOKEN_COMMA)
+			_mgAddChild(node, _mgParseExpression(parser, ++token, MG_FALSE));
+
+		MG_ASSERT((_mgListLength(node->children) == 1) || (_mgListLength(node->children) == 2));
+
+		return node;
+	}
 
 	MG_ASSERT(node);
 
