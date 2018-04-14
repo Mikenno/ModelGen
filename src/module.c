@@ -425,3 +425,41 @@ MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value)
 
 	return MG_TRUE;
 }
+
+
+void mgMapMerge(MGValue *destination, const MGValue *source, MGbool replace)
+{
+	MG_ASSERT(destination);
+	MG_ASSERT(destination->type == MG_VALUE_MAP);
+	MG_ASSERT(source);
+	MG_ASSERT(source->type == MG_VALUE_MAP);
+
+	MGMapIterator iterator;
+	mgCreateMapIterator(&iterator, (MGValue*) source);
+
+	MGValue *k, *v;
+
+	if (replace)
+		while (mgMapNext(&iterator, &k, &v))
+			mgMapSet(destination, k->data.str.s, mgReferenceValue(v));
+	else
+		while (mgMapNext(&iterator, &k, &v))
+			if (mgMapGet(destination, k->data.str.s) == NULL)
+				mgMapSet(destination, k->data.str.s, mgReferenceValue(v));
+
+	mgDestroyMapIterator(&iterator);
+}
+
+
+MGValue* mgMapCopy(const MGValue *map)
+{
+	MG_ASSERT(map);
+	MG_ASSERT(map->type == MG_VALUE_MAP);
+
+	MGValue *copy = mgCreateValueMap(mgMapSize(map));
+	MG_ASSERT(copy);
+
+	mgMapMerge(copy, map, MG_TRUE);
+
+	return copy;
+}

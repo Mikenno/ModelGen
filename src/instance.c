@@ -253,12 +253,7 @@ static inline void _mgImportDefaultInto(MGInstance *instance, MGValue *module)
 	MG_ASSERT(base);
 	MG_ASSERT(base->type == MG_VALUE_MODULE);
 
-	for (size_t i = 0; i < mgMapSize(base->data.module.globals); ++i)
-	{
-		MGValueMapPair *pair = &_mgListGet(base->data.module.globals->data.m, i);
-
-		mgModuleSet(module, pair->key, mgReferenceValue(pair->value));
-	}
+	mgMapMerge(module->data.module.globals, base->data.module.globals, MG_TRUE);
 }
 
 
