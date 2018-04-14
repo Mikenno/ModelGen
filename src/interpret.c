@@ -55,7 +55,7 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 	switch (copy->type)
 	{
 	case MG_VALUE_STRING:
-		copy->data.s = mgStringDuplicate(value->data.s);
+		copy->data.str.s = mgStringDuplicate(value->data.str.s);
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
@@ -203,12 +203,12 @@ static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *
 	MG_ASSERT(collection->type == MG_VALUE_MAP);
 	MG_ASSERT(key);
 	MG_ASSERT(key->type == MG_VALUE_STRING);
-	MG_ASSERT(key->data.s);
+	MG_ASSERT(key->data.str.s);
 
-	MGValue *value = mgMapGet(collection, key->data.s);
+	MGValue *value = mgMapGet(collection, key->data.str.s);
 
 	if (value == NULL)
-		MG_FAIL("Error: Undefined key \"%s\"", key->data.s);
+		MG_FAIL("Error: Undefined key \"%s\"", key->data.str.s);
 
 	return mgReferenceValue(value);
 }
@@ -220,9 +220,9 @@ static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *
 	MG_ASSERT(collection->type == MG_VALUE_MAP);
 	MG_ASSERT(key);
 	MG_ASSERT(key->type == MG_VALUE_STRING);
-	MG_ASSERT(key->data.s);
+	MG_ASSERT(key->data.str.s);
 
-	mgMapSet(collection, key->data.s, value);
+	mgMapSet(collection, key->data.str.s, value);
 }
 
 
@@ -681,7 +681,7 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
 		break;
 	case MG_VALUE_STRING:
-		_condition = condition->data.s ? (int) strlen(condition->data.s) : 0;
+		_condition = condition->data.str.length != 0;
 		break;
 	case MG_VALUE_TUPLE:
 		_condition = condition->data.a.length > 0;
@@ -959,10 +959,10 @@ static MGValue* _mgVisitMap(MGValue *module, MGNode *node)
 
 		MG_ASSERT(key);
 		MG_ASSERT(key->type == MG_VALUE_STRING);
-		MG_ASSERT(key->data.s);
+		MG_ASSERT(key->data.str.s);
 		MG_ASSERT(value);
 
-		mgMapSet(map, key->data.s, value);
+		mgMapSet(map, key->data.str.s, value);
 
 		mgDestroyValue(key);
 	}
@@ -1112,12 +1112,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				value = mgCreateValueFloat(lhs->data.i + rhs->data.f);
 				break;
 			case MG_VALUE_STRING:
-				MG_ASSERT(rhs->data.s);
-				size_t len = (size_t) snprintf(NULL, 0, "%d%s", lhs->data.i, rhs->data.s);
-				MG_ASSERT(len >= 0);
-				char *s = (char*) malloc((len + 1) * sizeof(char));
-				snprintf(s, len + 1, "%d%s", lhs->data.i, rhs->data.s);
-				s[len] = '\0';
+				MG_ASSERT(rhs->data.str.s);
+				size_t len = (size_t) snprintf(NULL, 0, "%d", lhs->data.i);
+				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
+				snprintf(s, len + 1, "%d", lhs->data.i);
+				strcpy(s + len, rhs->data.str.s);
+				s[len + rhs->data.str.length] = '\0';
 				value = mgCreateValueString(s);
 				free(s);
 				break;
@@ -1135,12 +1135,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				value = mgCreateValueFloat(lhs->data.f + rhs->data.f);
 				break;
 			case MG_VALUE_STRING:
-				MG_ASSERT(rhs->data.s);
-				size_t len = (size_t) snprintf(NULL, 0, "%f%s", lhs->data.f, rhs->data.s);
-				MG_ASSERT(len >= 0);
-				char *s = (char*) malloc((len + 1) * sizeof(char));
-				snprintf(s, len + 1, "%f%s", lhs->data.f, rhs->data.s);
-				s[len] = '\0';
+				MG_ASSERT(rhs->data.str.s);
+				size_t len = (size_t) snprintf(NULL, 0, "%f", lhs->data.f);
+				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
+				snprintf(s, len + 1, "%f", lhs->data.f);
+				strcpy(s + len, rhs->data.str.s);
+				s[len + rhs->data.str.length] = '\0';
 				value = mgCreateValueString(s);
 				free(s);
 				break;
@@ -1149,31 +1149,32 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			}
 			break;
 		case MG_VALUE_STRING:
-			MG_ASSERT(lhs->data.s);
+			MG_ASSERT(lhs->data.str.s);
 			char *s = NULL;
 			size_t len = 0;
 			switch (rhs->type)
 			{
 			case MG_VALUE_INTEGER:
-				len = (size_t) snprintf(NULL, 0, "%s%d", lhs->data.s, rhs->data.i);
-				MG_ASSERT(len >= 0);
-				s = (char*) malloc((len + 1) * sizeof(char));
-				snprintf(s, len + 1, "%s%d", lhs->data.s, rhs->data.i);
-				s[len] = '\0';
+				len = (size_t) snprintf(NULL, 0, "%d", rhs->data.i);
+				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
+				strcpy(s, lhs->data.str.s);
+				snprintf(s + lhs->data.str.length, len + 1, "%d", rhs->data.i);
+				s[lhs->data.str.length + len] = '\0';
 				break;
 			case MG_VALUE_FLOAT:
-				len = (size_t) snprintf(NULL, 0, "%s%f", lhs->data.s, rhs->data.f);
-				MG_ASSERT(len >= 0);
-				s = (char*) malloc((len + 1) * sizeof(char));
-				snprintf(s, len + 1, "%s%f", lhs->data.s, rhs->data.f);
-				s[len] = '\0';
+				len = (size_t) snprintf(NULL, 0, "%f", rhs->data.f);
+				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
+				strcpy(s, lhs->data.str.s);
+				snprintf(s + lhs->data.str.length, len + 1, "%f", rhs->data.f);
+				s[lhs->data.str.length + len] = '\0';
 				break;
 			case MG_VALUE_STRING:
-				MG_ASSERT(rhs->data.s);
-				s = (char*) malloc((strlen(lhs->data.s) + strlen(rhs->data.s) + 1) * sizeof(char));
+				MG_ASSERT(rhs->data.str.s);
+				s = (char*) malloc((lhs->data.str.length + rhs->data.str.length + 1) * sizeof(char));
 				MG_ASSERT(s);
-				strcpy(s, lhs->data.s);
-				strcat(s, rhs->data.s);
+				strcpy(s, lhs->data.str.s);
+				strcpy(s + lhs->data.str.length, rhs->data.str.s);
+				s[lhs->data.str.length + rhs->data.str.length] = '\0';
 			default:
 				break;
 			}
@@ -1248,16 +1249,14 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			case MG_VALUE_STRING:
 			{
-				const size_t len = strlen(rhs->data.s);
-
-				if ((len > 0) && (lhs->data.i > 0))
+				if ((rhs->data.str.length > 0) && (lhs->data.i > 0))
 				{
-					char *str = mgStringRepeatDuplicate(rhs->data.s, len, (size_t) lhs->data.i);
+					char *str = mgStringRepeatDuplicate(rhs->data.str.s, rhs->data.str.length, (size_t) lhs->data.i);
 					value = mgCreateValueString(str);
 					free(str);
 				}
 				else
-					value = mgCreateValueString(NULL);
+					value = mgCreateValueString("");
 
 				break;
 			}
@@ -1291,16 +1290,14 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 		case MG_VALUE_STRING:
 			if (rhs->type == MG_VALUE_INTEGER)
 			{
-				const size_t len = strlen(lhs->data.s);
-
-				if ((len > 0) && (rhs->data.i > 0))
+				if ((lhs->data.str.length > 0) && (rhs->data.i > 0))
 				{
-					char *str = mgStringRepeatDuplicate(lhs->data.s, len, (size_t) rhs->data.i);
+					char *str = mgStringRepeatDuplicate(lhs->data.str.s, lhs->data.str.length, (size_t) rhs->data.i);
 					value = mgCreateValueString(str);
 					free(str);
 				}
 				else
-					value = mgCreateValueString(NULL);
+					value = mgCreateValueString("");
 			}
 			break;
 		case MG_VALUE_TUPLE:
@@ -1413,12 +1410,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			}
 			break;
 		case MG_VALUE_STRING:
-			MG_ASSERT(lhs->data.s);
+			MG_ASSERT(lhs->data.str.s);
 			switch (rhs->type)
 			{
 			case MG_VALUE_STRING:
-				MG_ASSERT(rhs->data.s);
-				value = mgCreateValueInteger(!strcmp(lhs->data.s, rhs->data.s));
+				MG_ASSERT(rhs->data.str.s);
+				value = mgCreateValueInteger(!strcmp(lhs->data.str.s, rhs->data.str.s));
 				break;
 			default:
 				break;
@@ -1461,9 +1458,9 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			switch (rhs->type)
 			{
 			case MG_VALUE_STRING:
-				MG_ASSERT(lhs->data.s);
-				MG_ASSERT(rhs->data.s);
-				value = mgCreateValueInteger(strcmp(lhs->data.s, rhs->data.s));
+				MG_ASSERT(lhs->data.str.s);
+				MG_ASSERT(rhs->data.str.s);
+				value = mgCreateValueInteger(strcmp(lhs->data.str.s, rhs->data.str.s));
 				break;
 			default:
 				break;
@@ -1964,7 +1961,7 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 			MGValue *message = _mgVisitNode(module, _mgListGet(node->children, 1));
 			MG_ASSERT(message->type == MG_VALUE_STRING);
 
-			MG_FAIL("Error: %s", message->data.s);
+			MG_FAIL("Error: %s", message->data.str.s);
 
 			mgDestroyValue(message);
 		}

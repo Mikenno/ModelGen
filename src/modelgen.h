@@ -81,7 +81,10 @@ typedef struct MGValue {
 	union {
 		int i;
 		float f;
-		char *s;
+		struct {
+			char *s;
+			size_t length;
+		} str;
 		MGCFunction cfunc;
 		MGValueList a;
 		MGValueMap m;

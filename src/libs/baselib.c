@@ -38,8 +38,8 @@ static MGValue* mg_print(MGInstance *instance, size_t argc, MGValue **argv)
 
 		if (value->type != MG_VALUE_STRING)
 			mgInspectValueEx(argv[i], MG_FALSE);
-		else if (value->data.s)
-			fputs(value->data.s, stdout);
+		else if (value->data.str.s)
+			fputs(value->data.str.s, stdout);
 	}
 
 	putchar('\n');
@@ -190,7 +190,7 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
 			MG_FAIL("Error: import expected argument %zu as \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING], _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 
-		mgTupleAdd(modules, mgImportModule(instance, argv[i]->data.s));
+		mgTupleAdd(modules, mgImportModule(instance, argv[i]->data.str.s));
 	}
 
 	if (mgTupleLength(modules) == 1)

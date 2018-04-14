@@ -267,8 +267,8 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		break;
 	case MG_VALUE_STRING:
 	{
-		char *str = (char*) malloc((mgInlineRepresentationLength(value->data.s, NULL) + 1) * sizeof(char));
-		mgInlineRepresentation(str, value->data.s, NULL);
+		char *str = (char*) malloc((mgInlineRepresentationLength(value->data.str.s, NULL) + 1) * sizeof(char));
+		mgInlineRepresentation(str, value->data.str.s, NULL);
 		printf("\"%s\"", str);
 		free(str);
 		break;

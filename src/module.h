@@ -51,9 +51,8 @@ MGValue* mgCreateValueMap(size_t capacity);
 #define mgFloatGet(value) value->data.f
 
 void mgStringSet(MGValue *value, const char *s);
-const char* mgStringGet(MGValue *value);
-
-#define mgStringLength(str) strlen((str)->data.s)
+#define mgStringGet(value) ((const char*) (value)->data.str.s)
+#define mgStringLength(value) (value)->data.str.length
 
 #define mgTupleClear mgListClear
 

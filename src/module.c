@@ -29,7 +29,7 @@ void mgDestroyValue(MGValue *value)
 	switch (value->type)
 	{
 	case MG_VALUE_STRING:
-		free(value->data.s);
+		free(value->data.str.s);
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
@@ -106,7 +106,7 @@ inline float mgModuleGetFloat(MGValue *module, const char *name, float defaultVa
 inline const char* mgModuleGetString(MGValue *module, const char *name, const char *defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
-	return (value && (value->type == MG_VALUE_STRING)) ? value->data.s : defaultValue;
+	return (value && (value->type == MG_VALUE_STRING)) ? value->data.str.s : defaultValue;
 }
 
 
@@ -245,7 +245,8 @@ inline MGValue* mgCreateValueFloat(float f)
 inline MGValue* mgCreateValueString(const char *s)
 {
 	MGValue *value = mgCreateValue(MG_VALUE_STRING);
-	value->data.s = mgStringDuplicate(s ? s : "");
+	value->data.str.s = NULL;
+	mgStringSet(value, s);
 	return value;
 }
 
@@ -270,14 +271,11 @@ inline MGValue* mgCreateValueMap(size_t capacity)
 
 inline void mgStringSet(MGValue *value, const char *s)
 {
-	free(value->data.s);
-	value->data.s = mgStringDuplicate(s ? s : "");
-}
+	MG_ASSERT(s);
 
-
-inline const char* mgStringGet(MGValue *value)
-{
-	return value->data.s;
+	free(value->data.str.s);
+	value->data.str.s = mgStringDuplicate(s);
+	value->data.str.length = strlen(value->data.str.s);
 }
 
 
