@@ -7,6 +7,12 @@
 
 #include "modelgen.h"
 
+typedef struct MGMapIterator {
+	MGValue *map;
+	MGValue *key;
+	size_t index;
+} MGMapIterator;
+
 MGValue* mgCreateValue(MGValueType type);
 void mgDestroyValue(MGValue *value);
 
@@ -89,5 +95,10 @@ void mgListClear(MGValue *list);
 #define mgMapGet(map, key) _mgMapGet(&(map)->data.m, key)
 
 #define mgMapSize(map) _mgMapSize((map)->data.m)
+
+void mgCreateMapIterator(MGMapIterator *iterator, MGValue *map);
+void mgDestroyMapIterator(MGMapIterator *iterator);
+
+MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value);
 
 #endif

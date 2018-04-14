@@ -69,14 +69,16 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 			_mgListInitialize(copy->data.a);
 		break;
 	case MG_VALUE_MAP:
-		if (_mgListLength(value->data.m))
+		if (_mgMapSize(value->data.m))
 		{
-			_mgCreateMap(&copy->data.m, _mgListLength(value->data.m));
-			for (size_t i = 0; i < _mgMapSize(value->data.m); ++i)
-			{
-				const MGValueMapPair *pair = &_mgListGet(value->data.m, i);
-				mgMapSet(copy, pair->key, mgDeepCopyValue(pair->value));
-			}
+			MGMapIterator iterator;
+			mgCreateMapIterator(&iterator, (MGValue*) value);
+
+			MGValue *k, *v;
+			while (mgMapNext(&iterator, &k, &v))
+				mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
+
+			mgDestroyMapIterator(&iterator);
 		}
 		else
 			_mgCreateMap(&copy->data.m, 0);
@@ -361,11 +363,14 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 
 		if (func->data.func.locals)
 		{
-			for (size_t i = 0; i < mgMapSize(func->data.func.locals); ++i)
-			{
-				const MGValueMapPair *pair = &_mgListGet(func->data.func.locals->data.m, i);
-				_mgSetValue(module, pair->key, mgReferenceValue(pair->value));
-			}
+			MGMapIterator iterator;
+			mgCreateMapIterator(&iterator, func->data.func.locals);
+
+			MGValue *k, *v;
+			while (mgMapNext(&iterator, &k, &v))
+				_mgSetValue(module, k->data.str.s, mgReferenceValue(v));
+
+			mgDestroyMapIterator(&iterator);
 		}
 
 		MGNode *funcNode = func->data.func.node;
@@ -1928,12 +1933,14 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 		}
 		else
 		{
-			for (size_t i = 0; i < mgMapSize(importedModule->data.module.globals); ++i)
-			{
-				MGValueMapPair *pair = &_mgListGet(importedModule->data.module.globals->data.m, i);
+			MGMapIterator iterator;
+			mgCreateMapIterator(&iterator, importedModule->data.module.globals);
 
-				_mgSetValue(module, pair->key, mgReferenceValue(pair->value));
-			}
+			MGValue *k, *v;
+			while (mgMapNext(&iterator, &k, &v))
+				_mgSetValue(module, k->data.str.s, mgReferenceValue(v));
+
+			mgDestroyMapIterator(&iterator);
 		}
 
 		free(alias);

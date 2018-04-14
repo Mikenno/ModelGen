@@ -373,3 +373,55 @@ inline void mgListClear(MGValue *list)
 
 	_mgListClear(list->data.a);
 }
+
+
+void mgCreateMapIterator(MGMapIterator *iterator, MGValue *map)
+{
+	MG_ASSERT(iterator);
+	MG_ASSERT(map);
+	MG_ASSERT(map->type == MG_VALUE_MAP);
+
+	memset(iterator, 0, sizeof(MGMapIterator));
+
+	iterator->map = mgReferenceValue(map);
+}
+
+
+void mgDestroyMapIterator(MGMapIterator *iterator)
+{
+	MG_ASSERT(iterator);
+
+	mgDestroyValue(iterator->map);
+
+	if (iterator->key)
+		mgDestroyValue(iterator->key);
+}
+
+
+MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value)
+{
+	MG_ASSERT(iterator);
+	MG_ASSERT(iterator->map);
+
+	if (iterator->index == mgMapSize(iterator->map))
+		return MG_FALSE;
+
+	MGValueMapPair *pair = &_mgListGet(iterator->map->data.m, iterator->index);
+
+	if (key)
+	{
+		if (iterator->key)
+			mgDestroyValue(iterator->key);
+
+		iterator->key = mgCreateValueString(pair->key);
+
+		*key = iterator->key;
+	}
+
+	if (value)
+		*value = pair->value;
+
+	++iterator->index;
+
+	return MG_TRUE;
+}
