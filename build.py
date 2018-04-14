@@ -22,6 +22,7 @@ ldflags = ["-lm"]
 modelgen_dir = os.path.dirname(__file__)
 modelgen_src_dir = os.path.join(modelgen_dir, "src")
 modelgen_tests_dir = os.path.join(modelgen_dir, "tests")
+modelgen_modules_dir = os.path.join(modelgen_dir, "modules")
 modelgen_bin_dir = os.path.join(modelgen_dir, "bin")
 
 
@@ -168,7 +169,7 @@ build_configurations = {
 		"name": "modelgen-debug",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
 	},
@@ -176,7 +177,7 @@ build_configurations = {
 		"name": "modelgen-debug-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 	},
@@ -184,7 +185,7 @@ build_configurations = {
 		"name": "modelgen-release",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags,
 		"ldflags": ldflags,
 	},
@@ -192,7 +193,7 @@ build_configurations = {
 		"name": "modelgen-release-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 	},
@@ -200,7 +201,7 @@ build_configurations = {
 		"name": "modelgen-test",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_tests_dir, "test.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
 	},
@@ -208,7 +209,7 @@ build_configurations = {
 		"name": "modelgen-test-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": os.path.join(modelgen_tests_dir, "test.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir),
+		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 	},

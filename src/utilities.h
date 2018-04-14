@@ -27,6 +27,8 @@ const char* mgBasename(const char *filename);
 size_t mgDirnameEnd(const char *filename);
 char* mgDirname(char *dirname, const char *filename);
 
+int mgFileExists(const char *filename);
+
 unsigned int mgInlineRepresentationLength(const char *str, const char *end);
 char* mgInlineRepresentation(char *destination, const char *source, const char *end);
 

@@ -120,6 +120,7 @@ typedef float MGVertex[3];
 
 typedef struct MGInstance {
 	MGStackFrame *callStackTop;
+	_MGList(char*) path;
 	MGValue *modules;
 	MGValue *staticModules;
 	_MGList(MGVertex) vertices;

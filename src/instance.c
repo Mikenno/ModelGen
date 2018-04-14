@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#   include <windows.h>
+#endif
+
 #include "modelgen.h"
 #include "module.h"
 #include "utilities.h"
@@ -59,10 +63,39 @@ void mgCreateInstance(MGInstance *instance)
 
 	memset(instance, 0, sizeof(MGInstance));
 
+	_mgListCreate(char*, instance->path, 1 << 2);
+
 	instance->modules = mgCreateValueMap(1 << 3);
 	instance->staticModules = mgCreateValueMap(1 << 3);
 
 	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
+
+#ifdef _WIN32
+	char path[MAX_PATH + 1];
+
+	if (GetCurrentDirectoryA(MAX_PATH + 1, path))
+		_mgListAdd(char*, instance->path, mgStringDuplicate(path));
+
+	if (GetModuleFileNameA(NULL, path, MAX_PATH + 1))
+	{
+		size_t dirnameEnd = mgDirnameEnd(path);
+
+		if (dirnameEnd)
+		{
+			path[dirnameEnd] = '\0';
+			dirnameEnd = mgDirnameEnd(path);
+
+			_mgListAdd(char*, instance->path, mgStringDuplicate(path));
+
+			if (dirnameEnd)
+			{
+				strcpy(path + dirnameEnd, "/modules");
+
+				_mgListInsert(char*, instance->path, _mgListIndexRelativeToAbsolute(instance->path, -2), mgStringDuplicate(path));
+			}
+		}
+	}
+#endif
 
 	for (int i = 0; _mgStaticModules[i].name; ++i)
 	{
@@ -83,6 +116,10 @@ void mgCreateInstance(MGInstance *instance)
 void mgDestroyInstance(MGInstance *instance)
 {
 	MG_ASSERT(instance);
+
+	for (int i = 0; i < _mgListLength(instance->path); ++i)
+		free(_mgListGet(instance->path, i));
+	_mgListDestroy(instance->path);
 
 	mgDestroyValue(instance->modules);
 	mgDestroyValue(instance->staticModules);
@@ -263,6 +300,7 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
 	MG_ASSERT(module->data.module.instance == instance);
+	MG_ASSERT(module->data.module.parser.root);
 
 	MGStackFrame frame;
 	mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(module->data.module.globals));
@@ -278,34 +316,58 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 }
 
 
-static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *filename, const char *name)
+static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *name)
 {
 	MG_ASSERT(instance);
-	MG_ASSERT(filename);
 	MG_ASSERT(name);
 
 	MGValue *module = mgMapGet(instance->modules, name);
 
 	if (module == NULL)
+	{
+		char filename[MAX_PATH + 1];
+		char _name[MAX_PATH + 1];
+
+		strcpy(_name, "/");
+		strcat(_name, name);
+		strcat(_name, ".mg");
+
+		for (int i = 0; i <= _mgListLength(instance->path); ++i)
+		{
+			if (i < _mgListLength(instance->path))
+				strcat(strcpy(filename, _mgListGet(instance->path, i)), _name);
+			else
+				strcpy(filename, _name + 1);
+
+			if (mgFileExists(filename))
+			{
+				module = mgCreateValueModule();
+
+				module->data.module.instance = instance;
+				module->data.module.filename = mgStringDuplicate(filename);
+
+				if (mgParseFile(&module->data.module.parser, filename))
+				{
+					mgMapSet(instance->modules, name, module);
+					_mgRunModule(instance, module);
+					return module;
+				}
+				else
+				{
+					fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
+					mgDestroyValue(module);
+					return NULL;
+				}
+			}
+		}
+
 		module = mgMapGet(instance->staticModules, name);
 
-	if (module == NULL)
-	{
-		module = mgCreateValueModule();
-
-		module->data.module.instance = instance;
-		module->data.module.filename = mgStringDuplicate(filename);
-
-		if (mgParseFile(&module->data.module.parser, filename))
-		{
-			mgMapSet(instance->modules, name, module);
-			_mgRunModule(instance, module);
-		}
-		else
+		if (module == NULL)
 		{
 			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
 			mgDestroyValue(module);
-			module = NULL;
+			return NULL;
 		}
 	}
 
@@ -357,10 +419,7 @@ MGValue* mgImportModule(MGInstance *instance, const char *name)
 	MG_ASSERT(instance);
 	MG_ASSERT(name);
 
-	char *filename = _mgImportNameToFilename(name);
-	MGValue *module = _mgImportModuleFile(instance, filename, name);
-	free(filename);
-
+	MGValue *module = _mgImportModuleFile(instance, name);
 	MG_ASSERT(module);
 
 	return module;

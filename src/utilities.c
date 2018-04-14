@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#   include <windows.h>
+#else
+#   include <unistd.h>
+#endif
+
 #include "utilities.h"
 #include "debug.h"
 
@@ -73,6 +79,18 @@ char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times)
 	char *s = (char*) malloc((length * times + 1) * sizeof(char));
 
 	return mgStringRepeat(s, str, length, times);
+}
+
+
+int mgFileExists(const char *filename)
+{
+#ifdef _WIN32
+	DWORD dwAttrib = GetFileAttributesA(filename);
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES)
+	   && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+#else
+	return access(filename, F_OK) != -1;
+#endif
 }
 
 

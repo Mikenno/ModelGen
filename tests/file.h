@@ -7,14 +7,6 @@
 typedef void (*MGWalkFilesCallback)(const char *filename);
 
 
-static inline int mgFileExists(const char *filename)
-{
-	DWORD dwAttrib = GetFileAttributesA(filename);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES)
-	   && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
-}
-
-
 static int mgWalkFiles(const char *directory, MGWalkFilesCallback callback)
 {
 	char dir[MAX_PATH + 1], filename[MAX_PATH + 1];
