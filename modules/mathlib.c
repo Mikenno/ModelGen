@@ -3,8 +3,8 @@
 #include <math.h>
 #include <limits.h>
 
-#include "../src/modelgen.h"
-#include "../src/module.h"
+#include "modelgen.h"
+#include "module.h"
 
 
 #define _MG_PI 3.141592653589793238462643383279502884f

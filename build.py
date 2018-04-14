@@ -172,6 +172,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
+		"include_directories": [modelgen_src_dir],
 	},
 	"debug-x64": {
 		"name": "modelgen-debug-x64",
@@ -180,6 +181,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
+		"include_directories": [modelgen_src_dir],
 	},
 	"release": {
 		"name": "modelgen-release",
@@ -188,6 +190,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags,
 		"ldflags": ldflags,
+		"include_directories": [modelgen_src_dir],
 	},
 	"release-x64": {
 		"name": "modelgen-release-x64",
@@ -196,6 +199,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
+		"include_directories": [modelgen_src_dir],
 	},
 	"test": {
 		"name": "modelgen-test",
@@ -204,6 +208,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
+		"include_directories": [modelgen_src_dir],
 	},
 	"test-x64": {
 		"name": "modelgen-test-x64",
@@ -212,6 +217,7 @@ build_configurations = {
 		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
+		"include_directories": [modelgen_src_dir],
 	},
 }
 

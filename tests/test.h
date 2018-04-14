@@ -6,8 +6,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "../src/modelgen.h"
-#include "../src/utilities.h"
+#include "modelgen.h"
+#include "utilities.h"
 
 #include "file.h"
 

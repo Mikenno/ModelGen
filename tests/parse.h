@@ -1,9 +1,9 @@
 #ifndef MODELGEN_TEST_PARSE_H
 #define MODELGEN_TEST_PARSE_H
 
-#include "../src/modelgen.h"
-#include "../src/utilities.h"
-#include "../src/inspect.h"
+#include "modelgen.h"
+#include "utilities.h"
+#include "inspect.h"
 
 #include "test.h"
 

@@ -1,7 +1,7 @@
 #ifndef MODELGEN_TEST_INTERPRET_H
 #define MODELGEN_TEST_INTERPRET_H
 
-#include "../src/inspect.h"
+#include "inspect.h"
 
 
 #define _MG_OUTPUT_FILENAME "tests/_test.out"
