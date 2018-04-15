@@ -1,0 +1,104 @@
+Module
+- Assign
+-- Tuple
+--- Name f
+--- Name t
+-- Tuple
+--- Integer 0
+--- Integer 1
+
+- Function
+-- Name xor
+-- Tuple
+--- Name a
+--- Name b
+-- Return
+--- BinOpEq
+---- Name a
+---- UnaryOpNot not
+----- Name b
+
+- Call
+-- Name print
+-- Name f
+-- Name t
+- Call
+-- Name print
+-- UnaryOpNot not
+--- Name f
+-- UnaryOpNot not
+--- Name t
+
+- Call
+-- Name print
+-- BinOpAnd
+--- Name f
+--- Name f
+-- BinOpAnd
+--- Name f
+--- Name t
+-- BinOpAnd
+--- Name t
+--- Name f
+-- BinOpAnd
+--- Name t
+--- Name t
+- Call
+-- Name print
+-- BinOpOr
+--- Name f
+--- Name f
+-- BinOpOr
+--- Name f
+--- Name t
+-- BinOpOr
+--- Name t
+--- Name f
+-- BinOpOr
+--- Name t
+--- Name t
+- Call
+-- Name print
+-- Call
+--- Name xor
+--- Name f
+--- Name f
+-- Call
+--- Name xor
+--- Name f
+--- Name t
+-- Call
+--- Name xor
+--- Name t
+--- Name f
+-- Call
+--- Name xor
+--- Name t
+--- Name t
+
+- Call
+-- Name print
+-- BinOpOr
+--- BinOpGreater
+---- BinOpAdd
+----- Integer 1
+----- Integer 2
+---- BinOpAdd
+----- Integer 3
+----- Integer 4
+--- BinOpLess
+---- BinOpAdd
+----- Integer 5
+----- Integer 6
+---- BinOpAdd
+----- Integer 7
+----- Integer 8
+- Call
+-- Name print
+-- BinOpOr
+--- BinOpEq
+---- Integer 1
+---- Integer 2
+--- BinOpNotEq
+---- Integer 3
+---- Integer 4

@@ -20,42 +20,42 @@ Module
 -- Integer 2
 - Assign
 -- Tuple
---- Identifier a
---- Identifier b
---- Identifier c
+--- Name a
+--- Name b
+--- Name c
 -- Tuple
 --- Integer 1
 --- Integer 2
 --- Integer 3
 - Assign
 -- Tuple
---- Identifier a
---- Identifier b
---- Identifier c
+--- Name a
+--- Name b
+--- Name c
 -- Tuple
 --- Integer 1
 --- Integer 2
 --- Integer 3
 - Assign
 -- Tuple
---- Identifier a
---- Identifier b
---- Identifier c
+--- Name a
+--- Name b
+--- Name c
 -- Tuple
 --- Integer 1
 --- Integer 2
 --- Integer 3
 - Assign
 -- Tuple
---- Identifier a
---- Identifier b
---- Identifier c
+--- Name a
+--- Name b
+--- Name c
 -- Tuple
 --- Integer 1
 --- Integer 2
 --- Integer 3
 - Assign
--- Identifier a
+-- Name a
 -- Tuple
 --- Integer 1
 --- Integer 2

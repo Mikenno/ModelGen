@@ -1,10 +1,10 @@
 Module
 - Call
--- Identifier test
+-- Name test
 -- Integer 1
 -- Integer 2
 - Call
--- Identifier test
+-- Name test
 -- BinOpAdd
 --- Integer 1
 --- Integer 2

@@ -1,168 +1,168 @@
 Module
 - Call
--- Identifier print
+-- Name print
 -- String "begin"
 - If
--- Identifier true
+-- Name true
 -- Call
---- Identifier print
+--- Name print
 --- String "true"
 - If
--- Identifier true
+-- Name true
 -- Call
---- Identifier print
+--- Name print
 --- String "true"
 - Call
--- Identifier print
+-- Name print
 -- String "end"
 
 - Call
--- Identifier print
+-- Name print
 -- String "begin"
 - If
--- Identifier true
+-- Name true
 -- Call
---- Identifier print
+--- Name print
 --- String "true"
 -- Call
---- Identifier print
+--- Name print
 --- String "false"
 - Call
--- Identifier print
+-- Name print
 -- String "end"
 
 - Call
--- Identifier print
+-- Name print
 -- String "begin"
 - If
--- Identifier true
+-- Name true
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 1
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 2
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 3
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 4
 - Call
--- Identifier print
+-- Name print
 -- String "end"
 
 - Assign
--- Identifier x
+-- Name x
 -- Integer 1
 - Assign
--- Identifier y
+-- Name y
 -- Integer 1
 
 - Call
--- Identifier print
+-- Name print
 -- String "begin"
 - If
 -- BinOpEq
---- Identifier x
---- Identifier y
+--- Name x
+--- Name y
 -- Call
---- Identifier print
+--- Name print
 --- String "true"
 -- Call
---- Identifier print
+--- Name print
 --- String "false"
 - Call
--- Identifier print
+-- Name print
 -- String "end"
 
 - Call
--- Identifier print
+-- Name print
 -- String "begin"
 - If
 -- BinOpEq
---- Identifier x
---- Identifier y
+--- Name x
+--- Name y
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- String "true"
 --- If
 ---- BinOpEq
------ Identifier x
------ Identifier y
+----- Name x
+----- Name y
 ---- Call
------ Identifier print
+----- Name print
 ----- String "true true"
 --- Call
----- Identifier print
+---- Name print
 ---- String "true"
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- String "false"
 --- If
 ---- BinOpEq
------ Identifier x
------ Identifier y
+----- Name x
+----- Name y
 ---- Call
------ Identifier print
+----- Name print
 ----- String "false true"
 ---- Call
------ Identifier print
+----- Name print
 ----- String "false false"
 --- Call
----- Identifier print
+---- Name print
 ---- String "false"
 - Call
--- Identifier print
+-- Name print
 -- String "end"
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 4
 -- Block
 --- Call
----- Identifier print
----- Identifier i
+---- Name print
+---- Name i
 --- If
 ---- BinOpGreater
------ Identifier i
+----- Name i
 ----- Integer 1
 ---- Block
 ----- Call
------- Identifier print
------- Identifier i
+------ Name print
+------ Name i
 ------ Integer 1
 ----- If
 ------ BinOpGreater
-------- Identifier i
+------- Name i
 ------- Integer 2
 ------ Call
-------- Identifier print
-------- Identifier i
+------- Name print
+------- Name i
 ------- Integer 1
 ------- Integer 1
 ---- Block
 ----- Call
------- Identifier print
------- Identifier i
+------ Name print
+------ Name i
 ------ Integer 0
 ----- If
 ------ BinOpGreater
-------- Identifier i
+------- Name i
 ------- Integer 0
 ------ Call
-------- Identifier print
-------- Identifier i
+------- Name print
+------- Name i
 ------- Integer 0
 ------- Integer 1
 ------ Call
-------- Identifier print
-------- Identifier i
+------- Name print
+------- Name i
 ------- Integer 0
 ------- Integer 0

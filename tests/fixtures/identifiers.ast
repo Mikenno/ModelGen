@@ -1,8 +1,8 @@
 Module
-- Identifier a
-- Identifier b
-- Identifier abc
-- Identifier _
-- Identifier _a
-- Identifier __abc
-- Identifier _a_b_abc_
+- Name a
+- Name b
+- Name abc
+- Name _
+- Name _a
+- Name __abc
+- Name _a_b_abc_

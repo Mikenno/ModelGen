@@ -1,0 +1,22 @@
+ Module
+- Emit
+-- Tuple
+--- Integer 1
+--- Integer 2
+--- Integer 3
+
+- Emit
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+--- BinOpAdd
+---- Integer 5
+---- Integer 6
+
+- Emit
+-- Call
+--- Name test

@@ -3,7 +3,7 @@
 -- Invalid
 -- Tuple
 -- Call
---- Identifier print
+--- Name print
 --- String Anonymous
 
 - Call
@@ -11,7 +11,7 @@
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- String Anonymous
 
 - Call
@@ -19,65 +19,65 @@
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- String Anonymous
 
 - Call
 -- Procedure
 --- Invalid
 --- Tuple
----- Identifier x
----- Identifier y
+---- Name x
+---- Name y
 --- Call
----- Identifier print
+---- Name print
 ---- String Anonymous
----- Identifier x
----- Identifier y
+---- Name x
+---- Name y
 -- Integer 1
 -- Integer 2
 
 - Assign
--- Identifier test1
+-- Name test1
 -- Procedure
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- String Anonymous
 
 - Assign
--- Identifier test2
+-- Name test2
 -- Procedure
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- String Anonymous
 
 - Assign
--- Identifier test3
+-- Name test3
 -- Procedure
 --- Invalid
 --- Tuple
 --- Block
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous
 
 - Assign
--- Identifier test4
+-- Name test4
 -- Procedure
 --- Invalid
 --- Tuple
 --- Block
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous
 
 - Tuple
@@ -96,106 +96,106 @@
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 1
 -- Procedure
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 2
 -- Procedure
 --- Invalid
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 3
 
 - Tuple
 -- Procedure
---- Identifier test1
+--- Name test1
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 1
 -- Procedure
---- Identifier test2
+--- Name test2
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 2
 -- Procedure
---- Identifier test3
+--- Name test3
 --- Tuple
 --- Call
----- Identifier print
+---- Name print
 ---- Integer 3
 
 - Assign
--- Identifier x
+-- Name x
 -- Tuple
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 1
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 2
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 3
 
 - Assign
--- Identifier y
+-- Name y
 -- Tuple
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 1
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 2
 --- Procedure
 ---- Invalid
 ---- Tuple
 ---- Call
------ Identifier print
+----- Name print
 ----- String Anonymous 3
 
 - Assign
--- Identifier z
+-- Name z
 -- Tuple
 --- Call
 ---- Procedure
 ----- Invalid
 ----- Tuple
 ----- Call
------- Identifier print
+------ Name print
 ------ String Anonymous 1
 --- Call
 ---- Procedure
 ----- Invalid
 ----- Tuple
 ----- Call
------- Identifier print
+------ Name print
 ------ String Anonymous 2
 --- Call
 ---- Procedure
 ----- Invalid
 ----- Tuple
 ----- Call
------- Identifier print
+------ Name print
 ------ String Anonymous 3

@@ -1,0 +1,40 @@
+Module
+- Delete
+-- Tuple
+--- Name a
+--- Name b
+--- Attribute
+---- Name c
+---- Name d
+--- Attribute
+---- Attribute
+----- Name e
+----- Name f
+---- Name g
+--- Subscript
+---- Name h
+---- String "i"
+--- Subscript
+---- Subscript
+----- Name j
+----- String "k"
+---- String "l"
+
+- Delete
+-- Subscript
+--- Subscript
+---- Attribute
+----- Attribute
+------ Subscript
+------- Attribute
+-------- Subscript
+--------- Attribute
+---------- Name m
+---------- Name n
+--------- String "o"
+-------- Name p
+------- String "q"
+------ Name r
+----- Name s
+---- String "t"
+--- String "u"

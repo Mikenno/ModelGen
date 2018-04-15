@@ -1,144 +1,144 @@
 Module
 - For
--- Identifier i
+-- Name i
 -- Tuple
 --- Integer 0
 --- Integer 1
 --- Integer 2
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - For
--- Identifier i
+-- Name i
 -- List
 --- Integer 0
 --- Integer 1
 --- Integer 2
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- Block
 --- Call
----- Identifier print
----- Identifier i
+---- Name print
+---- Name i
 --- Call
----- Identifier print
----- Identifier i
+---- Name print
+---- Name i
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- Block
 --- Call
----- Identifier print
----- Identifier i
+---- Name print
+---- Name i
 --- For
----- Identifier j
+---- Name j
 ---- Call
------ Identifier range
+----- Name range
 ----- Integer 3
 ---- Call
------ Identifier print
------ Identifier i
------ Identifier j
+----- Name print
+----- Name i
+----- Name j
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- For
---- Identifier j
+--- Name j
 --- Call
----- Identifier range
+---- Name range
 ---- Integer 3
 --- Call
----- Identifier print
----- Identifier i
----- Identifier j
+---- Name print
+---- Name i
+---- Name j
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- Block
 --- Call
----- Identifier print
----- Identifier i
+---- Name print
+---- Name i
 --- For
----- Identifier j
+---- Name j
 ---- Call
------ Identifier range
+----- Name range
 ----- Integer 3
 ---- Call
------ Identifier print
------ Identifier i
------ Identifier j
+----- Name print
+----- Name i
+----- Name j
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- Call
---- Identifier print
+--- Name print
 --- String "Inside"
 - Call
--- Identifier print
+-- Name print
 -- String "Outside"
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 - Call
--- Identifier print
+-- Name print
 -- String "Outside"
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- For
---- Identifier j
+--- Name j
 --- Call
----- Identifier range
+---- Name range
 ---- Integer 3
 
 - For
--- Identifier i
+-- Name i
 -- Call
---- Identifier range
+--- Name range
 --- Integer 3
 -- For
---- Identifier j
+--- Name j
 --- Call
----- Identifier range
+---- Name range
 ---- Integer 3

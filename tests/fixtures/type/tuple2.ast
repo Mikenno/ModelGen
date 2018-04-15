@@ -1,0 +1,221 @@
+Module
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+- Tuple
+-- BinOpAdd
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- Integer 3
+
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+-- BinOpAdd
+--- Integer 5
+--- Integer 6
+- Tuple
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+-- BinOpAdd
+--- Integer 5
+--- Integer 6
+
+- Call
+-- Name print
+-- BinOpAdd
+--- Integer 1
+--- Integer 2
+-- BinOpAdd
+--- Integer 3
+--- Integer 4
+-- BinOpAdd
+--- Integer 5
+--- Integer 6
+- Call
+-- Name print
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+--- BinOpAdd
+---- Integer 5
+---- Integer 6
+
+- Tuple
+-- BinOpAdd
+--- BinOpMul
+---- Integer 1
+---- Integer 2
+--- Integer 3
+-- Tuple
+--- BinOpAdd
+---- Integer 4
+---- Integer 5
+--- BinOpMul
+---- Integer 6
+---- Integer 7
+-- BinOpAdd
+--- Integer 8
+--- BinOpMul
+---- Integer 9
+---- Integer 10
+
+- Assign
+-- Name a
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+- Assign
+-- Name a
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+- Assign
+-- Name a
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+- Assign
+-- Tuple
+--- Name a
+--- Name b
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+- Assign
+-- Tuple
+--- Name a
+--- Name b
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+
+- Assign
+-- Tuple
+--- Tuple
+---- Name a
+---- Name b
+--- Name c
+--- Tuple
+---- Name d
+---- Name e
+-- Tuple
+--- Tuple
+---- Integer 1
+---- Integer 2
+--- Integer 3
+--- Tuple
+---- Integer 4
+---- Integer 5
+- Assign
+-- Tuple
+--- Tuple
+---- Name a
+---- Name b
+--- Name c
+--- Tuple
+---- Name d
+---- Name e
+-- Tuple
+--- Tuple
+---- Integer 1
+---- Integer 2
+--- Integer 3
+--- Tuple
+---- Integer 4
+---- Integer 5
+
+- Assign
+-- Tuple
+--- Tuple
+---- Name a
+---- Name b
+--- Name c
+--- Tuple
+---- Name d
+---- Name e
+-- Tuple
+--- Tuple
+---- Integer 1
+---- Integer 2
+--- Integer 3
+--- Tuple
+---- Integer 4
+---- Integer 5
+- Assign
+-- Tuple
+--- Tuple
+---- Name a
+---- Name b
+--- Name c
+--- Tuple
+---- Name d
+---- Name e
+-- Tuple
+--- Tuple
+---- Integer 1
+---- Integer 2
+--- Integer 3
+--- Tuple
+---- Integer 4
+---- Integer 5

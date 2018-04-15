@@ -1,0 +1,39 @@
+Module
+- For
+-- Tuple
+--- Name a
+--- Name b
+-- Name iterable
+- For
+-- Tuple
+--- Name a
+--- Name b
+-- Name iterable
+
+- For
+-- Tuple
+--- Name a
+--- Name b
+-- Name iterable
+- For
+-- Tuple
+--- Name a
+--- Name b
+-- Name iterable
+
+- For
+-- Tuple
+--- Name a
+--- Tuple
+---- Name b
+---- Name c
+--- Name d
+-- Name iterable
+- For
+-- Tuple
+--- Name a
+--- Tuple
+---- Name b
+---- Name c
+--- Name d
+-- Name iterable

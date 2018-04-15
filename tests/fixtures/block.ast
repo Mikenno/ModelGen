@@ -1,15 +1,15 @@
 Module
-- Identifier a1
+- Name a1
 - Block
--- Identifier a11
--- Identifier a12
--- Identifier a121
--- Identifier a13
-- Identifier b2
+-- Name a11
+-- Name a12
+-- Name a121
+-- Name a13
+- Name b2
 - Block
--- Identifier b21
+-- Name b21
 -- Block
---- Identifier b211
---- Identifier b212
--- Identifier b22
-- Identifier c3
+--- Name b211
+--- Name b212
+-- Name b22
+- Name c3

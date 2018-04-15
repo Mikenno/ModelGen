@@ -1,0 +1,22 @@
+ Module
+- Return
+-- Tuple
+--- Integer 1
+--- Integer 2
+--- Integer 3
+
+- Return
+-- Tuple
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+--- BinOpAdd
+---- Integer 3
+---- Integer 4
+--- BinOpAdd
+---- Integer 5
+---- Integer 6
+
+- Return
+-- Call
+--- Name test

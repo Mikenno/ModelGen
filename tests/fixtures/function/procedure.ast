@@ -1,76 +1,76 @@
 Module
 - Procedure
--- Identifier test1
+-- Name test1
 -- Tuple
 - Call
--- Identifier print
+-- Name print
 -- String "Outside"
 
 - Procedure
--- Identifier test2
+-- Name test2
 -- Tuple
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- String "test2"
 --- Call
----- Identifier print
+---- Name print
 ---- String "test2"
 - Call
--- Identifier print
+-- Name print
 -- String "Outside"
 
 - Procedure
--- Identifier test3
+-- Name test3
 -- Tuple
 -- Block
 --- Call
----- Identifier print
+---- Name print
 ---- String "test3"
 --- Call
----- Identifier print
+---- Name print
 ---- String "test3"
 - Call
--- Identifier print
+-- Name print
 -- String "Outside"
 
 - Procedure
--- Identifier test4
+-- Name test4
 -- Tuple
---- Identifier x
+--- Name x
 -- Call
---- Identifier print
+--- Name print
 --- String "test4"
---- Identifier x
+--- Name x
 
 - Procedure
--- Identifier test5
+-- Name test5
 -- Tuple
---- Identifier x
---- Identifier y
---- Identifier z
+--- Name x
+--- Name y
+--- Name z
 -- Call
---- Identifier print
+--- Name print
 --- String "test5"
---- Identifier x
---- Identifier y
---- Identifier z
+--- Name x
+--- Name y
+--- Name z
 
 - Procedure
--- Identifier test6
+-- Name test6
 -- Tuple
---- Identifier x
+--- Name x
 --- Assign
----- Identifier y
+---- Name y
 ---- Integer 1
 --- Assign
----- Identifier z
+---- Name z
 ---- BinOpAdd
 ----- Integer 1
 ----- Integer 2
 -- Call
---- Identifier print
+--- Name print
 --- String "test6"
---- Identifier x
---- Identifier y
---- Identifier z
+--- Name x
+--- Name y
+--- Name z

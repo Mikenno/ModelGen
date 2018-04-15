@@ -1,6 +1,6 @@
 Module
 - Call
--- Identifier print
+-- Name print
 -- Subscript
 --- Tuple
 ---- Integer 1
@@ -9,7 +9,7 @@ Module
 --- Integer 0
 
 - Call
--- Identifier print
+-- Name print
 -- Subscript
 --- Tuple
 ---- Integer 1
@@ -18,7 +18,7 @@ Module
 --- Integer 1
 
 - Call
--- Identifier print
+-- Name print
 -- Subscript
 --- Tuple
 ---- Integer 1
@@ -27,7 +27,7 @@ Module
 --- Integer 2
 
 - Call
--- Identifier print
+-- Name print
 -- List
 --- Tuple
 ---- Integer 1
@@ -43,7 +43,7 @@ Module
 ---- Integer 9
 
 - Call
--- Identifier print
+-- Name print
 -- Subscript
 --- List
 ---- Tuple
@@ -61,7 +61,7 @@ Module
 --- Integer 1
 
 - Call
--- Identifier print
+-- Name print
 -- Subscript
 --- Subscript
 ---- List

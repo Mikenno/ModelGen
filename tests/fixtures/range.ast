@@ -1,75 +1,75 @@
 Module
 - Call
--- Identifier
+-- Name
 -- Range
 --- Integer 10
 --- Integer 20
 
 - Call
--- Identifier
+-- Name
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 
 - For
--- Identifier i
+-- Name i
 -- Range
 --- Integer 10
 --- Integer 20
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - For
--- Identifier i
+-- Name i
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - For
--- Identifier i
+-- Name i
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
 
 - Assign
--- Identifier x
+-- Name x
 -- Range
 --- Integer 10
 --- Integer 20
 
 - Assign
--- Identifier y
+-- Name y
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 
 - Assign
--- Identifier z
+-- Name z
 -- Range
 --- Integer 10
 --- Integer 20
 
 - Assign
--- Identifier w
+-- Name w
 -- Range
 --- Integer 10
 --- Integer 20
 --- Integer 2
 
 - For
--- Identifier i
--- Identifier x
+-- Name i
+-- Name x
 -- Call
---- Identifier print
---- Identifier i
+--- Name print
+--- Name i
