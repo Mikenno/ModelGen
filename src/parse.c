@@ -177,7 +177,7 @@ static inline MGNode* _mgDeepCopyNode(const MGNode *node)
 
 static inline int _mgTokenTypeIsSubexpression(MGTokenType type)
 {
-	return (type == MG_TOKEN_IDENTIFIER) ||
+	return (type == MG_TOKEN_NAME) ||
 	       (type == MG_TOKEN_INTEGER) ||
 	       (type == MG_TOKEN_FLOAT) ||
 	       (type == MG_TOKEN_STRING) ||
@@ -316,7 +316,7 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 
 #if MG_DEBUG
 		for (size_t i = 0; i < _mgListLength(import->children); ++i)
-			MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER) || _mgListGet(import->children, i)->type == MG_NODE_AS);
+			MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_NAME) || _mgListGet(import->children, i)->type == MG_NODE_AS);
 #endif
 	}
 	else
@@ -326,8 +326,8 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 		++token;
 		_MG_TOKEN_SCAN_LINE(token);
 
-		MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
-		_mgAddChild(import, mgCreateNode(token++, MG_NODE_IDENTIFIER));
+		MG_ASSERT(token->type == MG_TOKEN_NAME);
+		_mgAddChild(import, mgCreateNode(token++, MG_NODE_NAME));
 
 		_MG_TOKEN_SCAN_LINE(token);
 
@@ -345,7 +345,7 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 
 #if MG_DEBUG
 				for (size_t i = 0; i < _mgListLength(import->children); ++i)
-					MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_IDENTIFIER) || _mgListGet(import->children, i)->type == MG_NODE_AS);
+					MG_ASSERT((_mgListGet(import->children, i)->type == MG_NODE_NAME) || _mgListGet(import->children, i)->type == MG_NODE_AS);
 #endif
 			}
 		}
@@ -361,8 +361,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 	MGNode *node = NULL;
 
-	if (token->type == MG_TOKEN_IDENTIFIER)
-		node = mgCreateNode(token++, MG_NODE_IDENTIFIER);
+	if (token->type == MG_TOKEN_NAME)
+		node = mgCreateNode(token++, MG_NODE_NAME);
 	else if ((token->type == MG_TOKEN_INTEGER) ||
 	         (token->type == MG_TOKEN_FLOAT))
 	{
@@ -424,9 +424,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		while (token->type != MG_TOKEN_RBRACE)
 		{
-			MG_ASSERT((token->type == MG_TOKEN_IDENTIFIER) || (token->type == MG_TOKEN_STRING));
+			MG_ASSERT((token->type == MG_TOKEN_NAME) || (token->type == MG_TOKEN_STRING));
 
-			_mgAddChild(node, mgCreateNode(token, (token->type == MG_TOKEN_IDENTIFIER) ? MG_NODE_IDENTIFIER : MG_NODE_STRING));
+			_mgAddChild(node, mgCreateNode(token, (token->type == MG_TOKEN_NAME) ? MG_NODE_NAME : MG_NODE_STRING));
 
 			++token;
 			_MG_TOKEN_SCAN_LINE(token);
@@ -581,9 +581,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		_MG_TOKEN_SCAN_LINE(token);
 
 		MGNode *name = NULL;
-		if (token->type == MG_TOKEN_IDENTIFIER)
+		if (token->type == MG_TOKEN_NAME)
 		{
-			name = mgCreateNode(token++, MG_NODE_IDENTIFIER);
+			name = mgCreateNode(token++, MG_NODE_NAME);
 
 			_MG_TOKEN_SCAN_LINE(token);
 
@@ -591,11 +591,11 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			{
 				++token;
 				_MG_TOKEN_SCAN_LINE(token);
-				MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+				MG_ASSERT(token->type == MG_TOKEN_NAME);
 
 				name = _mgWrapNode(name, MG_NODE_ATTRIBUTE);
 
-				_mgAddChild(name, mgCreateNode(token++, MG_NODE_IDENTIFIER));
+				_mgAddChild(name, mgCreateNode(token++, MG_NODE_NAME));
 			}
 
 			_mgAddChild(node, name);
@@ -710,9 +710,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			++token;
 
 			_MG_TOKEN_SCAN_LINE(token);
-			MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+			MG_ASSERT(token->type == MG_TOKEN_NAME);
 
-			_mgAddChild(node, mgCreateNode(token++, MG_NODE_IDENTIFIER));
+			_mgAddChild(node, mgCreateNode(token++, MG_NODE_NAME));
 		}
 		else if (token->type == MG_TOKEN_AS)
 		{
@@ -720,9 +720,9 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			++token;
 
 			_MG_TOKEN_SCAN_LINE(token);
-			MG_ASSERT(token->type == MG_TOKEN_IDENTIFIER);
+			MG_ASSERT(token->type == MG_TOKEN_NAME);
 
-			_mgAddChild(node, mgCreateNode(token++, MG_NODE_IDENTIFIER));
+			_mgAddChild(node, mgCreateNode(token++, MG_NODE_NAME));
 		}
 		else
 			break;

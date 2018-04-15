@@ -308,7 +308,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	const MGValue *func = NULL;
 	char *name = NULL;
 
-	if (nameNode->type == MG_NODE_IDENTIFIER)
+	if (nameNode->type == MG_NODE_NAME)
 	{
 		MG_ASSERT(nameNode->token);
 
@@ -386,7 +386,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 			if (_mgListLength(funcParametersNode->children) < _mgListLength(args))
 			{
 				MGNode *funcNameNode = _mgListGet(funcNode->children, 0);
-				MG_ASSERT(funcNameNode->type == MG_NODE_IDENTIFIER);
+				MG_ASSERT(funcNameNode->type == MG_NODE_NAME);
 				MG_ASSERT(funcNameNode->token);
 
 				const size_t funcNameLength = funcNameNode->token->end.string - funcNameNode->token->begin.string;
@@ -402,11 +402,11 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
 			{
 				MGNode *funcParameterNode = _mgListGet(funcParametersNode->children, i);
-				MG_ASSERT((funcParameterNode->type == MG_NODE_IDENTIFIER) || (funcParameterNode->type == MG_NODE_ASSIGN));
+				MG_ASSERT((funcParameterNode->type == MG_NODE_NAME) || (funcParameterNode->type == MG_NODE_ASSIGN));
 
 				char *funcParameterName = NULL;
 
-				if (funcParameterNode->type == MG_NODE_IDENTIFIER)
+				if (funcParameterNode->type == MG_NODE_NAME)
 				{
 					const size_t funcParameterNameLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
 					MG_ASSERT(funcParameterNameLength > 0);
@@ -417,7 +417,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 					MG_ASSERT(_mgListLength(funcParameterNode->children) == 2);
 
 					MGNode *funcParameterNameNode = _mgListGet(funcParameterNode->children, 0);
-					MG_ASSERT(funcParameterNameNode->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT(funcParameterNameNode->type == MG_NODE_NAME);
 					MG_ASSERT(funcParameterNameNode->token);
 
 					const size_t funcParameterNameLength = funcParameterNameNode->token->end.string - funcParameterNameNode->token->begin.string;
@@ -530,7 +530,7 @@ static MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 
 static void _mgDelete(MGValue *module, MGNode *node)
 {
-	if (node->type == MG_NODE_IDENTIFIER)
+	if (node->type == MG_NODE_NAME)
 	{
 		const size_t nameLength = node->token->end.string - node->token->begin.string;
 		MG_ASSERT(nameLength > 0);
@@ -580,7 +580,7 @@ static void _mgDelete(MGValue *module, MGNode *node)
 		MG_ASSERT((object->type == MG_VALUE_MAP) || (object->type == MG_VALUE_MODULE));
 
 		const MGNode *attributeNode = _mgListGet(node->children, 1);
-		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
 		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
@@ -631,7 +631,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 	MG_ASSERT(_mgListLength(node->children) >= 2);
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
-	MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(nameNode->type == MG_NODE_NAME);
 	MG_ASSERT(nameNode->token);
 
 	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
@@ -711,7 +711,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
 	MGNode *nameNode = _mgListGet(node->children, 0);
-	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_ATTRIBUTE));
+	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
 	MGValue *func = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
 
@@ -740,9 +740,9 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	if (nameNode->type == MG_NODE_INVALID)
 		return func;
 
-	MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_ATTRIBUTE));
+	MG_ASSERT((nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
-	if (nameNode->type == MG_NODE_IDENTIFIER)
+	if (nameNode->type == MG_NODE_NAME)
 	{
 		MG_ASSERT(nameNode->token);
 
@@ -764,7 +764,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(nameNode->children, 1);
-		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
 		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
@@ -819,7 +819,7 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 
 	const MGNode *attribute = _mgListGet(node->children, 1);
 	MG_ASSERT(attribute);
-	MG_ASSERT(attribute->type == MG_NODE_IDENTIFIER);
+	MG_ASSERT(attribute->type == MG_NODE_NAME);
 	MG_ASSERT(attribute->token);
 
 	const size_t nameLength = attribute->token->end.string - attribute->token->begin.string;
@@ -846,7 +846,7 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitIdentifier(MGValue *module, MGNode *node)
+static MGValue* _mgVisitName(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
@@ -985,9 +985,9 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 
 	MGNode *lhs = _mgListGet(node->children, 0);
 	MG_ASSERT(lhs);
-	MG_ASSERT((lhs->type == MG_NODE_IDENTIFIER) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_ATTRIBUTE) || (lhs->type == MG_NODE_TUPLE));
+	MG_ASSERT((lhs->type == MG_NODE_NAME) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_ATTRIBUTE) || (lhs->type == MG_NODE_TUPLE));
 
-	if (lhs->type == MG_NODE_IDENTIFIER)
+	if (lhs->type == MG_NODE_NAME)
 	{
 		MG_ASSERT(lhs->token);
 
@@ -1024,7 +1024,7 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(lhs->children, 1);
-		MG_ASSERT(attributeNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
 		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
@@ -1056,7 +1056,7 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 
 		for (size_t i = 0; i < _mgListLength(lhs->children); ++i)
 		{
-			if (_mgListGet(lhs->children, i)->type != MG_NODE_IDENTIFIER)
+			if (_mgListGet(lhs->children, i)->type != MG_NODE_NAME)
 				MG_FAIL("Error: Cannot assign to \"%s\"", _MG_NODE_NAMES[_mgListGet(lhs->children, i)->type]);
 
 			const MGNode *const nameNode = _mgListGet(lhs->children, i);
@@ -1834,9 +1834,9 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 static void _mgResolveImportAs(MGValue *module, MGToken *name, MGToken *alias)
 {
 	MG_ASSERT(name);
-	MG_ASSERT(name->type == MG_TOKEN_IDENTIFIER);
+	MG_ASSERT(name->type == MG_TOKEN_NAME);
 	MG_ASSERT(alias);
-	MG_ASSERT(alias->type == MG_TOKEN_IDENTIFIER);
+	MG_ASSERT(alias->type == MG_TOKEN_NAME);
 
 	const size_t _nameLength = name->end.string - name->begin.string;
 	MG_ASSERT(_nameLength > 0);
@@ -1872,9 +1872,9 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 		for (size_t i = 0; i < _mgListLength(node->children); ++i)
 		{
 			const MGNode *const nameNode = _mgListGet(node->children, i);
-			MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_AS));
+			MG_ASSERT((nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_AS));
 
-			if (nameNode->type == MG_NODE_IDENTIFIER)
+			if (nameNode->type == MG_NODE_NAME)
 				_mgResolveImportAs(module, nameNode->token, nameNode->token);
 			else if (nameNode->type == MG_NODE_AS)
 			{
@@ -1887,7 +1887,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 	{
 		const MGNode *nameNode = _mgListGet(node->children, 0);
 		const MGNode *aliasNode = NULL;
-		MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+		MG_ASSERT(nameNode->type == MG_NODE_NAME);
 		MG_ASSERT(nameNode->token);
 
 		size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
@@ -1912,7 +1912,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 				nameNode = _mgListGet(node->children, i);
 				aliasNode = NULL;
 
-				MG_ASSERT((nameNode->type == MG_NODE_IDENTIFIER) || (nameNode->type == MG_NODE_AS));
+				MG_ASSERT((nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_AS));
 
 				if (nameNode->type == MG_NODE_AS)
 				{
@@ -1922,7 +1922,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 					nameNode = _mgListGet(nameNode->children, 0);
 				}
 
-				MG_ASSERT(nameNode->type == MG_NODE_IDENTIFIER);
+				MG_ASSERT(nameNode->type == MG_NODE_NAME);
 				MG_ASSERT(nameNode->token);
 
 				nameLength = nameNode->token->end.string - nameNode->token->begin.string;
@@ -1940,7 +1940,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 
 				if (aliasNode)
 				{
-					MG_ASSERT(aliasNode->type == MG_NODE_IDENTIFIER);
+					MG_ASSERT(aliasNode->type == MG_NODE_NAME);
 					MG_ASSERT(aliasNode->token);
 
 					aliasLength = aliasNode->token->end.string - aliasNode->token->begin.string;
@@ -2028,8 +2028,8 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitModule(module, node);
 	case MG_NODE_BLOCK:
 		return _mgVisitChildren(module, node);
-	case MG_NODE_IDENTIFIER:
-		return _mgVisitIdentifier(module, node);
+	case MG_NODE_NAME:
+		return _mgVisitName(module, node);
 	case MG_NODE_INTEGER:
 		return _mgVisitInteger(module, node);
 	case MG_NODE_FLOAT:

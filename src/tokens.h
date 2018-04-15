@@ -4,7 +4,7 @@
 #define _MG_TOKENS \
 	_MG_T(INVALID, "invalid") \
 	_MG_T(EOF, "end-of-file") \
-	_MG_T(IDENTIFIER, "identifier") \
+	_MG_T(NAME, "name") \
 	_MG_T(INTEGER, "integer") \
 	_MG_T(FLOAT, "float") \
 	_MG_T(STRING, "string") \

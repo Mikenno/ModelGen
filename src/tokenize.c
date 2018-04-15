@@ -289,7 +289,7 @@ void mgTokenizeNext(MGToken *token)
 
 	if (isalpha(c) || (c == '_'))
 	{
-		token->type = MG_TOKEN_IDENTIFIER;
+		token->type = MG_TOKEN_NAME;
 		while (isalnum(*token->end.string) || (*token->end.string == '_'))
 			_mgTokenNextCharacter(token);
 

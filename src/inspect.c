@@ -86,7 +86,7 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 	{
 		switch (node->token->type)
 		{
-		case MG_TOKEN_IDENTIFIER:
+		case MG_TOKEN_NAME:
 		case MG_TOKEN_INTEGER:
 		case MG_TOKEN_FLOAT:
 		case MG_TOKEN_STRING:
