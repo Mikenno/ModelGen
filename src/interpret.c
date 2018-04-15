@@ -1326,7 +1326,9 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			switch (rhs->type)
 			{
 			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i / rhs->data.i);
+				if (rhs->data.i == 0)
+					MG_FAIL("Error: Division by zero");
+				value = mgCreateValueFloat(lhs->data.i / (float) rhs->data.i);
 				break;
 			case MG_VALUE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i / rhs->data.f);
@@ -1343,6 +1345,41 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			case MG_VALUE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f / rhs->data.f);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_INT_DIV:
+		switch (lhs->type)
+		{
+		case MG_VALUE_INTEGER:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				if (rhs->data.i == 0)
+					MG_FAIL("Error: Division by zero");
+				value = mgCreateValueInteger(lhs->data.i / rhs->data.i);
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger((int) (lhs->data.i / rhs->data.f));
+				break;
+			default:
+				break;
+			}
+			break;
+		case MG_VALUE_FLOAT:
+			switch (rhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.i));
+				break;
+			case MG_VALUE_FLOAT:
+				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.f));
 				break;
 			default:
 				break;
@@ -2010,6 +2047,7 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_SUB:
 	case MG_NODE_BIN_OP_MUL:
 	case MG_NODE_BIN_OP_DIV:
+	case MG_NODE_BIN_OP_INT_DIV:
 	case MG_NODE_BIN_OP_MOD:
 	case MG_NODE_BIN_OP_EQ:
 	case MG_NODE_BIN_OP_NOT_EQ:

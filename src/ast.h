@@ -13,6 +13,7 @@
 	_MG_N(BIN_OP_SUB, "BinOpSub") \
 	_MG_N(BIN_OP_MUL, "BinOpMul") \
 	_MG_N(BIN_OP_DIV, "BinOpDiv") \
+	_MG_N(BIN_OP_INT_DIV, "BinOpIntDiv") \
 	_MG_N(BIN_OP_MOD, "BinOpMod") \
 	_MG_N(BIN_OP_EQ, "BinOpEq") \
 	_MG_N(BIN_OP_NOT_EQ, "BinOpNotEq") \

@@ -204,6 +204,17 @@ void mgTokenizeNext(MGToken *token)
 	case '/':
 		_mgTokenNextCharacter(token);
 		switch (*token->end.string) {
+		case '/':
+			_mgTokenNextCharacter(token);
+			switch (*token->end.string) {
+			case '=':
+				token->type = MG_TOKEN_DIVDIV_ASSIGN;
+				_mgTokenNextCharacter(token);
+				return;
+			default:
+				token->type = MG_TOKEN_DIVDIV;
+				return;
+			}
 		case '=':
 			token->type = MG_TOKEN_DIV_ASSIGN;
 			_mgTokenNextCharacter(token);

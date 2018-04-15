@@ -37,12 +37,14 @@
 	_MG_T(SUB, "-") \
 	_MG_T(MUL, "*") \
 	_MG_T(DIV, "/") \
+	_MG_T(DIVDIV, "//") \
 	_MG_T(MOD, "%") \
 	_MG_T(ASSIGN, "=") \
 	_MG_T(ADD_ASSIGN, "+=") \
 	_MG_T(SUB_ASSIGN, "-=") \
 	_MG_T(MUL_ASSIGN, "*=") \
 	_MG_T(DIV_ASSIGN, "/=") \
+	_MG_T(DIVDIV_ASSIGN, "//=") \
 	_MG_T(MOD_ASSIGN, "%=") \
 	_MG_T(EQUAL, "==") \
 	_MG_T(NOT_EQUAL, "!=") \
