@@ -355,6 +355,43 @@ static MGNode* _mgParseImport(MGParser *parser, MGToken *token)
 }
 
 
+static inline MGToken* _mgParseTypedName(MGParser *parser, MGToken *token, MGNode *name)
+{
+	MG_ASSERT(name);
+	MG_ASSERT(name->type == MG_NODE_NAME);
+
+	_MG_TOKEN_SCAN_LINE(token);
+
+	MG_ASSERT(token->type == MG_TOKEN_NAME);
+	MGNode *type = mgCreateNode(token++, MG_NODE_NAME);
+	_mgAddChild(name, type);
+
+	if (token->type == MG_TOKEN_LESS)
+	{
+		++token;
+
+		for (;;)
+		{
+			token = _mgParseTypedName(parser, token, type) + 1;
+
+			_MG_TOKEN_SCAN_LINES(token);
+
+			if (token->type == MG_TOKEN_GREATER)
+				break;
+
+			MG_ASSERT(token->type == MG_TOKEN_COMMA);
+
+			++token;
+			_MG_TOKEN_SCAN_LINES(token);
+		}
+
+		name->tokenEnd = token;
+	}
+
+	return name->tokenEnd;
+}
+
+
 static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 {
 	_MG_TOKEN_SCAN_LINES(token);
@@ -362,7 +399,17 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 	MGNode *node = NULL;
 
 	if (token->type == MG_TOKEN_NAME)
+	{
 		node = mgCreateNode(token++, MG_NODE_NAME);
+
+		_MG_TOKEN_SCAN_LINE(token);
+
+		if (token->type == MG_TOKEN_COLON)
+		{
+			_mgParseTypedName(parser, ++token, node);
+			return node;
+		}
+	}
 	else if ((token->type == MG_TOKEN_INTEGER) ||
 	         (token->type == MG_TOKEN_FLOAT))
 	{
@@ -616,6 +663,13 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		_mgAddChild(node, parameters);
 
 		token = node->tokenEnd + 1;
+
+		if (token->type == MG_TOKEN_COLON)
+		{
+			node->tokenEnd = _mgParseTypedName(parser, ++token, name);
+			token = node->tokenEnd + 1;
+		}
+
 		_MG_TOKEN_SCAN_LINES(token);
 
 		if ((token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA))
