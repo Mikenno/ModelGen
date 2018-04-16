@@ -1,0 +1,47 @@
+Module
+- Assign
+-- Name i
+--- Name int
+-- Integer 1
+
+- Assign
+-- Name f
+--- Name float
+-- Float 2.5
+
+- Assign
+-- Name m
+--- Name map
+---- Name string
+---- Name int
+-- Map
+--- String "a"
+--- Integer 1
+--- String "b"
+--- Integer 2
+--- String "c"
+--- BinOpAdd
+---- Integer 1
+---- Integer 2
+
+- Function
+-- Name add
+--- Name int
+-- Tuple
+--- Name a
+---- Name int
+--- Name b
+---- Name int
+-- Return
+--- BinOpAdd
+---- Name a
+---- Name b
+
+- Function
+-- Name test
+--- Name map
+---- Name string
+---- Name int
+-- Tuple
+-- Return
+--- Name m
