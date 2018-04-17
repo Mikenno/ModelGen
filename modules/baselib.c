@@ -129,6 +129,69 @@ static MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
+static MGValue* mg_int(MGInstance *instance, size_t argc, MGValue **argv)
+{
+	if (argc < 1)
+		MG_FAIL("Error: int expected at least 1 argument, received %zu", argc);
+	else if (argc > 2)
+		MG_FAIL("Error: int expected at most 2 arguments, received %zu", argc);
+
+	int base = 10;
+
+	if (argc == 2)
+	{
+		if (argv[0]->type != MG_VALUE_STRING)
+			MG_FAIL("Error: int expected argument %zu as \"%s\", received \"%s\"",
+			        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+
+		if (argv[1]->type != MG_VALUE_INTEGER)
+			MG_FAIL("Error: int expected argument %zu as \"%s\", received \"%s\"",
+			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
+
+		base = argv[1]->data.i;
+	}
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		return mgCreateValueInteger(argv[0]->data.i);
+	case MG_VALUE_FLOAT:
+		return mgCreateValueInteger((int) argv[0]->data.f);
+	case MG_VALUE_STRING:
+		return mgCreateValueInteger(strtol(argv[0]->data.str.s, NULL, base));
+	default:
+		MG_FAIL("Error: int expected argument as \"%s\" or \"%s\" or \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	}
+
+	return mgCreateValueNull();
+}
+
+
+static MGValue* mg_float(MGInstance *instance, size_t argc, MGValue **argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: float expects exactly 1 argument, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		return mgCreateValueFloat((float) argv[0]->data.i);
+	case MG_VALUE_FLOAT:
+		return mgCreateValueFloat(argv[0]->data.f);
+	case MG_VALUE_STRING:
+		return mgCreateValueFloat(strtof(argv[0]->data.str.s, NULL));
+	default:
+		MG_FAIL("Error: float expected argument as \"%s\" or \"%s\" or \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	}
+
+	return mgCreateValueNull();
+}
+
+
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	MG_ASSERT(instance);
@@ -224,6 +287,8 @@ MGValue* mgCreateBaseLib(void)
 	mgModuleSetCFunction(module, "range", mg_range);
 	mgModuleSetCFunction(module, "type", mg_type);
 	mgModuleSetCFunction(module, "len", mg_len);
+	mgModuleSetCFunction(module, "int", mg_int);
+	mgModuleSetCFunction(module, "float", mg_float);
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 	mgModuleSetCFunction(module, "globals", mg_globals);
 	mgModuleSetCFunction(module, "locals", mg_locals);
