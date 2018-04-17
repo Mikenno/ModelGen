@@ -71,6 +71,30 @@ MGValue* _mg_rangei(int start, int stop, int step)
 }
 
 
+static MGValue* _mg_rangef(float start, float stop, float step)
+{
+	float difference = stop - start;
+
+	if (_MG_FEQUAL(difference, 0.0f))
+		return mgCreateValueTuple(0);
+
+	if (_MG_FEQUAL(step, 0.0f))
+		step = (float) ((difference > 0) - (difference < 0));
+
+	int length = (int) ceilf((stop - start) / step);
+
+	if (length < 0)
+		return mgCreateValueTuple(0);
+
+	MGValue *value = mgCreateValueTuple((size_t) length);
+	for (int i = 0; i < length; ++i)
+		mgTupleAdd(value, mgCreateValueFloat(start + step * i));
+
+	return value;
+}
+
+
+// Returns a tuple containing values within the half-closed interval [start, stop)
 static MGValue* mg_range(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	if (argc < 1)
@@ -78,23 +102,50 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, MGValue **argv)
 	else if (argc > 3)
 		MG_FAIL("Error: range expected at most 3 arguments, received %zu", argc);
 
+	MGbool isInt = MG_TRUE;
+
 	for (size_t i = 0; i < argc; ++i)
-		if (argv[i]->type != MG_VALUE_INTEGER)
-			MG_FAIL("Error: rangef expected argument %zu as \"%s\", received \"%s\"",
-			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[i]->type]);
+	{
+		if (argv[i]->type == MG_VALUE_FLOAT)
+			isInt = MG_FALSE;
 
-	int range[3] = { 0, 0, 0 };
+		if ((argv[i]->type != MG_VALUE_INTEGER) && (argv[i]->type != MG_VALUE_FLOAT))
+			MG_FAIL("Error: range expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+			        _MG_VALUE_TYPE_NAMES[argv[i]->type]);
+	}
 
-	if (argc > 1)
-		for (size_t i = 0; i < argc; ++i)
-			range[i] = argv[i]->data.i;
+	union {
+		int i[3];
+		float f[3];
+	} range;
+
+	memset(&range, 0, sizeof(range));
+
+	if (isInt)
+	{
+		if (argc > 1)
+			for (size_t i = 0; i < argc; ++i)
+				range.i[i] = argv[i]->data.i;
+		else
+			range.i[1] = argv[0]->data.i;
+	}
 	else
-		range[1] = argv[0]->data.i;
+	{
+		if (argc > 1)
+			for (size_t i = 0; i < argc; ++i)
+				range.f[i] = (argv[i]->type == MG_VALUE_INTEGER) ? (float) argv[i]->data.i : argv[i]->data.f;
+		else
+			range.f[1] = (argv[0]->type == MG_VALUE_INTEGER) ? (float) argv[0]->data.i : argv[0]->data.f;
+	}
 
-	if ((argc > 2) && (range[2] == 0))
-		MG_FAIL("Error: step cannot be 0");
+	if (argc > 2)
+		if ((isInt && (range.i[2] == 0)) || (!isInt && _MG_FEQUAL(range.f[2], 0.0f)))
+			MG_FAIL("Error: step cannot be 0");
 
-	return _mg_rangei(range[0], range[1], range[2]);
+	return isInt ?
+	       _mg_rangei(range.i[0], range.i[1], range.i[2]) :
+	       _mg_rangef(range.f[0], range.f[1], range.f[2]);
 }
 
 
