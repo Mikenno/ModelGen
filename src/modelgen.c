@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 
 		if (exportFilename)
 		{
-			FILE *f = fopen(exportFilename, "w");
+			FILE *f = fopen(exportFilename, exportOBJ ? "w" : "wb");
 
 			if (f)
 			{

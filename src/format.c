@@ -31,5 +31,5 @@ void mgExportTriangles(MGInstance *instance, FILE *file)
 	const size_t vertexCount = _mgListLength(instance->vertices);
 	MGVertex *const vertices = _mgListItems(instance->vertices);
 
-	fwrite(vertices, vertexCount, sizeof(MGVertex), file);
+	fwrite(vertices, vertexCount * sizeof(MGVertex), 1, file);
 }
