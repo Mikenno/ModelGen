@@ -116,7 +116,7 @@ typedef struct MGStackFrame {
 	MGValue *locals;
 } MGStackFrame;
 
-typedef float MGVertex[3];
+typedef float MGVertex[3 + 3];
 
 typedef struct MGInstance {
 	MGStackFrame *callStackTop;
@@ -124,7 +124,15 @@ typedef struct MGInstance {
 	MGValue *modules;
 	MGValue *staticModules;
 	_MGList(MGVertex) vertices;
+	struct {
+		unsigned int position : 3;
+		unsigned int uv : 2;
+		unsigned int normal : 3;
+		unsigned int color : 3;
+	} vertexSize;
 } MGInstance;
+
+#define mgInstanceGetVertexSize(instance) ((instance)->vertexSize.position + (instance)->vertexSize.uv + (instance)->vertexSize.normal + (instance)->vertexSize.color)
 
 char* mgReadFile(const char *filename, size_t *length);
 char* mgReadFileHandle(FILE *file, size_t *length);

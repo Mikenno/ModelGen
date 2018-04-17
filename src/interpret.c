@@ -474,22 +474,26 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 	MG_ASSERT(node->type == MG_NODE_EMIT);
 	MG_ASSERT(_mgListLength(node->children) == 1);
 
+	MGInstance *instance = module->data.module.instance;
+
+	const unsigned int vertexSize = mgInstanceGetVertexSize(instance);
+
 	MGValue *tuple = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(tuple);
 
 	if (tuple->type != MG_VALUE_TUPLE)
 		MG_FAIL("Error: Expected \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_TUPLE], _MG_VALUE_TYPE_NAMES[tuple->type]);
-	else if (mgTupleLength(tuple) != 3)
-		MG_FAIL("Error: Expected tuple with a length of 3, received a tuple with a length of %zu",
-		        mgTupleLength(tuple));
+	else if (mgTupleLength(tuple) != vertexSize)
+		MG_FAIL("Error: Expected tuple with a length of %u, received a tuple with a length of %zu",
+		        vertexSize, mgTupleLength(tuple));
 
-	const size_t vertexCount = _mgListLength(module->data.module.instance->vertices);
+	const size_t vertexCount = _mgListLength(instance->vertices);
 
-	_mgListAddUninitialized(MGVertex, module->data.module.instance->vertices);
-	MGVertex *vertices = _mgListItems(module->data.module.instance->vertices);
+	_mgListAddUninitialized(MGVertex, instance->vertices);
+	MGVertex *vertices = _mgListItems(instance->vertices);
 
-	for (size_t i = 0; i < 3; ++i)
+	for (unsigned int i = 0; i < vertexSize; ++i)
 	{
 		if (mgTupleGet(tuple, i)->type == MG_VALUE_INTEGER)
 			vertices[vertexCount][i] = (float) mgTupleGet(tuple, i)->data.i;
@@ -501,7 +505,7 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 			        _MG_VALUE_TYPE_NAMES[tuple->type]);
 	}
 
-	++_mgListLength(module->data.module.instance->vertices);
+	++_mgListLength(instance->vertices);
 
 	mgDestroyValue(tuple);
 

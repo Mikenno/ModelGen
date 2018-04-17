@@ -30,7 +30,8 @@ void usage(void)
 		"Formats:\n"
 		"\n"
 		"    obj       Wavefront .obj format\n"
-		"    triangles Tightly packed triangles (xyz) 32-bit floats\n"
+		"    triangles Tightly packed triangles 32-bit floats\n"
+		"              Format: xyz nxnynz (interleaved vertices)\n"
 		"\n"
 		"Introspection:\n"
 		"\n"
@@ -56,6 +57,12 @@ int main(int argc, char *argv[])
 	MGbool exportOBJ = MG_FALSE;
 	MGbool exportTriangles = MG_FALSE;
 	const char *exportFilename = NULL;
+
+	MGInstance instance;
+	mgCreateInstance(&instance);
+
+	instance.vertexSize.position = 3;
+	instance.vertexSize.normal = 3;
 
 	int i = 1;
 	const char *arg;
@@ -214,9 +221,6 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		MGInstance instance;
-		mgCreateInstance(&instance);
-
 		if (runStdin)
 			mgRunFileHandle(&instance, stdin, "<stdin>");
 
@@ -254,8 +258,6 @@ int main(int argc, char *argv[])
 			else if (exportTriangles)
 				mgExportTriangles(&instance, stdout);
 		}
-
-		mgDestroyInstance(&instance);
 	}
 
 #ifdef _WIN32
@@ -279,6 +281,8 @@ int main(int argc, char *argv[])
 #endif
 	}
 #endif
+
+	mgDestroyInstance(&instance);
 
 	return err;
 }
