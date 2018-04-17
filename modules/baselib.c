@@ -44,7 +44,7 @@ static MGValue* mg_print(MGInstance *instance, size_t argc, MGValue **argv)
 
 	putchar('\n');
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -125,7 +125,7 @@ static MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: \"%s\" has no length", _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 	}
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -151,7 +151,7 @@ static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
 		++depth;
 	}
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 

@@ -45,7 +45,7 @@ static MGValue* mg_abs(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: abs expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -65,7 +65,7 @@ static MGValue* mg_deg(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: deg expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -85,7 +85,7 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: rad expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -105,7 +105,7 @@ static MGValue* mg_ceil(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: ceil expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -125,7 +125,7 @@ static MGValue* mg_floor(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: floor expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -145,7 +145,7 @@ static MGValue* mg_round(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: round expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -165,7 +165,7 @@ static MGValue* mg_sign(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: sign expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -226,7 +226,7 @@ static MGValue* mg_sqrt(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: sqrt expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -246,7 +246,7 @@ static MGValue* mg_cos(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: cos expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -266,7 +266,7 @@ static MGValue* mg_sin(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: sin expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -286,7 +286,7 @@ static MGValue* mg_tan(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: tan expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -306,7 +306,7 @@ static MGValue* mg_acos(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: acos expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -326,7 +326,7 @@ static MGValue* mg_asin(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: asin expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -346,7 +346,7 @@ static MGValue* mg_atan(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: atan expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -383,7 +383,7 @@ static MGValue* mg_exp(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: exp expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -403,7 +403,7 @@ static MGValue* mg_log(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: log expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -423,7 +423,7 @@ static MGValue* mg_log2(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: log2 expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -551,7 +551,7 @@ static MGValue* mg_max(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: max expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 
@@ -571,7 +571,7 @@ static MGValue* mg_min(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: min expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueVoid();
+		return mgCreateValueNull();
 	}
 }
 

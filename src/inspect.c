@@ -320,6 +320,9 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 	case MG_VALUE_MODULE:
 		_mgInspectValue(value->data.module.globals, depth, metadata);
 		break;
+	case MG_VALUE_NULL:
+		fputs("<null>", stdout);
+		break;
 	default:
 		break;
 	}

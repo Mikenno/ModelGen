@@ -360,11 +360,14 @@ static inline MGToken* _mgParseTypedName(MGParser *parser, MGToken *token, MGNod
 	MG_ASSERT(name);
 	MG_ASSERT(name->type == MG_NODE_NAME);
 
-	_MG_TOKEN_SCAN_LINE(token);
+	const size_t childIndex = _mgListLength(name->children);
 
+	_MG_TOKEN_SCAN_LINE(token);
 	MG_ASSERT(token->type == MG_TOKEN_NAME);
+
 	MGNode *type = mgCreateNode(token++, MG_NODE_NAME);
 	_mgAddChild(name, type);
+
 
 	if (token->type == MG_TOKEN_LESS)
 	{
@@ -384,6 +387,13 @@ static inline MGToken* _mgParseTypedName(MGParser *parser, MGToken *token, MGNod
 			++token;
 			_MG_TOKEN_SCAN_LINES(token);
 		}
+
+		name->tokenEnd = token++;
+	}
+
+	if (token->type == MG_TOKEN_OPTIONAL)
+	{
+		_mgListSet(name->children, childIndex, _mgWrapNode(type, MG_NODE_OPTIONAL));
 
 		name->tokenEnd = token;
 	}
@@ -733,6 +743,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		return node;
 	}
+	else if (token->type == MG_TOKEN_NULL)
+		return mgCreateNode(token, MG_NODE_NULL);
 
 	MG_ASSERT(node);
 

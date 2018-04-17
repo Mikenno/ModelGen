@@ -3,6 +3,7 @@
 
 #define _MG_VALUES \
 	_MG_V(INVALID, "Invalid") \
+	_MG_V(NULL, "Null") \
 	_MG_V(INTEGER, "Integer") \
 	_MG_V(FLOAT, "Float") \
 	_MG_V(STRING, "String") \

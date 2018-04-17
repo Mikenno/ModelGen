@@ -6,6 +6,8 @@
 	_MG_N(MODULE, "Module") \
 	_MG_N(BLOCK, "Block") \
 	_MG_N(NAME, "Name") \
+	_MG_N(NULL, "Null") \
+	_MG_N(OPTIONAL, "Optional") \
 	_MG_N(INTEGER, "Integer") \
 	_MG_N(FLOAT, "Float") \
 	_MG_N(STRING, "String") \

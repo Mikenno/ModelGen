@@ -234,6 +234,10 @@ void mgTokenizeNext(MGToken *token)
 			token->type = MG_TOKEN_MOD;
 			return;
 		}
+	case '?':
+		_mgTokenNextCharacter(token);
+		token->type = MG_TOKEN_OPTIONAL;
+		return;
 	case '=':
 		_mgTokenNextCharacter(token);
 		switch (*token->end.string) {
@@ -326,6 +330,8 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_FUNC;
 			else if (!strncmp("from", token->begin.string, 4))
 				token->type = MG_TOKEN_FROM;
+			else if (!strncmp("null", token->begin.string, 4))
+				token->type = MG_TOKEN_NULL;
 			break;
 		case 6:
 			if (!strncmp("return", token->begin.string, 6))

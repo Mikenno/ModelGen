@@ -281,7 +281,7 @@ static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 		}
 	}
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -450,7 +450,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	if (frame.value)
 		value = mgReferenceValue(frame.value);
 	else
-		value = mgCreateValueVoid();
+		value = mgCreateValueNull();
 
 	mgPopStackFrame(frame.module->data.module.instance, &frame);
 	mgDestroyStackFrame(&frame);
@@ -505,7 +505,7 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 
 	mgDestroyValue(tuple);
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -622,7 +622,7 @@ static inline MGValue* _mgVisitDelete(MGValue *module, MGNode *node)
 
 	_mgDelete(module, _mgListGet(node->children, 0));
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -860,6 +860,20 @@ static MGValue* _mgVisitName(MGValue *module, MGNode *node)
 	free(name);
 
 	return mgReferenceValue(value);
+}
+
+
+#if defined(__GNUC__)
+static inline __attribute__((always_inline)) MGValue* _mgVisitNull(MGValue *module, MGNode *node)
+#elif defined(_MSC_VER)
+static __forceinline MGValue* _mgVisitNull(MGValue *module, MGNode *node)
+#else
+static inline MGValue* _mgVisitNull(MGValue *module, MGNode *node)
+#endif
+{
+	MG_ASSERT(node->type == MG_NODE_NULL);
+
+	return mgCreateValueNull();
 }
 
 
@@ -1423,94 +1437,100 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 		}
 		break;
 	case MG_NODE_BIN_OP_EQ:
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
+		if ((lhs->type == MG_VALUE_NULL) || (rhs->type == MG_VALUE_NULL))
+			value = mgCreateValueInteger(lhs->type == rhs->type);
+		else
+			switch (lhs->type)
 			{
 			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i == rhs->data.i);
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(lhs->data.i == rhs->data.i);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(lhs->data.i == rhs->data.f);
+					break;
+				default:
+					break;
+				}
 				break;
 			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i == rhs->data.f);
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(_MG_FEQUAL(lhs->data.f, rhs->data.f));
+					break;
+				default:
+					break;
+				}
 				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(_MG_FEQUAL(lhs->data.f, rhs->data.f));
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_STRING:
-			MG_ASSERT(lhs->data.str.s);
-			switch (rhs->type)
-			{
-			case MG_VALUE_STRING:
-				MG_ASSERT(rhs->data.str.s);
-				value = mgCreateValueInteger(!strcmp(lhs->data.str.s, rhs->data.str.s));
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_NOT_EQ:
-		switch (lhs->type)
-		{
-		case MG_VALUE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i != rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i != rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_VALUE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f != rhs->data.i);
-				break;
-			case MG_VALUE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f != rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_VALUE_STRING:
-			switch (rhs->type)
-			{
 			case MG_VALUE_STRING:
 				MG_ASSERT(lhs->data.str.s);
-				MG_ASSERT(rhs->data.str.s);
-				value = mgCreateValueInteger(strcmp(lhs->data.str.s, rhs->data.str.s));
+				switch (rhs->type)
+				{
+				case MG_VALUE_STRING:
+					MG_ASSERT(rhs->data.str.s);
+					value = mgCreateValueInteger(!strcmp(lhs->data.str.s, rhs->data.str.s));
+					break;
+				default:
+					break;
+				}
 				break;
 			default:
 				break;
 			}
-			break;
-		default:
-			break;
-		}
+		break;
+	case MG_NODE_BIN_OP_NOT_EQ:
+		if ((lhs->type == MG_VALUE_NULL) || (rhs->type == MG_VALUE_NULL))
+			value = mgCreateValueInteger(lhs->type != rhs->type);
+		else
+			switch (lhs->type)
+			{
+			case MG_VALUE_INTEGER:
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(lhs->data.i != rhs->data.i);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(lhs->data.i != rhs->data.f);
+					break;
+				default:
+					break;
+				}
+				break;
+			case MG_VALUE_FLOAT:
+				switch (rhs->type)
+				{
+				case MG_VALUE_INTEGER:
+					value = mgCreateValueInteger(lhs->data.f != rhs->data.i);
+					break;
+				case MG_VALUE_FLOAT:
+					value = mgCreateValueInteger(lhs->data.f != rhs->data.f);
+					break;
+				default:
+					break;
+				}
+				break;
+			case MG_VALUE_STRING:
+				switch (rhs->type)
+				{
+				case MG_VALUE_STRING:
+					MG_ASSERT(lhs->data.str.s);
+					MG_ASSERT(rhs->data.str.s);
+					value = mgCreateValueInteger(strcmp(lhs->data.str.s, rhs->data.str.s));
+					break;
+				default:
+					break;
+				}
+				break;
+			default:
+				break;
+			}
 		break;
 	case MG_NODE_BIN_OP_LESS:
 		switch (lhs->type)
@@ -1984,7 +2004,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 		free(name);
 	}
 
-	return mgCreateValueVoid();
+	return mgCreateValueNull();
 }
 
 
@@ -2016,7 +2036,8 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 	mgDestroyValue(expression);
 
 #endif
-	return mgCreateValueVoid();
+
+	return mgCreateValueNull();
 }
 
 
@@ -2088,6 +2109,8 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitImport(module, node);
 	case MG_NODE_ASSERT:
 		return _mgVisitAssert(module, node);
+	case MG_NODE_NULL:
+		return _mgVisitNull(module, node);
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
