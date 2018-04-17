@@ -208,11 +208,11 @@ void mgTokenizeNext(MGToken *token)
 			_mgTokenNextCharacter(token);
 			switch (*token->end.string) {
 			case '=':
-				token->type = MG_TOKEN_DIVDIV_ASSIGN;
+				token->type = MG_TOKEN_INT_DIV_ASSIGN;
 				_mgTokenNextCharacter(token);
 				return;
 			default:
-				token->type = MG_TOKEN_DIVDIV;
+				token->type = MG_TOKEN_INT_DIV;
 				return;
 			}
 		case '=':
@@ -236,8 +236,22 @@ void mgTokenizeNext(MGToken *token)
 		}
 	case '?':
 		_mgTokenNextCharacter(token);
-		token->type = MG_TOKEN_OPTIONAL;
-		return;
+		switch (*token->end.string) {
+		case '?':
+			_mgTokenNextCharacter(token);
+			switch (*token->end.string) {
+			case '=':
+				token->type = MG_TOKEN_COALESCE_ASSIGN;
+				_mgTokenNextCharacter(token);
+				return;
+			default:
+				token->type = MG_TOKEN_COALESCE;
+				return;
+			}
+		default:
+			token->type = MG_TOKEN_OPTIONAL;
+			return;
+		}
 	case '=':
 		_mgTokenNextCharacter(token);
 		switch (*token->end.string) {

@@ -210,7 +210,7 @@ static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *
 	MGValue *value = mgMapGet(collection, key->data.str.s);
 
 	if (value == NULL)
-		MG_FAIL("Error: Undefined key \"%s\"", key->data.str.s);
+		return mgCreateValueNull();
 
 	return mgReferenceValue(value);
 }
@@ -1108,7 +1108,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	MG_ASSERT(lhs);
 	MGValue *rhs = NULL;
 
-	if ((node->type != MG_NODE_BIN_OP_AND) && (node->type != MG_NODE_BIN_OP_OR))
+	if ((node->type != MG_NODE_BIN_OP_AND) && (node->type != MG_NODE_BIN_OP_OR) && (node->type != MG_NODE_BIN_OP_COALESCE))
 	{
 		rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 		MG_ASSERT(rhs);
@@ -1434,6 +1434,16 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			break;
 		default:
 			break;
+		}
+		break;
+	case MG_NODE_BIN_OP_COALESCE:
+		if (lhs->type != MG_VALUE_NULL)
+			value = mgReferenceValue(lhs);
+		else
+		{
+			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+			MG_ASSERT(rhs);
+			value = mgReferenceValue(rhs);
 		}
 		break;
 	case MG_NODE_BIN_OP_EQ:
@@ -2070,6 +2080,7 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_DIV:
 	case MG_NODE_BIN_OP_INT_DIV:
 	case MG_NODE_BIN_OP_MOD:
+	case MG_NODE_BIN_OP_COALESCE:
 	case MG_NODE_BIN_OP_EQ:
 	case MG_NODE_BIN_OP_NOT_EQ:
 	case MG_NODE_BIN_OP_LESS:

@@ -17,6 +17,7 @@
 	_MG_N(BIN_OP_DIV, "BinOpDiv") \
 	_MG_N(BIN_OP_INT_DIV, "BinOpIntDiv") \
 	_MG_N(BIN_OP_MOD, "BinOpMod") \
+	_MG_N(BIN_OP_COALESCE, "BinOpCoalesce") \
 	_MG_N(BIN_OP_EQ, "BinOpEq") \
 	_MG_N(BIN_OP_NOT_EQ, "BinOpNotEq") \
 	_MG_N(BIN_OP_LESS, "BinOpLess") \
@@ -40,7 +41,9 @@
 	_MG_N(ASSIGN_SUB, "AssignSub") \
 	_MG_N(ASSIGN_MUL, "AssignMul") \
 	_MG_N(ASSIGN_DIV, "AssignDiv") \
+	_MG_N(ASSIGN_INT_DIV, "AssignIntDiv") \
 	_MG_N(ASSIGN_MOD, "AssignMod") \
+	_MG_N(ASSIGN_COALESCE, "AssignCoalesce") \
 	_MG_N(SUBSCRIPT, "Subscript") \
 	_MG_N(ATTRIBUTE, "Attribute") \
 	_MG_N(PROCEDURE, "Procedure") \
