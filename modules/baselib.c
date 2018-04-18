@@ -158,7 +158,7 @@ static MGValue* mg_type(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
+MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: len expects exactly 1 argument, received %zu", argc);
