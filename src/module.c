@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "modelgen.h"
 #include "module.h"
@@ -284,6 +285,25 @@ inline MGValue* mgCreateValueTuple(size_t capacity)
 	MGValue *value = mgCreateValueList(capacity);
 	value->type = MG_VALUE_TUPLE;
 	return value;
+}
+
+
+MGValue* mgCreateValueTupleEx(size_t n, ...)
+{
+	MGValue *tuple = mgCreateValueTuple(n);
+	MG_ASSERT(tuple);
+
+	va_list args;
+	va_start(args, n);
+
+	for (size_t i = 0; i < n; ++i)
+		_mgListSet(tuple->data.a, i, va_arg(args, MGValue*));
+
+	va_end(args);
+
+	mgListLength(tuple) = n;
+
+	return tuple;
 }
 
 

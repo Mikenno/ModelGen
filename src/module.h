@@ -47,6 +47,7 @@ MGValue* mgCreateValueFloat(float f);
 MGValue* mgCreateValueString(const char *s);
 MGValue* mgCreateValueCFunction(MGCFunction cfunc);
 MGValue* mgCreateValueTuple(size_t capacity);
+MGValue* mgCreateValueTupleEx(size_t n, ...);
 MGValue* mgCreateValueList(size_t capacity);
 MGValue* mgCreateValueMap(size_t capacity);
 

@@ -110,13 +110,7 @@ static MGValue* mg_map_pairs(MGInstance *instance, size_t argc, MGValue **argv)
 	MGValue *pairs = mgCreateValueTuple(mgMapSize(argv[0]));
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
-	{
-		MGValue *pair = mgCreateValueTuple(2);
-		mgTupleAdd(pair, mgCreateValueString(_mgListGet(map->data.m, i).key));
-		mgTupleAdd(pair, mgReferenceValue(_mgListGet(map->data.m, i).value));
-
-		mgTupleAdd(pairs, pair);
-	}
+		mgTupleAdd(pairs, mgCreateValueTupleEx(2, mgCreateValueString(_mgListGet(map->data.m, i).key), mgReferenceValue(_mgListGet(map->data.m, i).value)));
 
 	return pairs;
 }
