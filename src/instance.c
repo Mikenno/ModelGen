@@ -14,6 +14,7 @@
 extern MGValue* mgCreateBaseLib(void);
 extern MGValue* mgCreateMathLib(void);
 extern MGValue* mgCreateListLib(void);
+extern MGValue* mgCreateMapLib(void);
 
 
 struct {
@@ -23,6 +24,7 @@ struct {
 	{ "base", mgCreateBaseLib },
 	{ "math", mgCreateMathLib },
 	{ "list", mgCreateListLib },
+	{ "map", mgCreateMapLib },
 	{ NULL, NULL }
 };
 
