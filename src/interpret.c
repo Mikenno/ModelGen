@@ -41,6 +41,9 @@ static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *
 #define _MG_FAIL(module, node, ...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
+static MGValue* _mgVisitNode(MGValue *module, MGNode *node);
+
+
 inline MGValue* mgDeepCopyValue(const MGValue *value)
 {
 	MG_ASSERT(value);
@@ -256,7 +259,85 @@ static inline void _mgResolveSubscriptSet(MGValue *module, MGNode *node, MGValue
 }
 
 
-static MGValue* _mgVisitNode(MGValue *module, MGNode *node);
+static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values, MGbool local)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(names);
+	MG_ASSERT((names->type == MG_NODE_NAME) || (names->type == MG_NODE_SUBSCRIPT) || (names->type == MG_NODE_ATTRIBUTE) || (names->type == MG_NODE_TUPLE));
+	MG_ASSERT(values);
+
+	if (names->type == MG_NODE_NAME)
+	{
+		MG_ASSERT(names->token);
+
+		const size_t nameLength = names->token->end.string - names->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(names->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		if (local)
+			_mgSetLocalValue(module, name, mgReferenceValue(values));
+		else
+			_mgSetValue(module, name, mgReferenceValue(values));
+
+		free(name);
+	}
+	else if (names->type == MG_NODE_SUBSCRIPT)
+	{
+		MG_ASSERT(_mgListLength(names->children) == 2);
+
+		MGValue *index = _mgVisitNode(module, _mgListGet(names->children, 1));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(names->children, 0));
+
+		MG_ASSERT(collection);
+		MG_ASSERT(index);
+
+		_mgResolveSubscriptSet(module, names, collection, index, mgReferenceValue(values));
+
+		mgDestroyValue(collection);
+		mgDestroyValue(index);
+	}
+	else if (names->type == MG_NODE_ATTRIBUTE)
+	{
+		MG_ASSERT(_mgListLength(names->children) == 2);
+
+		MGValue *object = _mgVisitNode(module, _mgListGet(names->children, 0));
+		MG_ASSERT(object);
+		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
+
+		MGNode *attributeNode = _mgListGet(names->children, 1);
+		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
+		MG_ASSERT(attributeNode->token);
+
+		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
+		MG_ASSERT(nameLength > 0);
+		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
+		MG_ASSERT(name);
+
+		if (object->type == MG_VALUE_MAP)
+			mgMapSet(object, name, mgReferenceValue(values));
+		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+			mgMapSet(object->data.func.locals, name, mgReferenceValue(values));
+		else if (object->type == MG_VALUE_MODULE)
+			mgMapSet(object->data.module.globals, name, mgReferenceValue(values));
+
+		free(name);
+
+		mgDestroyValue(object);
+	}
+	else if (names->type == MG_NODE_TUPLE)
+	{
+		if ((values->type != MG_VALUE_TUPLE) && (values->type != MG_VALUE_LIST))
+			_MG_FAIL(module, names, "Error: \"%s\" is not iterable", _MG_VALUE_TYPE_NAMES[values->type]);
+
+		if (_mgListLength(names->children) != mgListLength(values))
+			_MG_FAIL(module, names, "Error: Mismatched lengths for parallel assignment (%zu != %zu)", _mgListLength(names->children), mgListLength(values));
+
+		for (size_t i = 0; i < _mgListLength(names->children); ++i)
+			_mgResolveAssignment(module, _mgListGet(names->children, i), _mgListGet(values->data.a, i), local);
+	}
+}
 
 
 static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
@@ -634,13 +715,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) >= 2);
 
-	MGNode *nameNode = _mgListGet(node->children, 0);
-	MG_ASSERT(nameNode->type == MG_NODE_NAME);
-	MG_ASSERT(nameNode->token);
-
-	const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-	MG_ASSERT(nameLength > 0);
-	char *name = mgStringDuplicateFixed(nameNode->token->begin.string, nameLength);
+	MGNode *name = _mgListGet(node->children, 0);
 	MG_ASSERT(name);
 
 	MGValue *test = _mgVisitNode(module, _mgListGet(node->children, 1));
@@ -654,7 +729,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 		MGValue *value = _mgListGet(test->data.a, i);
 		MG_ASSERT(value);
 
-		_mgSetLocalValue(module, name, mgReferenceValue(value));
+		_mgResolveAssignment(module, name, value, MG_TRUE);
 
 		for (size_t j = 2; j < _mgListLength(node->children); ++j)
 		{
@@ -665,8 +740,6 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 	}
 
 	mgDestroyValue(test);
-
-	free(name);
 
 	return mgCreateValueInteger(iterations);
 }
@@ -1003,101 +1076,8 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 
 	MGNode *lhs = _mgListGet(node->children, 0);
 	MG_ASSERT(lhs);
-	MG_ASSERT((lhs->type == MG_NODE_NAME) || (lhs->type == MG_NODE_SUBSCRIPT) || (lhs->type == MG_NODE_ATTRIBUTE) || (lhs->type == MG_NODE_TUPLE));
 
-	if (lhs->type == MG_NODE_NAME)
-	{
-		MG_ASSERT(lhs->token);
-
-		const size_t nameLength = lhs->token->end.string - lhs->token->begin.string;
-		MG_ASSERT(nameLength > 0);
-		char *name = mgStringDuplicateFixed(lhs->token->begin.string, nameLength);
-		MG_ASSERT(name);
-
-		_mgSetValue(module, name, mgReferenceValue(value));
-
-		free(name);
-	}
-	else if (lhs->type == MG_NODE_SUBSCRIPT)
-	{
-		MG_ASSERT(_mgListLength(lhs->children) == 2);
-
-		MGValue *index = _mgVisitNode(module, _mgListGet(lhs->children, 1));
-		MGValue *collection = _mgVisitNode(module, _mgListGet(lhs->children, 0));
-
-		MG_ASSERT(collection);
-		MG_ASSERT(index);
-
-		_mgResolveSubscriptSet(module, lhs, collection, index, mgReferenceValue(value));
-
-		mgDestroyValue(collection);
-		mgDestroyValue(index);
-	}
-	else if (lhs->type == MG_NODE_ATTRIBUTE)
-	{
-		MG_ASSERT(_mgListLength(lhs->children) == 2);
-
-		MGValue *object = _mgVisitNode(module, _mgListGet(lhs->children, 0));
-		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
-
-		MGNode *attributeNode = _mgListGet(lhs->children, 1);
-		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
-		MG_ASSERT(attributeNode->token);
-
-		const size_t nameLength = attributeNode->token->end.string - attributeNode->token->begin.string;
-		MG_ASSERT(nameLength > 0);
-		char *name = mgStringDuplicateFixed(attributeNode->token->begin.string, nameLength);
-		MG_ASSERT(name);
-
-		if (object->type == MG_VALUE_MAP)
-			mgMapSet(object, name, mgReferenceValue(value));
-		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
-			mgMapSet(object->data.func.locals, name, mgReferenceValue(value));
-		else if (object->type == MG_VALUE_MODULE)
-			mgMapSet(object->data.module.globals, name, mgReferenceValue(value));
-
-		free(name);
-
-		mgDestroyValue(object);
-	}
-	else if (lhs->type == MG_NODE_TUPLE)
-	{
-		if ((value->type != MG_VALUE_TUPLE) && (value->type != MG_VALUE_LIST))
-			MG_FAIL("Error: \"%s\" is not iterable", _MG_VALUE_TYPE_NAMES[value->type]);
-
-		if (_mgListLength(lhs->children) != mgListLength(value))
-			MG_FAIL("Error: Mismatched lengths for parallel assignment (%zu != %zu)", _mgListLength(lhs->children), mgListLength(value));
-
-		char *name = NULL;
-		size_t nameCapacity = 0;
-
-		for (size_t i = 0; i < _mgListLength(lhs->children); ++i)
-		{
-			if (_mgListGet(lhs->children, i)->type != MG_NODE_NAME)
-				MG_FAIL("Error: Cannot assign to \"%s\"", _MG_NODE_NAMES[_mgListGet(lhs->children, i)->type]);
-
-			const MGNode *const nameNode = _mgListGet(lhs->children, i);
-			MG_ASSERT(nameNode->token);
-
-			const size_t nameLength = nameNode->token->end.string - nameNode->token->begin.string;
-			MG_ASSERT(nameLength > 0);
-
-			if (nameLength >= nameCapacity)
-			{
-				nameCapacity = nameLength + 1;
-				name = (char*) realloc(name, nameCapacity * sizeof(char));
-				MG_ASSERT(name);
-			}
-
-			strncpy(name, nameNode->token->begin.string, nameLength);
-			name[nameLength] = '\0';
-
-			_mgSetValue(module, name, mgReferenceValue(_mgListGet(value->data.a, i)));
-		}
-
-		free(name);
-	}
+	_mgResolveAssignment(module, lhs, value, MG_FALSE);
 
 	return value;
 }
