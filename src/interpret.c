@@ -998,7 +998,7 @@ static inline MGValue* _mgVisitString(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(node->token);
 
-	return mgCreateValueString(node->token->value.s);
+	return mgCreateValueString(node->token->value.s ? node->token->value.s : "");
 }
 
 

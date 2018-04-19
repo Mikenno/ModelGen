@@ -64,6 +64,10 @@ int main(int argc, char *argv[])
 	instance.vertexSize.position = 3;
 	instance.vertexSize.normal = 3;
 
+	MGValue *base = mgMapGet(instance.staticModules, "base");
+	MG_ASSERT(base);
+	MG_ASSERT(base->type == MG_VALUE_MODULE);
+
 	int i = 1;
 	const char *arg;
 
@@ -112,7 +116,7 @@ int main(int argc, char *argv[])
 			{
 				if (i >= (argc - 1))
 				{
-					fputs("Error: Missing filename after \"--export\"", stderr);
+					fputs("Error: Missing filename after --export", stderr);
 					return EXIT_FAILURE;
 				}
 
@@ -144,6 +148,26 @@ int main(int argc, char *argv[])
 			profileTime = MG_TRUE;
 		else if (!strcmp("--inspect", arg))
 			inspectModules = MG_TRUE;
+		else if (!strcmp("--set", arg))
+		{
+			if (i >= (argc - 1))
+			{
+				fputs("Error: Missing name after --set", stderr);
+				return EXIT_FAILURE;
+			}
+
+			const char *name = argv[++i];
+
+			if (i >= (argc - 1))
+			{
+				fprintf(stderr, "Error: Missing value after --set \"%s\"", name);
+				return EXIT_FAILURE;
+			}
+
+			const char *value = argv[++i];
+
+			mgModuleSet(base, name, mgCreateValueString(value));
+		}
 		else if (!strcmp("--", arg))
 		{
 			++i;
