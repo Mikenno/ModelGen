@@ -7,7 +7,9 @@
 #include "module.h"
 
 
-#define _MG_PI 3.141592653589793238462643383279502884f
+#define _MG_PI  3.141592653589793238462643383279502884f
+#define _MG_TAU 6.283185307179586476925286766559005768f
+
 #define _MG_DEG2RAD (_MG_PI / 180.0f)
 #define _MG_RAD2DEG (180.0f / _MG_PI)
 
@@ -586,6 +588,7 @@ MGValue* mgCreateMathLib(void)
 	mgModuleSetFloat(module, "inf", INFINITY);
 	mgModuleSetFloat(module, "nan", NAN);
 	mgModuleSetFloat(module, "pi", _MG_PI);
+	mgModuleSetFloat(module, "tau", _MG_TAU);
 
 	mgModuleSetCFunction(module, "abs", mg_abs);
 

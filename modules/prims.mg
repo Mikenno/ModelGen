@@ -280,6 +280,76 @@ func make_square_pyramid(size = (1, 1, 1), center = (0, 0, 0))
 	return translate_triangles(_triangles, center)
 
 
+func make_sphere(diameter = 1, center = (0, 0, 0), rings = 24, sectors = 24)
+	return make_ellipsoid((diameter, diameter, diameter), center, rings, sectors)
+
+func make_ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 24)
+	hw, hh, hl = vec.div(size, 2)
+	cx, cy, cz = center
+	r, s = 1 / rings, 1 / sectors
+	_triangles = []
+	for ir in range(rings)
+		rs0 = math.sin(math.pi * (ir + 0) * r)
+		rs1 = math.sin(math.pi * (ir + 1) * r)
+		rns0 = math.sin(-math.pi * 0.5 + math.pi * (ir + 0) * r)
+		rns1 = math.sin(-math.pi * 0.5 + math.pi * (ir + 1) * r)
+		for is in range(sectors)
+			sc0 = math.cos(math.tau * (is + 0) * s)
+			sc1 = math.cos(math.tau * (is + 1) * s)
+			ss0 = math.sin(math.tau * (is + 0) * s)
+			ss1 = math.sin(math.tau * (is + 1) * s)
+			x1, y1, z1 = sc0 * rs0, rns0, ss0 * rs0
+			x2, y2, z2 = sc1 * rs0, rns0, ss1 * rs0
+			x3, y3, z3 = sc1 * rs1, rns1, ss1 * rs1
+			x4, y4, z4 = sc0 * rs1, rns1, ss0 * rs1
+			list.add(_triangles, (
+				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
+				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
+				(cx + x2 * hw, cy + y2 * hh, cz + z2 * hl)))
+			list.add(_triangles, (
+				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
+				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
+				(cx + x4 * hw, cy + y4 * hh, cz + z4 * hl)))
+	return _triangles
+
+func make_semisphere(diameter = 1, center = (0, 0, 0), rings = 24 / 2, sectors = 24)
+	return make_semiellipsoid((diameter, diameter / 2, diameter), center, rings, sectors)
+
+make_hemisphere = make_semisphere
+
+func make_semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), rings = 24 / 2, sectors = 24)
+	hw, hh, hl = size
+	hw, hl = hw / 2, hl / 2
+	cx, cy, cz = center
+	cy -= hh / 2
+	r, s = 1 / rings, 1 / sectors
+	hr = r / 2
+	_triangles = []
+	for ir in range(rings)
+		rs0 = math.sin(math.pi / 2 * (ir + 0) * r)
+		rs1 = math.sin(math.pi / 2 * (ir + 1) * r)
+		rns0 = math.sin(math.pi * 0.5 + math.pi / 2 * (ir + 0) * r)
+		rns1 = math.sin(math.pi * 0.5 + math.pi / 2 * (ir + 1) * r)
+		for is in range(sectors)
+			sc0 = math.cos(math.tau * (is + 0) * s)
+			sc1 = math.cos(math.tau * (is + 1) * s)
+			ss0 = math.sin(math.tau * (is + 0) * s)
+			ss1 = math.sin(math.tau * (is + 1) * s)
+			x1, y1, z1 = sc0 * rs0, rns0, ss0 * rs0
+			x2, y2, z2 = sc1 * rs0, rns0, ss1 * rs0
+			x3, y3, z3 = sc1 * rs1, rns1, ss1 * rs1
+			x4, y4, z4 = sc0 * rs1, rns1, ss0 * rs1
+			list.add(_triangles, (
+				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
+				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
+				(cx + x2 * hw, cy + y2 * hh, cz + z2 * hl)))
+			list.add(_triangles, (
+				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
+				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
+				(cx + x4 * hw, cy + y4 * hh, cz + z4 * hl)))
+	return _triangles
+
+
 proc triangle(p1, p2, p3, center = (0, 0, 0), clockwise = false)
 	if clockwise
 		p1, p2, p3 = flip_triangle(p1, p2, p3)
@@ -325,3 +395,18 @@ proc prism(polygon, height = 1, center = (0, 0, 0))
 
 proc cylinder(diameter, height, center = (0, 0, 0), segments = 8)
 	prism(make_circle(diameter, (0, 0), segments), height, center)
+
+
+proc sphere(diameter = 1, center = (0, 0, 0), rings = 24, sectors = 24)
+	triangles(make_sphere(diameter, center, rings, sectors))
+
+proc ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 24)
+	triangles(make_ellipsoid(size, center, rings, sectors))
+
+proc semisphere(diameter = 1, center = (0, 0, 0), rings = 24 / 2, sectors = 24)
+	triangles(make_semisphere(diameter, center, rings, sectors))
+
+hemisphere = semisphere
+
+proc semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), rings = 24 / 2, sectors = 24)
+	triangles(make_semiellipsoid(size, center, rings, sectors))
