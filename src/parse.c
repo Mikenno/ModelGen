@@ -7,14 +7,17 @@
 #include "inspect.h"
 
 
-static inline void _mgFail(MGParser *parser, MGToken *token, const char *format, ...)
+static inline void _mgFail(MGParser *parser, const MGToken *token, const char *format, ...)
 {
 	fflush(stdout);
 
 	if (parser->tokenizer.filename)
 		fprintf(stderr, "%s:", parser->tokenizer.filename);
+
 	if (token)
 		fprintf(stderr, "%u:%u: ", token->begin.line, token->begin.character);
+	else if (parser->tokenizer.filename)
+		fputc(' ', stderr);
 
 	va_list args;
 	va_start(args, format);
@@ -28,6 +31,7 @@ static inline void _mgFail(MGParser *parser, MGToken *token, const char *format,
 }
 
 #define MG_FAIL(...) _mgFail(parser, token, __VA_ARGS__)
+#define _MG_FAIL(...) _mgFail(parser, __VA_ARGS__)
 
 
 #define _MG_TOKEN_SCAN_LINE(token)  for (; (token->type == MG_TOKEN_WHITESPACE) || (token->type == MG_TOKEN_COMMENT); ++token)
@@ -688,6 +692,36 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		_mgParseExpressionList(parser, token, parameters, MG_TOKEN_RPAREN);
 		_mgAddChild(node, parameters);
 
+		for (size_t i = 0; i < _mgListLength(parameters->children); ++i)
+		{
+			const MGNode *parameter = _mgListGet(parameters->children, i);
+			MG_ASSERT(parameter);
+			MG_ASSERT((parameter->type == MG_NODE_NAME) || (parameter->type == MG_NODE_ASSIGN));
+
+			const MGbool parameterHasDefaultArgument = (MGbool) (parameter->type == MG_NODE_ASSIGN);
+			const MGToken *parameterNameToken = parameterHasDefaultArgument ? _mgListGet(parameter->children, 0)->token : parameter->token;
+			const char *parameterName = parameterNameToken->begin.string;
+			const size_t parameterNameLength = parameterNameToken->end.string - parameterNameToken->begin.string;
+
+			for (size_t j = i + 1; j < _mgListLength(parameters->children); ++j)
+			{
+				const MGNode *parameter2 = _mgListGet(parameters->children, j);
+				MG_ASSERT(parameter2);
+				MG_ASSERT((parameter2->type == MG_NODE_NAME) || (parameter2->type == MG_NODE_ASSIGN));
+
+				const MGbool parameter2HasDefaultArgument = (MGbool) (parameter2->type == MG_NODE_ASSIGN);
+				const MGToken *parameter2NameToken = parameter2HasDefaultArgument ? _mgListGet(parameter2->children, 0)->token : parameter2->token;
+				const char *parameter2Name = parameter2NameToken->begin.string;
+				const size_t parameter2NameLength = parameter2NameToken->end.string - parameter2NameToken->begin.string;
+
+				if ((parameterNameLength == parameter2NameLength) && !strncmp(parameterName, parameter2Name, parameterNameLength))
+					_MG_FAIL(parameterNameToken, "Duplicate parameter \"%.*s\"", (int) parameterNameLength, parameterName);
+
+				if (parameterHasDefaultArgument && !parameter2HasDefaultArgument)
+					_MG_FAIL(parameterNameToken, "Default argument missing for parameter %zu \"%.*s\"", j + 1, (int) parameter2NameLength, parameter2Name);
+			}
+		}
+
 		token = node->tokenEnd + 1;
 
 		if (token->type == MG_TOKEN_COLON)
@@ -944,6 +978,11 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 		_mgAddChild(node, child);
 
 		MG_ASSERT(_mgListLength(node->children) == 2);
+
+		const MGNode *names = _mgListGet(node->children, 0);
+
+		if ((names->type != MG_NODE_NAME) && (names->type != MG_NODE_SUBSCRIPT) && (names->type != MG_NODE_ATTRIBUTE) && (names->type != MG_NODE_TUPLE))
+			_MG_FAIL(names->token, "Cannot assign to \"%s\"", _MG_NODE_NAMES[names->type]);
 
 		if (node->type != MG_NODE_ASSIGN)
 		{

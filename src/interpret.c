@@ -24,7 +24,7 @@ static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *
 	if (node && node->tokenBegin)
 		fprintf(stderr, "%u:%u: ", node->tokenBegin->begin.line, node->tokenBegin->begin.character);
 	else if (module && module->data.module.filename)
-		putchar(' ');
+		fputc(' ', stderr);
 
 	va_list args;
 	va_start(args, format);
