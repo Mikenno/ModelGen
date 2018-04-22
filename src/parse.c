@@ -238,7 +238,7 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 
 		if (indentation < token->begin.character)
 		{
-			if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA))
+			if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA) || (token->type == MG_TOKEN_ELSE))
 				break;
 
 			MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
@@ -255,7 +255,7 @@ static void _mgParseBlock(MGParser *parser, MGToken *token, MGNode *node, unsign
 			_MG_TOKEN_SCAN_LINES(token);
 		}
 
-		if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA))
+		if ((token->type == MG_TOKEN_EOF) || (token->type == MG_TOKEN_RPAREN) || (token->type == MG_TOKEN_RSQUARE) || (token->type == MG_TOKEN_COMMA) || (token->type == MG_TOKEN_ELSE))
 			break;
 	}
 }
@@ -389,7 +389,6 @@ static inline MGToken* _mgParseTypedName(MGParser *parser, MGToken *token, MGNod
 
 	MGNode *type = mgCreateNode(token++, MG_NODE_NAME);
 	_mgAddChild(name, type);
-
 
 	if (token->type == MG_TOKEN_LESS)
 	{
@@ -567,6 +566,33 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			token = node->tokenEnd + 1;
 		}
 	}
+	else if (token->type == MG_TOKEN_WHILE)
+	{
+		node = mgCreateNode(token, MG_NODE_WHILE);
+
+		MGNode *condition = _mgParseExpression(parser, token + 1, MG_TRUE);
+		MG_ASSERT(condition);
+		_mgAddChild(node, condition);
+
+		token = condition->tokenEnd + 1;
+		_MG_TOKEN_SCAN_LINES(token);
+
+		if ((node->tokenBegin->begin.character < token->begin.character) &&
+		    ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA)))
+		{
+			MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
+			block->token = NULL;
+
+			_mgParseBlock(parser, token, block, token->begin.character);
+
+			if (_mgListLength(block->children) == 1)
+				_mgAddChild(node, _mgDestroyNodeExtractFirst(block));
+			else
+				_mgAddChild(node, block);
+
+			token = node->tokenEnd + 1;
+		}
+	}
 	else if (token->type == MG_TOKEN_IF)
 	{
 		MGToken *start = token;
@@ -600,7 +626,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		while (token->type == MG_TOKEN_ELSE)
 		{
-			if (start->begin.character != token->begin.character)
+			if ((start->begin.character != token->begin.character) && (start->begin.line != token->begin.line))
 				break;
 
 			if (end)
@@ -763,15 +789,36 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 		return node;
 	}
-	else if ((token->type == MG_TOKEN_RETURN) || (token->type == MG_TOKEN_EMIT))
+	else if ((token->type == MG_TOKEN_RETURN) || (token->type == MG_TOKEN_EMIT) || (token->type == MG_TOKEN_BREAK) || (token->type == MG_TOKEN_CONTINUE))
 	{
-		node = mgCreateNode(token, (token->type == MG_TOKEN_RETURN) ? MG_NODE_RETURN : MG_NODE_EMIT);
-		++token;
+		node = mgCreateNode(token, MG_NODE_INVALID);
 
-		_MG_TOKEN_SCAN_LINE(token);
+		switch (token->type)
+		{
+		case MG_TOKEN_RETURN:
+			node->type = MG_NODE_RETURN;
+			break;
+		case MG_TOKEN_EMIT:
+			node->type = MG_NODE_EMIT;
+			break;
+		case MG_TOKEN_BREAK:
+			node->type = MG_NODE_BREAK;
+			break;
+		case MG_TOKEN_CONTINUE:
+			node->type = MG_NODE_CONTINUE;
+			break;
+		default:
+			break;
+		}
 
-		if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_NEWLINE))
-			_mgAddChild(node, _mgParseExpression(parser, token, MG_TRUE));
+		if (token->type != MG_TOKEN_CONTINUE)
+		{
+			++token;
+			_MG_TOKEN_SCAN_LINE(token);
+
+			if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_NEWLINE))
+				_mgAddChild(node, _mgParseExpression(parser, token, MG_TRUE));
+		}
 
 		return node;
 	}

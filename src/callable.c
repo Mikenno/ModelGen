@@ -56,8 +56,6 @@ MGValue* mgCall(MGInstance *instance, const MGValue *callable, size_t argc, cons
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
 
-	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
-
 	mgPushStackFrame(instance, &frame);
 
 	MGValue *value = mgCallEx(instance, &frame, callable, argc, argv);

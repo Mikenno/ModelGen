@@ -347,6 +347,12 @@ void mgTokenizeNext(MGToken *token)
 			else if (!strncmp("null", token->begin.string, 4))
 				token->type = MG_TOKEN_NULL;
 			break;
+		case 5:
+			if (!strncmp("while", token->begin.string, 5))
+				token->type = MG_TOKEN_WHILE;
+			else if (!strncmp("break", token->begin.string, 5))
+				token->type = MG_TOKEN_BREAK;
+			break;
 		case 6:
 			if (!strncmp("return", token->begin.string, 6))
 				token->type = MG_TOKEN_RETURN;
@@ -356,6 +362,11 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_IMPORT;
 			else if (!strncmp("assert", token->begin.string, 6))
 				token->type = MG_TOKEN_ASSERT;
+			break;
+		case 8:
+			if (!strncmp("continue", token->begin.string, 8))
+				token->type = MG_TOKEN_CONTINUE;
+			break;
 		default:
 			break;
 		}

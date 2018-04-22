@@ -36,6 +36,9 @@
 	_MG_N(MAP, "Map") \
 	_MG_N(CALL, "Call") \
 	_MG_N(FOR, "For") \
+	_MG_N(WHILE, "While") \
+	_MG_N(BREAK, "Break") \
+	_MG_N(CONTINUE, "Continue") \
 	_MG_N(IF, "If") \
 	_MG_N(ASSIGN, "Assign") \
 	_MG_N(ASSIGN_ADD, "AssignAdd") \

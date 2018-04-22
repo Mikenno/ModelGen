@@ -360,13 +360,8 @@ static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 	{
 		mgDestroyValue(_mgVisitNode(module, _mgListGet(node->children, i)));
 
-		if (frame->state == MG_STACK_FRAME_STATE_UNWINDING)
-		{
-			if (frame->value)
-				return mgReferenceValue(frame->value);
-
-			break;
-		}
+		if (frame->state != MG_STACK_FRAME_STATE_ACTIVE)
+			return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
 	}
 
 	return mgCreateValueNull();
@@ -435,7 +430,6 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
 
-	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 	frame.caller = node;
 	frame.callerName = name;
 
@@ -504,7 +498,7 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
+static inline MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->data.module.instance);
@@ -512,14 +506,12 @@ static MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 
 	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
+	frame->state = MG_STACK_FRAME_STATE_RETURN;
+
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
-	else
-		frame->value = mgCreateValueNull();
 
-	frame->state = MG_STACK_FRAME_STATE_UNWINDING;
-
-	return mgCreateValueInteger((_mgListLength(node->children) > 0) ? 1 : 0);
+	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
 }
 
 
@@ -623,20 +615,24 @@ static inline MGValue* _mgVisitDelete(MGValue *module, MGNode *node)
 
 static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 {
+	MG_ASSERT(module);
+	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(_mgListLength(node->children) >= 2);
 
 	MGNode *name = _mgListGet(node->children, 0);
 	MG_ASSERT(name);
 
-	MGValue *test = _mgVisitNode(module, _mgListGet(node->children, 1));
-	MG_ASSERT(test);
-	MG_ASSERT((test->type == MG_VALUE_TUPLE) || (test->type == MG_VALUE_LIST));
+	MGValue *iterable = _mgVisitNode(module, _mgListGet(node->children, 1));
+	MG_ASSERT(iterable);
+	MG_ASSERT((iterable->type == MG_VALUE_TUPLE) || (iterable->type == MG_VALUE_LIST));
 
-	int iterations = 0;
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
-	for (size_t i = 0; i < _mgListLength(test->data.a); ++i, ++iterations)
+	MGValue *value = NULL;
+
+	for (size_t i = 0; i < _mgListLength(iterable->data.a); ++i)
 	{
-		MGValue *value = _mgListGet(test->data.a, i);
+		value = _mgListGet(iterable->data.a, i);
 		MG_ASSERT(value);
 
 		_mgResolveAssignment(module, name, value, MG_TRUE);
@@ -646,12 +642,110 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 			MGValue *result = _mgVisitNode(module, _mgListGet(node->children, j));
 			MG_ASSERT(result);
 			mgDestroyValue(result);
+
+			if (frame->state == MG_STACK_FRAME_STATE_RETURN)
+			{
+				value = frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+				goto end;
+			}
+			else if (frame->state == MG_STACK_FRAME_STATE_BREAK)
+			{
+				frame->state = MG_STACK_FRAME_STATE_ACTIVE;
+				value = frame->value ? mgReferenceValue(frame->value) : mgReferenceValue(value);
+				goto end;
+			}
+			else if (frame->state == MG_STACK_FRAME_STATE_CONTINUE)
+			{
+				frame->state = MG_STACK_FRAME_STATE_ACTIVE;
+				break;
+			}
 		}
 	}
 
-	mgDestroyValue(test);
+	if (value)
+		value = mgReferenceValue(value);
 
-	return mgCreateValueInteger(iterations);
+end:
+
+	mgDestroyValue(iterable);
+
+	return value ? value : mgCreateValueNull();
+}
+
+
+static MGValue* _mgVisitWhile(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) <= 2);
+
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
+
+	for (;;)
+	{
+		MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
+		MG_ASSERT(condition);
+		MG_ASSERT(condition->type == MG_VALUE_INTEGER);
+
+		if (!condition->data.i)
+		{
+			mgDestroyValue(condition);
+			break;
+		}
+
+		mgDestroyValue(condition);
+
+		for (size_t j = 1; j < _mgListLength(node->children); ++j)
+		{
+			mgDestroyValue(_mgVisitNode(module, _mgListGet(node->children, j)));
+
+			if (frame->state == MG_STACK_FRAME_STATE_RETURN)
+				return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+			else if (frame->state == MG_STACK_FRAME_STATE_BREAK)
+			{
+				frame->state = MG_STACK_FRAME_STATE_ACTIVE;
+				return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+			}
+			else if (frame->state == MG_STACK_FRAME_STATE_CONTINUE)
+			{
+				frame->state = MG_STACK_FRAME_STATE_ACTIVE;
+				break;
+			}
+		}
+	}
+
+	return mgCreateValueNull();
+}
+
+
+static inline MGValue* _mgVisitBreak(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
+	MG_ASSERT(_mgListLength(node->children) < 2);
+
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
+
+	frame->state = MG_STACK_FRAME_STATE_BREAK;
+
+	if (_mgListLength(node->children) > 0)
+		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
+
+	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+}
+
+
+static inline MGValue* _mgVisitContinue(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(module);
+	MG_ASSERT(module->data.module.instance);
+	MG_ASSERT(module->data.module.instance->callStackTop);
+	MG_ASSERT(_mgListLength(node->children) == 0);
+
+	MGStackFrame *frame = module->data.module.instance->callStackTop;
+
+	frame->state = MG_STACK_FRAME_STATE_CONTINUE;
+
+	return mgCreateValueNull();
 }
 
 
@@ -666,6 +760,8 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 
 	switch (condition->type)
 	{
+	case MG_VALUE_NULL:
+		break;
 	case MG_VALUE_INTEGER:
 		_condition = condition->data.i != 0;
 		break;
@@ -673,10 +769,14 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
 		break;
 	case MG_VALUE_STRING:
-		_condition = condition->data.str.length != 0;
+		_condition = mgStringLength(condition) != 0;
 		break;
 	case MG_VALUE_TUPLE:
-		_condition = condition->data.a.length > 0;
+	case MG_VALUE_LIST:
+		_condition = mgListLength(condition) > 0;
+		break;
+	case MG_VALUE_MAP:
+		_condition = mgMapSize(condition) > 0;
 		break;
 	default:
 		_condition = 1;
@@ -1998,6 +2098,12 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitCall(module, node);
 	case MG_NODE_FOR:
 		return _mgVisitFor(module, node);
+	case MG_NODE_WHILE:
+		return _mgVisitWhile(module, node);
+	case MG_NODE_BREAK:
+		return _mgVisitBreak(module, node);
+	case MG_NODE_CONTINUE:
+		return _mgVisitContinue(module, node);
 	case MG_NODE_IF:
 		return _mgVisitIf(module, node);
 	case MG_NODE_PROCEDURE:

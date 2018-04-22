@@ -3,7 +3,9 @@
 
 #define _MG_STACK_FRAME_STATES \
 	_MG_SFS(ACTIVE, "Active") \
-	_MG_SFS(UNWINDING, "Unwinding")
+	_MG_SFS(RETURN, "Return") \
+	_MG_SFS(BREAK, "Break") \
+	_MG_SFS(CONTINUE, "Continue")
 
 
 #define _MG_LONGEST_STACK_FRAME_STATE_NAME_LENGTH 9

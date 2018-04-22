@@ -14,6 +14,9 @@
 	_MG_T(NEWLINE, "newline") \
 	_MG_T(WHITESPACE, "whitespace") \
 	_MG_T(FOR, "for") \
+	_MG_T(WHILE, "while") \
+	_MG_T(BREAK, "break") \
+	_MG_T(CONTINUE, "continue") \
 	_MG_T(IF, "if") \
 	_MG_T(ELSE, "else") \
 	_MG_T(PROC, "proc") \

@@ -147,6 +147,7 @@ void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *module, MGValue *locals)
 
 	memset(frame, 0, sizeof(MGStackFrame));
 
+	frame->state = MG_STACK_FRAME_STATE_ACTIVE;
 	frame->module = module;
 	frame->locals = locals;
 }
@@ -308,8 +309,6 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 
 	MGStackFrame frame;
 	mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(module->data.module.globals));
-
-	frame.state = MG_STACK_FRAME_STATE_ACTIVE;
 
 	mgPushStackFrame(instance, &frame);
 	_mgImportDefaultInto(instance, module);
