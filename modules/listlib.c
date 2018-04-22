@@ -5,7 +5,7 @@
 #include "module.h"
 
 
-extern MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv);
+extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv);
 
 
 static inline void _mgFail(const char *format, ...)
@@ -26,7 +26,7 @@ static inline void _mgFail(const char *format, ...)
 #define MG_FAIL(...) _mgFail(__VA_ARGS__)
 
 
-static MGValue* mg_list_add(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 2)
 		MG_FAIL("Error: add expected at least 2 arguments, received %zu", argc);
@@ -35,13 +35,13 @@ static MGValue* mg_list_add(MGInstance *instance, size_t argc, MGValue **argv)
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	for (size_t i = 1; i < argc; ++i)
-		mgListAdd(argv[0], mgReferenceValue(argv[i]));
+		mgListAdd((MGValue*) argv[0], mgReferenceValue(argv[i]));
 
 	return mgCreateValueNull();
 }
 
 
-static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
 		MG_FAIL("Error: add_from expects exactly 2 argument, received %zu", argc);
@@ -53,13 +53,13 @@ static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, MGValue **ar
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_TUPLE], _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
 
 	for (size_t i = 0, end = mgListLength(argv[1]); i < end; ++i)
-		mgListAdd(argv[0], mgReferenceValue(_mgListGet(argv[1]->data.a, i)));
+		mgListAdd((MGValue*) argv[0], mgReferenceValue(_mgListGet(argv[1]->data.a, i)));
 
 	return mgCreateValueNull();
 }
 
 
-static MGValue* mg_list_insert(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 3)
 		MG_FAIL("Error: insert expects exactly 3 arguments, received %zu", argc);
@@ -74,13 +74,13 @@ static MGValue* mg_list_insert(MGInstance *instance, size_t argc, MGValue **argv
 	index = (index > 0) ? index : 0;
 	index = (index > (intmax_t) mgListLength(argv[0])) ? (intmax_t) mgListLength(argv[0]) : index;
 
-	mgListInsert(argv[0], index, mgReferenceValue(argv[2]));
+	mgListInsert((MGValue*) argv[0], index, mgReferenceValue(argv[2]));
 
 	return mgCreateValueNull();
 }
 
 
-static MGValue* mg_list_clear(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: clear expects exactly 1 argument, received %zu", argc);
@@ -88,13 +88,13 @@ static MGValue* mg_list_clear(MGInstance *instance, size_t argc, MGValue **argv)
 		MG_FAIL("Error: clear expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
-	mgListClear(argv[0]);
+	mgListClear((MGValue*) argv[0]);
 
 	return mgCreateValueNull();
 }
 
 
-static MGValue* mg_list_slice(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: slice expected at least 1 argument, received %zu", argc);

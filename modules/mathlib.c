@@ -32,7 +32,7 @@ static inline void _mgFail(const char *format, ...)
 #define MG_FAIL(...) _mgFail(__VA_ARGS__)
 
 
-static MGValue* mg_abs(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_abs(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: abs expects exactly 1 argument, received %zu", argc);
@@ -52,7 +52,7 @@ static MGValue* mg_abs(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_deg(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_deg(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: deg expects exactly 1 argument, received %zu", argc);
@@ -72,7 +72,7 @@ static MGValue* mg_deg(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_rad(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: rad expects exactly 1 argument, received %zu", argc);
@@ -92,7 +92,7 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_ceil(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: ceil expects exactly 1 argument, received %zu", argc);
@@ -112,7 +112,7 @@ static MGValue* mg_ceil(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_floor(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_floor(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: floor expects exactly 1 argument, received %zu", argc);
@@ -132,7 +132,7 @@ static MGValue* mg_floor(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_round(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_round(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: round expects exactly 1 argument, received %zu", argc);
@@ -152,7 +152,7 @@ static MGValue* mg_round(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_sign(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: sign expects exactly 1 argument, received %zu", argc);
@@ -193,7 +193,7 @@ static inline int _mg_powi(int base, unsigned int exp)
 }
 
 
-static MGValue* mg_pow(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_pow(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
 		MG_FAIL("Error: pow expects exactly 2 arguments, received %zu", argc);
@@ -213,7 +213,7 @@ static MGValue* mg_pow(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_sqrt(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_sqrt(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: sqrt expects exactly 1 argument, received %zu", argc);
@@ -233,7 +233,7 @@ static MGValue* mg_sqrt(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_cos(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_cos(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: cos expects exactly 1 argument, received %zu", argc);
@@ -253,7 +253,7 @@ static MGValue* mg_cos(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_sin(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_sin(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: sin expects exactly 1 argument, received %zu", argc);
@@ -273,7 +273,7 @@ static MGValue* mg_sin(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_tan(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_tan(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: tan expects exactly 1 argument, received %zu", argc);
@@ -293,7 +293,7 @@ static MGValue* mg_tan(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_acos(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_acos(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: acos expects exactly 1 argument, received %zu", argc);
@@ -313,7 +313,7 @@ static MGValue* mg_acos(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_asin(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_asin(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: asin expects exactly 1 argument, received %zu", argc);
@@ -333,7 +333,7 @@ static MGValue* mg_asin(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_atan(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_atan(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: atan expects exactly 1 argument, received %zu", argc);
@@ -353,7 +353,7 @@ static MGValue* mg_atan(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_atan2(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_atan2(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
 		MG_FAIL("Error: atan2 expects exactly 2 arguments, received %zu", argc);
@@ -370,7 +370,7 @@ static MGValue* mg_atan2(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_exp(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_exp(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: exp expects exactly 1 argument, received %zu", argc);
@@ -390,7 +390,7 @@ static MGValue* mg_exp(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_log(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_log(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: log expects exactly 1 argument, received %zu", argc);
@@ -410,7 +410,7 @@ static MGValue* mg_log(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_log2(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_log2(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: log2 expects exactly 1 argument, received %zu", argc);
@@ -430,7 +430,7 @@ static MGValue* mg_log2(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-MGValue* _mg_maxi(size_t argc, MGValue **argv)
+MGValue* _mg_maxi(size_t argc, const MGValue* const* argv)
 {
 	int result = INT_MIN;
 
@@ -457,7 +457,7 @@ MGValue* _mg_maxi(size_t argc, MGValue **argv)
 }
 
 
-MGValue* _mg_maxf(size_t argc, MGValue **argv)
+MGValue* _mg_maxf(size_t argc, const MGValue* const* argv)
 {
 	float result = -INFINITY;
 
@@ -484,7 +484,7 @@ MGValue* _mg_maxf(size_t argc, MGValue **argv)
 }
 
 
-MGValue* _mg_mini(size_t argc, MGValue **argv)
+MGValue* _mg_mini(size_t argc, const MGValue* const* argv)
 {
 	int result = INT_MAX;
 
@@ -511,7 +511,7 @@ MGValue* _mg_mini(size_t argc, MGValue **argv)
 }
 
 
-MGValue* _mg_minf(size_t argc, MGValue **argv)
+MGValue* _mg_minf(size_t argc, const MGValue* const* argv)
 {
 	float result = INFINITY;
 
@@ -538,7 +538,7 @@ MGValue* _mg_minf(size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_max(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_max(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: max expected at least 1 argument, received %zu", argc);
@@ -558,7 +558,7 @@ static MGValue* mg_max(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_min(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_min(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: min expected at least 1 argument, received %zu", argc);

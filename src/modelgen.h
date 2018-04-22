@@ -27,7 +27,7 @@ typedef unsigned char MGbool;
 typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
 
-typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, MGValue **argv);
+typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, const MGValue* const* argv);
 
 typedef struct MGToken {
 	MGTokenType type;

@@ -17,7 +17,7 @@ MGValue* mgCreateValue(MGValueType type);
 void mgDestroyValue(MGValue *value);
 
 MGValue* mgDeepCopyValue(const MGValue *value);
-MGValue* mgReferenceValue(MGValue *value);
+MGValue* mgReferenceValue(const MGValue *value);
 
 MGValue* mgCreateValueModule(void);
 

@@ -94,13 +94,14 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 }
 
 
-inline MGValue* mgReferenceValue(MGValue *value)
+MGValue* mgReferenceValue(const MGValue *value)
 {
 	MG_ASSERT(value);
 
-	++value->refCount;
+	MGValue *referenced = (MGValue*) value;
+	++referenced->refCount;
 
-	return value;
+	return referenced;
 }
 
 
@@ -436,7 +437,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	mgPushStackFrame(frame.module->data.module.instance, &frame);
 
 	if (func->type == MG_VALUE_CFUNCTION)
-		frame.value = func->data.cfunc(frame.module->data.module.instance, _mgListLength(args), _mgListItems(args));
+		frame.value = func->data.cfunc(frame.module->data.module.instance, _mgListLength(args), (const MGValue* const*) _mgListItems(args));
 	else
 	{
 		MG_ASSERT(func->data.func.module);

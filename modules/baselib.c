@@ -27,7 +27,7 @@ static inline void _mgFail(const char *format, ...)
 #define MG_FAIL(...) _mgFail(__VA_ARGS__)
 
 
-static MGValue* mg_print(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_print(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	for (size_t i = 0; i < argc; ++i)
 	{
@@ -95,7 +95,7 @@ static MGValue* _mg_rangef(float start, float stop, float step)
 
 
 // Returns a tuple containing values within the half-closed interval [start, stop)
-static MGValue* mg_range(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: range expected at least 1 argument, received %zu", argc);
@@ -149,7 +149,7 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_type(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_type(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: type expects exactly 1 argument, received %zu", argc);
@@ -158,7 +158,7 @@ static MGValue* mg_type(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
+MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: len expects exactly 1 argument, received %zu", argc);
@@ -180,7 +180,7 @@ MGValue* mg_len(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_int(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_int(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
 		MG_FAIL("Error: int expected at least 1 argument, received %zu", argc);
@@ -220,7 +220,7 @@ static MGValue* mg_int(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_float(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_float(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
 		MG_FAIL("Error: float expects exactly 1 argument, received %zu", argc);
@@ -243,7 +243,7 @@ static MGValue* mg_float(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(instance->callStackTop);
@@ -269,7 +269,7 @@ static MGValue* mg_traceback(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_globals(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_globals(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(instance->callStackTop);
@@ -281,7 +281,7 @@ static MGValue* mg_globals(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_locals(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_locals(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(instance->callStackTop);
@@ -292,7 +292,7 @@ static MGValue* mg_locals(MGInstance *instance, size_t argc, MGValue **argv)
 }
 
 
-static MGValue* mg_import(MGInstance *instance, size_t argc, MGValue **argv)
+static MGValue* mg_import(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
 
