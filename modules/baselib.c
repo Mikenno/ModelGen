@@ -249,6 +249,7 @@ static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* c
 	MG_ASSERT(instance->callStackTop);
 
 	const MGStackFrame *frame = instance->callStackTop;
+	MG_ASSERT(frame);
 
 	while (frame->last)
 		frame = frame->last;

@@ -5,6 +5,7 @@
 
 #include "modelgen.h"
 #include "module.h"
+#include "callable.h"
 #include "inspect.h"
 #include "utilities.h"
 
@@ -41,7 +42,7 @@ static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *
 #define _MG_FAIL(module, node, ...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
-static MGValue* _mgVisitNode(MGValue *module, MGNode *node);
+MGValue* _mgVisitNode(MGValue *module, MGNode *node);
 
 
 inline MGValue* mgDeepCopyValue(const MGValue *value)
@@ -86,6 +87,11 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		else
 			_mgCreateMap(&copy->data.m, 0);
 		break;
+	case MG_VALUE_PROCEDURE:
+	case MG_VALUE_FUNCTION:
+		copy->data.func.locals = mgDeepCopyValue(value->data.func.locals);
+		copy->data.func.module = mgReferenceValue(value->data.func.module);
+		break;
 	default:
 		break;
 	}
@@ -105,7 +111,7 @@ MGValue* mgReferenceValue(const MGValue *value)
 }
 
 
-static inline void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
+void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
@@ -117,7 +123,7 @@ static inline void _mgSetLocalValue(MGValue *module, const char *name, MGValue *
 }
 
 
-static inline void _mgSetValue(MGValue *module, const char *name, MGValue *value)
+void _mgSetValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
@@ -132,7 +138,7 @@ static inline void _mgSetValue(MGValue *module, const char *name, MGValue *value
 }
 
 
-static inline MGValue* _mgGetValue(MGValue *module, const char *name)
+MGValue* _mgGetValue(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
@@ -385,6 +391,8 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(_mgListLength(node->children) > 0);
 
+	MGInstance *instance = module->data.module.instance;
+
 	MGNode *nameNode = _mgListGet(node->children, 0);
 
 	const MGValue *func = NULL;
@@ -411,9 +419,6 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	if (name == NULL)
 		name = mgStringDuplicate("<anonymous>");
 
-	if ((func->type != MG_VALUE_CFUNCTION) && (func->type != MG_VALUE_PROCEDURE) && (func->type != MG_VALUE_FUNCTION))
-		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[func->type]);
-
 	_MGList(MGValue*) args;
 	_mgListCreate(MGValue*, args, _mgListLength(node->children) - 1);
 
@@ -425,7 +430,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 
 	MGStackFrame frame;
 
-	if ((func->type != MG_VALUE_CFUNCTION) && func->data.func.locals)
+	if (((func->type == MG_VALUE_PROCEDURE) || (func->type == MG_VALUE_FUNCTION)) && func->data.func.locals)
 		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(func->data.func.locals));
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
@@ -434,107 +439,11 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	frame.caller = node;
 	frame.callerName = name;
 
-	mgPushStackFrame(frame.module->data.module.instance, &frame);
+	mgPushStackFrame(instance, &frame);
 
-	if (func->type == MG_VALUE_CFUNCTION)
-		frame.value = func->data.cfunc(frame.module->data.module.instance, _mgListLength(args), (const MGValue* const*) _mgListItems(args));
-	else
-	{
-		MG_ASSERT(func->data.func.module);
-		MG_ASSERT(func->data.func.node);
+	MGValue *value = mgCallEx(instance, &frame, func, _mgListLength(args), (const MGValue* const*) _mgListItems(args));
 
-		if (func->data.func.locals)
-		{
-			MGMapIterator iterator;
-			mgCreateMapIterator(&iterator, func->data.func.locals);
-
-			MGValue *k, *v;
-			while (mgMapNext(&iterator, &k, &v))
-				_mgSetValue(module, k->data.str.s, mgReferenceValue(v));
-
-			mgDestroyMapIterator(&iterator);
-		}
-
-		MGNode *funcNode = func->data.func.node;
-
-		if (funcNode)
-		{
-			MG_ASSERT((funcNode->type == MG_NODE_PROCEDURE) || funcNode->type == MG_NODE_FUNCTION);
-			MG_ASSERT((_mgListLength(funcNode->children) == 2) || (_mgListLength(funcNode->children) == 3));
-
-			MGNode *funcParametersNode = _mgListGet(funcNode->children, 1);
-			MG_ASSERT(funcParametersNode->type == MG_NODE_TUPLE);
-
-			if (_mgListLength(funcParametersNode->children) < _mgListLength(args))
-			{
-				MGNode *funcNameNode = _mgListGet(funcNode->children, 0);
-				MG_ASSERT(funcNameNode->type == MG_NODE_NAME);
-				MG_ASSERT(funcNameNode->token);
-
-				const size_t funcNameLength = funcNameNode->token->end.string - funcNameNode->token->begin.string;
-				MG_ASSERT(funcNameLength > 0);
-				char *funcName = mgStringDuplicateFixed(funcNameNode->token->begin.string, funcNameLength);
-				MG_ASSERT(funcName);
-
-				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", funcName, _mgListLength(funcParametersNode->children), _mgListLength(args));
-
-				free(funcName);
-			}
-
-			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
-			{
-				MGNode *funcParameterNode = _mgListGet(funcParametersNode->children, i);
-				MG_ASSERT((funcParameterNode->type == MG_NODE_NAME) || (funcParameterNode->type == MG_NODE_ASSIGN));
-
-				char *funcParameterName = NULL;
-
-				if (funcParameterNode->type == MG_NODE_NAME)
-				{
-					const size_t funcParameterNameLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
-					MG_ASSERT(funcParameterNameLength > 0);
-					funcParameterName = mgStringDuplicateFixed(funcParameterNode->token->begin.string, funcParameterNameLength);
-				}
-				else if (funcParameterNode->type == MG_NODE_ASSIGN)
-				{
-					MG_ASSERT(_mgListLength(funcParameterNode->children) == 2);
-
-					MGNode *funcParameterNameNode = _mgListGet(funcParameterNode->children, 0);
-					MG_ASSERT(funcParameterNameNode->type == MG_NODE_NAME);
-					MG_ASSERT(funcParameterNameNode->token);
-
-					const size_t funcParameterNameLength = funcParameterNameNode->token->end.string - funcParameterNameNode->token->begin.string;
-					MG_ASSERT(funcParameterNameLength > 0);
-					funcParameterName = mgStringDuplicateFixed(funcParameterNameNode->token->begin.string, funcParameterNameLength);
-				}
-
-				MG_ASSERT(funcParameterName);
-
-				if (i < _mgListLength(args))
-					_mgSetLocalValue(module, funcParameterName, mgReferenceValue(_mgListGet(args, i)));
-				else
-				{
-					if (funcParameterNode->type != MG_NODE_ASSIGN)
-						MG_FAIL("Error: Expected argument \"%s\"", funcParameterName);
-
-					_mgSetLocalValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
-				}
-
-				free(funcParameterName);
-			}
-
-			if (_mgListLength(funcNode->children) == 3)
-				_mgVisitNode(func->data.func.module, _mgListGet(funcNode->children, 2));
-		}
-	}
-
-	MGValue *value = NULL;
-
-	if (frame.value)
-		value = mgReferenceValue(frame.value);
-	else
-		value = mgCreateValueNull();
-
-	mgPopStackFrame(frame.module->data.module.instance, &frame);
+	mgPopStackFrame(instance, &frame);
 	mgDestroyStackFrame(&frame);
 
 	for (size_t i = 0; i < _mgListLength(args); ++i)
@@ -606,7 +515,7 @@ static MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
 	else
-		frame->value = mgCreateValueTuple(0);
+		frame->value = mgCreateValueNull();
 
 	frame->state = MG_STACK_FRAME_STATE_UNWINDING;
 
@@ -2040,7 +1949,7 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
+MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 {
 	switch (node->type)
 	{
