@@ -3,6 +3,7 @@
 
 #define _MG_NODES \
 	_MG_N(INVALID, "Invalid") \
+	_MG_N(NOP, "NoOperation") \
 	_MG_N(MODULE, "Module") \
 	_MG_N(BLOCK, "Block") \
 	_MG_N(NAME, "Name") \

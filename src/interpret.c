@@ -747,7 +747,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 
 static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 {
-	MG_ASSERT(_mgListLength(node->children) >= 2);
+	MG_ASSERT(_mgListLength(node->children) > 0);
 
 	MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(condition);
@@ -773,10 +773,14 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 		break;
 	}
 
-	if (_condition)
-		return _mgVisitNode(module, _mgListGet(node->children, 1));
-	else if (_mgListLength(node->children) > 2)
-		return _mgVisitNode(module, _mgListGet(node->children, 2));
+	if (_mgListLength(node->children) > 1)
+	{
+		if (_condition)
+			return _mgVisitNode(module, _mgListGet(node->children, 1));
+		else if (_mgListLength(node->children) > 2)
+			return _mgVisitNode(module, _mgListGet(node->children, 2));
+	}
+
 	return mgCreateValueInteger(_condition);
 }
 
@@ -2106,6 +2110,8 @@ static MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitAssert(module, node);
 	case MG_NODE_NULL:
 		return _mgVisitNull(module, node);
+	case MG_NODE_NOP:
+		return mgCreateValueNull();
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}
