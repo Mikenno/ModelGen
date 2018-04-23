@@ -1278,12 +1278,13 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			}
 			case MG_VALUE_TUPLE:
+			case MG_VALUE_LIST:
 			{
 				const size_t len = ((mgListLength(rhs) > 0) && (lhs->data.i > 0)) ? (mgListLength(rhs) * lhs->data.i) : 0;
-				value = mgCreateValueTuple(len);
+				value = (rhs->type == MG_VALUE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i % mgListLength(rhs))));
+					mgListAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i % mgListLength(rhs))));
 
 				break;
 			}
@@ -1318,13 +1319,14 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			}
 			break;
 		case MG_VALUE_TUPLE:
+		case MG_VALUE_LIST:
 			if (rhs->type == MG_VALUE_INTEGER)
 			{
 				const size_t len = ((mgListLength(lhs) > 0) && (rhs->data.i > 0)) ? (mgListLength(lhs) * rhs->data.i) : 0;
-				value = mgCreateValueTuple(len);
+				value = (lhs->type == MG_VALUE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
 
 				for (size_t i = 0; i < len; ++i)
-					mgTupleAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i % mgListLength(lhs))));
+					mgListAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i % mgListLength(lhs))));
 			}
 			break;
 		default:

@@ -101,7 +101,7 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 		MG_FAIL("Error: slice expected at least 1 argument, received %zu", argc);
 	else if (argc > 3)
 		MG_FAIL("Error: slice expected at most 3 arguments, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
+	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
 		MG_FAIL("Error: slice expected argument %zu as \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
@@ -144,7 +144,7 @@ static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue
 {
 	if (argc != 1)
 		MG_FAIL("Error: reverse expects exactly 1 argument, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
+	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
 		MG_FAIL("Error: reverse expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
@@ -168,7 +168,7 @@ static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* c
 {
 	if (argc != 2)
 		MG_FAIL("Error: sort expects exactly 2 arguments, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
+	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
 		MG_FAIL("Error: sort expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 

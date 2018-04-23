@@ -71,10 +71,10 @@ static MGValue* mg_map_keys(MGInstance *instance, size_t argc, const MGValue* co
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
-	MGValue *keys = mgCreateValueTuple(mgMapSize(argv[0]));
+	MGValue *keys = mgCreateValueList(mgMapSize(argv[0]));
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
-		mgTupleAdd(keys, mgCreateValueString(_mgListGet(map->data.m, i).key));
+		mgListAdd(keys, mgCreateValueString(_mgListGet(map->data.m, i).key));
 
 	return keys;
 }
@@ -89,10 +89,10 @@ static MGValue* mg_map_values(MGInstance *instance, size_t argc, const MGValue* 
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
-	MGValue *values = mgCreateValueTuple(mgMapSize(argv[0]));
+	MGValue *values = mgCreateValueList(mgMapSize(argv[0]));
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
-		mgTupleAdd(values, mgReferenceValue(_mgListGet(map->data.m, i).value));
+		mgListAdd(values, mgReferenceValue(_mgListGet(map->data.m, i).value));
 
 	return values;
 }
@@ -107,10 +107,10 @@ static MGValue* mg_map_pairs(MGInstance *instance, size_t argc, const MGValue* c
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
-	MGValue *pairs = mgCreateValueTuple(mgMapSize(argv[0]));
+	MGValue *pairs = mgCreateValueList(mgMapSize(argv[0]));
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
-		mgTupleAdd(pairs, mgCreateValueTupleEx(2, mgCreateValueString(_mgListGet(map->data.m, i).key), mgReferenceValue(_mgListGet(map->data.m, i).value)));
+		mgListAdd(pairs, mgCreateValueTupleEx(2, mgCreateValueString(_mgListGet(map->data.m, i).key), mgReferenceValue(_mgListGet(map->data.m, i).value)));
 
 	return pairs;
 }

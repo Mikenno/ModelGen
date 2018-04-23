@@ -5,6 +5,7 @@
 
 #include "modelgen.h"
 #include "module.h"
+#include "utilities.h"
 
 
 #define _MG_PI  3.141592653589793238462643383279502884f
@@ -92,6 +93,109 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* 
 }
 
 
+static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: sign expects exactly 1 argument, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		return mgCreateValueInteger((0 < argv[0]->data.i) - (argv[0]->data.i < 0));
+	case MG_VALUE_FLOAT:
+		return mgCreateValueInteger((0.0f < argv[0]->data.f) - (argv[0]->data.f < 0.0f));
+	default:
+		MG_FAIL("Error: sign expected argument as \"%s\" or \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		return mgCreateValueNull();
+	}
+}
+
+
+static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: even expects exactly 1 argument, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		return mgCreateValueInteger((argv[0]->data.i & 1) == 0);
+	case MG_VALUE_FLOAT:
+		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 0.0f));
+	default:
+		MG_FAIL("Error: even expected argument as \"%s\" or \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		return mgCreateValueNull();
+	}
+}
+
+
+static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: odd expects exactly 1 argument, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		return mgCreateValueInteger((argv[0]->data.i & 1) == 1);
+	case MG_VALUE_FLOAT:
+		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 1.0f));
+	default:
+		MG_FAIL("Error: odd expected argument as \"%s\" or \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		return mgCreateValueNull();
+	}
+}
+
+
+// Check if b is a multiple of a
+static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 2)
+		MG_FAIL("Error: multiple expects exactly 2 arguments, received %zu", argc);
+
+	switch (argv[0]->type)
+	{
+	case MG_VALUE_INTEGER:
+		switch (argv[1]->type)
+		{
+		case MG_VALUE_INTEGER:
+			return mgCreateValueInteger((argv[1]->data.i % argv[0]->data.i) == 0);
+		case MG_VALUE_FLOAT:
+			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, (float) argv[0]->data.i), 0.0f));
+		default:
+			MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+			        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+			return mgCreateValueNull();
+		}
+	case MG_VALUE_FLOAT:
+		switch (argv[1]->type)
+		{
+		case MG_VALUE_INTEGER:
+			return mgCreateValueInteger(_MG_FEQUAL(fmodf((float) argv[1]->data.i, argv[0]->data.f), 0.0f));
+		case MG_VALUE_FLOAT:
+			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, argv[0]->data.f), 0.0f));
+		default:
+			MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+			        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+			return mgCreateValueNull();
+		}
+	default:
+		MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
+		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		return mgCreateValueNull();
+	}
+}
+
+
 static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
@@ -145,26 +249,6 @@ static MGValue* mg_round(MGInstance *instance, size_t argc, const MGValue* const
 		return mgCreateValueFloat(roundf(argv[0]->data.f));
 	default:
 		MG_FAIL("Error: round expected argument as \"%s\" or \"%s\", received \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
-		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-		return mgCreateValueNull();
-	}
-}
-
-
-static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const* argv)
-{
-	if (argc != 1)
-		MG_FAIL("Error: sign expects exactly 1 argument, received %zu", argc);
-
-	switch (argv[0]->type)
-	{
-	case MG_VALUE_INTEGER:
-		return mgCreateValueInteger((0 < argv[0]->data.i) - (argv[0]->data.i < 0));
-	case MG_VALUE_FLOAT:
-		return mgCreateValueInteger((0.0f < argv[0]->data.f) - (argv[0]->data.f < 0.0f));
-	default:
-		MG_FAIL("Error: sign expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -590,12 +674,20 @@ MGValue* mgCreateMathLib(void)
 	mgModuleSetFloat(module, "pi", _MG_PI);
 	mgModuleSetFloat(module, "tau", _MG_TAU);
 
-	mgModuleSetCFunction(module, "abs", mg_abs);
+	mgModuleSetInteger(module, "int_max", INT_MAX);
+	mgModuleSetInteger(module, "int_min", INT_MIN);
 
-	mgModuleSetCFunction(module, "sign", mg_sign);
+	mgModuleSetCFunction(module, "abs", mg_abs);
 
 	mgModuleSetCFunction(module, "deg", mg_deg);
 	mgModuleSetCFunction(module, "rad", mg_rad);
+
+	mgModuleSetCFunction(module, "sign", mg_sign);
+
+	mgModuleSetCFunction(module, "even", mg_even);
+	mgModuleSetCFunction(module, "odd", mg_odd);
+
+	mgModuleSetCFunction(module, "multiple", mg_multiple);
 
 	mgModuleSetCFunction(module, "ceil", mg_ceil);
 	mgModuleSetCFunction(module, "floor", mg_floor);
