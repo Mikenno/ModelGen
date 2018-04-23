@@ -3,6 +3,7 @@
 
 #include "modelgen.h"
 #include "module.h"
+#include "callable.h"
 
 
 extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv);
@@ -139,6 +140,70 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 }
 
 
+static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 1)
+		MG_FAIL("Error: reverse expects exactly 1 argument, received %zu", argc);
+	else if (argv[0]->type != MG_VALUE_LIST)
+		MG_FAIL("Error: reverse expected argument as \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+
+	const MGValue *list = argv[0];
+	const size_t length = mgListLength(list);
+
+	for (size_t i = 0; i < length / 2; ++i)
+	{
+		MGValue *item1 = _mgListGet(list->data.a, i);
+		MGValue *item2 = _mgListGet(list->data.a, length - i - 1);
+
+		_mgListSet(list->data.a, i, item2);
+		_mgListSet(list->data.a, length - i - 1, item1);
+	}
+
+	return mgReferenceValue(list);
+}
+
+
+static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	if (argc != 2)
+		MG_FAIL("Error: sort expects exactly 2 arguments, received %zu", argc);
+	else if (argv[0]->type != MG_VALUE_LIST)
+		MG_FAIL("Error: sort expected argument as \"%s\", received \"%s\"",
+		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+
+	const MGValue *list = argv[0];
+	const intmax_t length = (intmax_t) mgListLength(list);
+
+	const MGValue *comparator = argv[1];
+
+	for (intmax_t i = length - 1; i >= 0; --i)
+	{
+		for (intmax_t j = 1; j <= i; ++j)
+		{
+			MGValue *item1 = _mgListGet(list->data.a, j - 1);
+			MGValue *item2 = _mgListGet(list->data.a, j);
+
+			const MGValue* const argv2[2] = { item1, item2 }; // Purposely not referenced
+
+			MGValue *comparison = mgCall(instance, comparator, 2, argv2);
+			MG_ASSERT(comparison);
+			MG_ASSERT(comparison->type == MG_VALUE_INTEGER);
+
+			if (comparison->data.i)
+			{
+				_mgListSet(list->data.a, j - 1, item2);
+				_mgListSet(list->data.a, j, item1);
+			}
+
+			mgDestroyValue(comparison);
+		}
+	}
+
+	return mgReferenceValue(list);
+}
+
+
 MGValue* mgCreateListLib(void)
 {
 	MGValue *module = mgCreateValueModule();
@@ -151,6 +216,9 @@ MGValue* mgCreateListLib(void)
 	mgModuleSetCFunction(module, "size", mg_len); // list.size(list): int
 
 	mgModuleSetCFunction(module, "slice", mg_list_slice); // list.size(list, begin = 0, end = len(list)): list
+
+	mgModuleSetCFunction(module, "reverse", mg_list_reverse); // list.reverse(list): list
+	mgModuleSetCFunction(module, "sort", mg_list_sort); // list.reverse(list, comparator): list
 
 	return module;
 }
