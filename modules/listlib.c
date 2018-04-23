@@ -99,41 +99,60 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 {
 	if (argc < 1)
 		MG_FAIL("Error: slice expected at least 1 argument, received %zu", argc);
-	else if (argc > 3)
-		MG_FAIL("Error: slice expected at most 3 arguments, received %zu", argc);
+	else if (argc > 4)
+		MG_FAIL("Error: slice expected at most 4 arguments, received %zu", argc);
 	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
 		MG_FAIL("Error: slice expected argument %zu as \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
-	intmax_t begin = 0;
-	intmax_t end = (intmax_t) mgListLength(argv[0]);
+	intmax_t start = 0;
+	intmax_t stop = (intmax_t) mgListLength(argv[0]);
+	intmax_t step = 0;
 
 	if (argc > 1)
 	{
 		if (argv[1]->type != MG_VALUE_INTEGER)
 			MG_FAIL("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-			        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
+			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
 
-		begin = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[1]->data.i);
-		begin = (begin > 0) ? begin : 0;
+		start = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[1]->data.i);
+		start = (start > 0) ? start : 0;
 	}
 
 	if (argc > 2)
 	{
 		if (argv[2]->type != MG_VALUE_INTEGER)
 			MG_FAIL("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[2]->type]);
+			        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[2]->type]);
 
-		end = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[2]->data.i);
-		end = (end > (intmax_t) mgListLength(argv[0])) ? (intmax_t) mgListLength(argv[0]) : end;
+		stop = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[2]->data.i);
+		stop = (stop > (intmax_t) mgListLength(argv[0])) ? (intmax_t) mgListLength(argv[0]) : stop;
 	}
 
-	if (begin >= end)
+	if (argc > 3)
+	{
+		if (argv[3]->type != MG_VALUE_INTEGER)
+			MG_FAIL("Error: slice expected argument %zu as \"%s\", received \"%s\"",
+			        4, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[3]->type]);
+
+		step = (intmax_t) argv[3]->data.i;
+	}
+
+	intmax_t difference = stop - start;
+
+	if (difference == 0)
 		return mgCreateValueList(0);
 
-	MGValue *slice = mgCreateValueList((size_t) (end - begin));
+	if (step == 0)
+		step = (difference > 0) - (difference < 0);
 
-	for (intmax_t i = begin; i < end; ++i)
+	if ((difference ^ step) < 0)
+		return mgCreateValueList(0);
+
+	intmax_t length = difference / step + ((difference % step) != 0);
+
+	MGValue *slice = mgCreateValueList((size_t) length);
+	for (intmax_t i = start; i < stop; i += step)
 		mgListAdd(slice, mgReferenceValue(_mgListGet(argv[0]->data.a, i)));
 
 	return slice;
@@ -169,8 +188,11 @@ static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* c
 	if (argc != 2)
 		MG_FAIL("Error: sort expects exactly 2 arguments, received %zu", argc);
 	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-		MG_FAIL("Error: sort expected argument as \"%s\", received \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		MG_FAIL("Error: sort expected argument %zu as \"%s\", received \"%s\"",
+		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	else if (!mgIsCallable(argv[1]))
+		MG_FAIL("Error: sort expected argument %zu as \"%s\", received \"%s\"",
+		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_FUNCTION], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
 
 	const MGValue *list = argv[0];
 	const intmax_t length = (intmax_t) mgListLength(list);
@@ -215,7 +237,7 @@ MGValue* mgCreateListLib(void)
 	mgModuleSetCFunction(module, "clear", mg_list_clear); // list.clear(list)
 	mgModuleSetCFunction(module, "size", mg_len); // list.size(list): int
 
-	mgModuleSetCFunction(module, "slice", mg_list_slice); // list.size(list, begin = 0, end = len(list)): list
+	mgModuleSetCFunction(module, "slice", mg_list_slice); // list.size(list, begin = 0, end = len(list), step = 0): list
 
 	mgModuleSetCFunction(module, "reverse", mg_list_reverse); // list.reverse(list): list
 	mgModuleSetCFunction(module, "sort", mg_list_sort); // list.reverse(list, comparator): list
