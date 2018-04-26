@@ -12,4 +12,7 @@
 MGValue* mgCall(MGInstance *instance, const MGValue *callable, size_t argc, const MGValue* const* argv);
 MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *callable, size_t argc, const MGValue* const* argv);
 
+void mgCheckArgumentCount(MGInstance *instance, size_t argc, size_t min, size_t max);
+void mgCheckArgumentTypes(MGInstance *instance, size_t argc, const MGValue* const* argv, ...);
+
 #endif

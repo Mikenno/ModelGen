@@ -145,3 +145,63 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 
 	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
 }
+
+
+void mgCheckArgumentCount(MGInstance *instance, size_t argc, size_t min, size_t max)
+{
+	MG_ASSERT(instance);
+
+	if ((min == max) && (argc != min))
+		mgFatalError("Error: %s expects exactly %zu argument%s, received %zu", mgGetCalleeName(instance), min, ((min == 1) ? "" : "s"), argc);
+	else if (argc < min)
+		mgFatalError("Error: %s expected at least %zu argument%s, received %zu", mgGetCalleeName(instance), min, ((min == 1) ? "" : "s"), argc);
+	else if (argc > max)
+		mgFatalError("Error: %s expected at most %zu argument%s, received %zu", mgGetCalleeName(instance), max, ((max == 1) ? "" : "s"), argc);
+}
+
+
+void mgCheckArgumentTypes(MGInstance *instance, size_t argc, const MGValue* const* argv, ...)
+{
+	MG_ASSERT(instance);
+
+	va_list args, args2;
+	va_start(args, argv);
+
+	for (size_t i = 0; i < argc; ++i)
+	{
+		int types = va_arg(args, int);
+
+		va_copy(args2, args);
+
+		MGbool match = (MGbool) (types == 0);
+
+		for (int j = 0; j < types; ++j)
+			if (argv[i]->type == va_arg(args, MGValueType))
+				match = MG_TRUE;
+
+		if (!match)
+		{
+			size_t messageLength = 100 + (size_t) types * (_MG_LONGEST_VALUE_NAME_LENGTH + 10);
+			char *message = (char*) malloc(messageLength * sizeof(char*));
+			char *end = message;
+
+			end += snprintf(end, messageLength - (end - message), "Error: %s expected argument %zu as", mgGetCalleeName(instance), i + 1);
+
+			for (int j = 0; j < types; ++j)
+				end += snprintf(end, messageLength - (end - message), "%s \"%s\"", (j > 0) ? " or" : "", _MG_VALUE_TYPE_NAMES[va_arg(args2, MGValueType)]);
+
+			end += snprintf(end, messageLength - (end - message), ", received \"%s\"", _MG_VALUE_TYPE_NAMES[argv[i]->type]);
+
+			message[messageLength - 1] = '\0';
+			*end = '\0';
+
+			mgFatalError("%s", message);
+
+			free(message);
+		}
+
+		va_end(args2);
+	}
+
+	va_end(args);
+}

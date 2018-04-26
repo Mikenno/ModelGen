@@ -12,6 +12,9 @@ extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* 
 
 static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
+	mgCheckArgumentCount(instance, argc, 2, 8);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 0, 0, 0, 0, 0, 0, 0);
+
 	if (argc < 2)
 		mgFatalError("Error: add expected at least 2 arguments, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_LIST)
@@ -27,14 +30,8 @@ static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* co
 
 static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	if (argc != 2)
-		mgFatalError("Error: add_from expects exactly 2 argument, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
-		mgFatalError("Error: add_from expected argument %zu as \"%s\", received \"%s\"",
-		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-	else if ((argv[1]->type != MG_VALUE_TUPLE) && (argv[1]->type != MG_VALUE_LIST))
-		mgFatalError("Error: add_from expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
-		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_TUPLE], _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
+	mgCheckArgumentCount(instance, argc, 2, 2);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 2, MG_VALUE_TUPLE, MG_VALUE_LIST);
 
 	for (size_t i = 0, end = mgListLength(argv[1]); i < end; ++i)
 		mgListAdd((MGValue*) argv[0], mgReferenceValue(_mgListGet(argv[1]->data.a, i)));
@@ -45,14 +42,8 @@ static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValu
 
 static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	if (argc != 3)
-		mgFatalError("Error: insert expects exactly 3 arguments, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
-		mgFatalError("Error: insert expected argument %zu as \"%s\", received \"%s\"",
-		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-	else if (argv[1]->type != MG_VALUE_INTEGER)
-		mgFatalError("Error: index expected argument %zu as \"%s\", received \"%s\"",
-		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	mgCheckArgumentCount(instance, argc, 3, 3);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 1, MG_VALUE_INTEGER, 0);
 
 	intmax_t index = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[1]->data.i);
 	index = (index > 0) ? index : 0;
@@ -66,6 +57,9 @@ static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue*
 
 static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST);
+
 	if (argc != 1)
 		mgFatalError("Error: clear expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_LIST)
@@ -80,45 +74,26 @@ static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* 
 
 static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	if (argc < 1)
-		mgFatalError("Error: slice expected at least 1 argument, received %zu", argc);
-	else if (argc > 4)
-		mgFatalError("Error: slice expected at most 4 arguments, received %zu", argc);
-	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-		mgFatalError("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	mgCheckArgumentCount(instance, argc, 1, 4);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_TUPLE, MG_VALUE_LIST, 1, MG_VALUE_INTEGER, 1, MG_VALUE_INTEGER, 1, MG_VALUE_INTEGER);
+
+	const MGValue *list = argv[0];
+	const intmax_t length = (intmax_t) mgListLength(list);
 
 	intmax_t start = 0;
-	intmax_t stop = (intmax_t) mgListLength(argv[0]);
-	intmax_t step = 0;
+	intmax_t stop = length;
+	intmax_t step = (argc > 3) ? (intmax_t) argv[3]->data.i : 0;
 
 	if (argc > 1)
 	{
-		if (argv[1]->type != MG_VALUE_INTEGER)
-			mgFatalError("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
-
 		start = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[1]->data.i);
 		start = (start > 0) ? start : 0;
 	}
 
 	if (argc > 2)
 	{
-		if (argv[2]->type != MG_VALUE_INTEGER)
-			mgFatalError("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-			        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[2]->type]);
-
 		stop = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[2]->data.i);
-		stop = (stop > (intmax_t) mgListLength(argv[0])) ? (intmax_t) mgListLength(argv[0]) : stop;
-	}
-
-	if (argc > 3)
-	{
-		if (argv[3]->type != MG_VALUE_INTEGER)
-			mgFatalError("Error: slice expected argument %zu as \"%s\", received \"%s\"",
-			        4, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[3]->type]);
-
-		step = (intmax_t) argv[3]->data.i;
+		stop = (stop > (intmax_t) mgListLength(argv[0])) ? length : stop;
 	}
 
 	intmax_t difference = stop - start;
@@ -132,9 +107,9 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 	if ((difference ^ step) < 0)
 		return mgCreateValueList(0);
 
-	intmax_t length = difference / step + ((difference % step) != 0);
+	intmax_t sliceLength = difference / step + ((difference % step) != 0);
 
-	MGValue *slice = mgCreateValueList((size_t) length);
+	MGValue *slice = mgCreateValueList((size_t) sliceLength);
 	for (intmax_t i = start; i < stop; i += step)
 		mgListAdd(slice, mgReferenceValue(_mgListGet(argv[0]->data.a, i)));
 
@@ -144,11 +119,8 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 
 static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	if (argc != 1)
-		mgFatalError("Error: reverse expects exactly 1 argument, received %zu", argc);
-	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-		mgFatalError("Error: reverse expected argument as \"%s\", received \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST);
 
 	const MGValue *list = argv[0];
 	const size_t length = mgListLength(list);
@@ -168,14 +140,8 @@ static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue
 
 static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	if (argc != 2)
-		mgFatalError("Error: sort expects exactly 2 arguments, received %zu", argc);
-	else if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-		mgFatalError("Error: sort expected argument %zu as \"%s\", received \"%s\"",
-		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
-	else if (!mgIsCallable(argv[1]))
-		mgFatalError("Error: sort expected argument %zu as \"%s\", received \"%s\"",
-		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_FUNCTION], _MG_VALUE_TYPE_NAMES[argv[1]->type]);
+	mgCheckArgumentCount(instance, argc, 2, 2);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 2, MG_VALUE_FUNCTION, MG_VALUE_CFUNCTION);
 
 	const MGValue *list = argv[0];
 	const intmax_t length = (intmax_t) mgListLength(list);
