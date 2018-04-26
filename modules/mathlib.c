@@ -5,6 +5,7 @@
 
 #include "modelgen.h"
 #include "module.h"
+#include "error.h"
 #include "utilities.h"
 
 
@@ -15,28 +16,10 @@
 #define _MG_RAD2DEG (180.0f / _MG_PI)
 
 
-static inline void _mgFail(const char *format, ...)
-{
-	fflush(stdout);
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	putc('\n', stderr);
-	fflush(stderr);
-
-	exit(1);
-}
-
-#define MG_FAIL(...) _mgFail(__VA_ARGS__)
-
-
 static MGValue* mg_abs(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: abs expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: abs expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -45,7 +28,7 @@ static MGValue* mg_abs(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(fabsf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: abs expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: abs expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -56,7 +39,7 @@ static MGValue* mg_abs(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_deg(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: deg expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: deg expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -65,7 +48,7 @@ static MGValue* mg_deg(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(argv[0]->data.f * _MG_RAD2DEG);
 	default:
-		MG_FAIL("Error: deg expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: deg expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -76,7 +59,7 @@ static MGValue* mg_deg(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: rad expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: rad expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -85,7 +68,7 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(argv[0]->data.f * _MG_DEG2RAD);
 	default:
-		MG_FAIL("Error: rad expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: rad expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -96,7 +79,7 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: sign expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: sign expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -105,7 +88,7 @@ static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueInteger((0.0f < argv[0]->data.f) - (argv[0]->data.f < 0.0f));
 	default:
-		MG_FAIL("Error: sign expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: sign expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -116,7 +99,7 @@ static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: even expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: even expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -125,7 +108,7 @@ static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 0.0f));
 	default:
-		MG_FAIL("Error: even expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: even expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -136,7 +119,7 @@ static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: odd expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: odd expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -145,7 +128,7 @@ static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 1.0f));
 	default:
-		MG_FAIL("Error: odd expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: odd expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -157,7 +140,7 @@ static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
-		MG_FAIL("Error: multiple expects exactly 2 arguments, received %zu", argc);
+		mgFatalError("Error: multiple expects exactly 2 arguments, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -169,7 +152,7 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		case MG_VALUE_FLOAT:
 			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, (float) argv[0]->data.i), 0.0f));
 		default:
-			MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 			return mgCreateValueNull();
@@ -182,13 +165,13 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		case MG_VALUE_FLOAT:
 			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, argv[0]->data.f), 0.0f));
 		default:
-			MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 			return mgCreateValueNull();
 		}
 	default:
-		MG_FAIL("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: multiple expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -199,7 +182,7 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: ceil expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: ceil expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -208,7 +191,7 @@ static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(ceilf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: ceil expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: ceil expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -219,7 +202,7 @@ static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_floor(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: floor expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: floor expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -228,7 +211,7 @@ static MGValue* mg_floor(MGInstance *instance, size_t argc, const MGValue* const
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(floorf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: floor expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: floor expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -239,7 +222,7 @@ static MGValue* mg_floor(MGInstance *instance, size_t argc, const MGValue* const
 static MGValue* mg_round(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: round expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: round expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -248,7 +231,7 @@ static MGValue* mg_round(MGInstance *instance, size_t argc, const MGValue* const
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(roundf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: round expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: round expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -280,11 +263,11 @@ static inline int _mg_powi(int base, unsigned int exp)
 static MGValue* mg_pow(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
-		MG_FAIL("Error: pow expects exactly 2 arguments, received %zu", argc);
+		mgFatalError("Error: pow expects exactly 2 arguments, received %zu", argc);
 
 	for (size_t i = 0; i < 2; ++i)
 		if ((argv[i]->type != MG_VALUE_INTEGER) && (argv[i]->type != MG_VALUE_FLOAT))
-			MG_FAIL("Error: pow expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: pow expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 
@@ -300,7 +283,7 @@ static MGValue* mg_pow(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_sqrt(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: sqrt expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: sqrt expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -309,7 +292,7 @@ static MGValue* mg_sqrt(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(sqrtf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: sqrt expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: sqrt expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -320,7 +303,7 @@ static MGValue* mg_sqrt(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_cos(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: cos expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: cos expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -329,7 +312,7 @@ static MGValue* mg_cos(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(cosf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: cos expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: cos expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -340,7 +323,7 @@ static MGValue* mg_cos(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_sin(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: sin expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: sin expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -349,7 +332,7 @@ static MGValue* mg_sin(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(sinf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: sin expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: sin expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -360,7 +343,7 @@ static MGValue* mg_sin(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_tan(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: tan expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: tan expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -369,7 +352,7 @@ static MGValue* mg_tan(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(tanf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: tan expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: tan expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -380,7 +363,7 @@ static MGValue* mg_tan(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_acos(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: acos expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: acos expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -389,7 +372,7 @@ static MGValue* mg_acos(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(acosf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: acos expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: acos expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -400,7 +383,7 @@ static MGValue* mg_acos(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_asin(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: asin expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: asin expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -409,7 +392,7 @@ static MGValue* mg_asin(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(asinf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: asin expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: asin expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -420,7 +403,7 @@ static MGValue* mg_asin(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_atan(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: atan expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: atan expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -429,7 +412,7 @@ static MGValue* mg_atan(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(atanf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: atan expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: atan expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -440,11 +423,11 @@ static MGValue* mg_atan(MGInstance *instance, size_t argc, const MGValue* const*
 static MGValue* mg_atan2(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
-		MG_FAIL("Error: atan2 expects exactly 2 arguments, received %zu", argc);
+		mgFatalError("Error: atan2 expects exactly 2 arguments, received %zu", argc);
 
 	for (size_t i = 0; i < 2; ++i)
 		if ((argv[i]->type != MG_VALUE_INTEGER) && (argv[i]->type != MG_VALUE_FLOAT))
-			MG_FAIL("Error: atan2 expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: atan2 expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 
@@ -457,7 +440,7 @@ static MGValue* mg_atan2(MGInstance *instance, size_t argc, const MGValue* const
 static MGValue* mg_exp(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: exp expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: exp expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -466,7 +449,7 @@ static MGValue* mg_exp(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(expf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: exp expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: exp expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -477,7 +460,7 @@ static MGValue* mg_exp(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_log(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: log expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: log expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -486,7 +469,7 @@ static MGValue* mg_log(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(logf(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: log expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: log expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -497,7 +480,7 @@ static MGValue* mg_log(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_log2(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: log2 expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: log2 expects exactly 1 argument, received %zu", argc);
 
 	switch (argv[0]->type)
 	{
@@ -506,7 +489,7 @@ static MGValue* mg_log2(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_VALUE_FLOAT:
 		return mgCreateValueFloat(log2f(argv[0]->data.f));
 	default:
-		MG_FAIL("Error: log2 expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: log2 expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -538,7 +521,7 @@ MGValue* _mg_max(size_t argc, const MGValue* const* argv)
 		result.f = argv[0]->data.f;
 		break;
 	default:
-		MG_FAIL("Error: max expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: max expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -565,7 +548,7 @@ MGValue* _mg_max(size_t argc, const MGValue* const* argv)
 			result.f = (argv[i]->data.f > result.f) ? argv[i]->data.f : result.f;
 			break;
 		default:
-			MG_FAIL("Error: max expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: max expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 		}
@@ -599,7 +582,7 @@ MGValue* _mg_min(size_t argc, const MGValue* const* argv)
 		result.f = argv[0]->data.f;
 		break;
 	default:
-		MG_FAIL("Error: min expected argument as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: min expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 		        _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 		return mgCreateValueNull();
@@ -626,7 +609,7 @@ MGValue* _mg_min(size_t argc, const MGValue* const* argv)
 			result.f = (argv[i]->data.f < result.f) ? argv[i]->data.f : result.f;
 			break;
 		default:
-			MG_FAIL("Error: min expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: min expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[argv[i]->type]);
 		}
@@ -639,12 +622,12 @@ MGValue* _mg_min(size_t argc, const MGValue* const* argv)
 static MGValue* mg_max(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
-		MG_FAIL("Error: max expected at least 1 argument, received %zu", argc);
+		mgFatalError("Error: max expected at least 1 argument, received %zu", argc);
 
 	if (argc == 1)
 	{
 		if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-			MG_FAIL("Error: max expected argument %zu as \"%s\", received \"%s\"",
+			mgFatalError("Error: max expected argument %zu as \"%s\", received \"%s\"",
 			        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 		return _mg_max(mgListLength(argv[0]), (const MGValue* const*) mgListItems(argv[0]));
@@ -657,12 +640,12 @@ static MGValue* mg_max(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_min(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc < 1)
-		MG_FAIL("Error: min expected at least 1 argument, received %zu", argc);
+		mgFatalError("Error: min expected at least 1 argument, received %zu", argc);
 
 	if (argc == 1)
 	{
 		if ((argv[0]->type != MG_VALUE_TUPLE) && (argv[0]->type != MG_VALUE_LIST))
-			MG_FAIL("Error: min expected argument %zu as \"%s\", received \"%s\"",
+			mgFatalError("Error: min expected argument %zu as \"%s\", received \"%s\"",
 			        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 		return _mg_min(mgListLength(argv[0]), (const MGValue* const*) mgListItems(argv[0]));
@@ -679,15 +662,15 @@ static MGValue* mg_clamp(MGInstance *instance, size_t argc, const MGValue* const
 	const MGValue *max = argv[2];
 
 	if (argc != 3)
-		MG_FAIL("Error: clamp expects exactly 3 arguments, received %zu", argc);
+		mgFatalError("Error: clamp expects exactly 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((min->type != MG_VALUE_INTEGER) && (min->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min->type]);
 	else if ((max->type != MG_VALUE_INTEGER) && (max->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: clamp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max->type]);
 
 	if ((value->type == MG_VALUE_FLOAT) || (min->type == MG_VALUE_FLOAT) || (max->type == MG_VALUE_FLOAT))
@@ -714,9 +697,9 @@ static MGValue* mg_sum(MGInstance *instance, size_t argc, const MGValue* const* 
 	const MGValue *list = argv[0];
 
 	if (argc != 1)
-		MG_FAIL("Error: sum expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: sum expects exactly 1 argument, received %zu", argc);
 	else if ((list->type != MG_VALUE_TUPLE) && (list->type != MG_VALUE_LIST))
-		MG_FAIL("Error: sum expected argument as \"%s\", received \"%s\"",
+		mgFatalError("Error: sum expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[list->type]);
 
 	MGbool isInt = MG_TRUE;
@@ -753,7 +736,7 @@ static MGValue* mg_sum(MGInstance *instance, size_t argc, const MGValue* const* 
 			result.f += item->data.f;
 			break;
 		default:
-			MG_FAIL("Error: sum expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+			mgFatalError("Error: sum expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 			        i + 1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
 			        _MG_VALUE_TYPE_NAMES[item->type]);
 		}
@@ -766,7 +749,7 @@ static MGValue* mg_sum(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_random(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 0)
-		MG_FAIL("Error: random expects exactly 0 arguments, received %zu", argc);
+		mgFatalError("Error: random expects exactly 0 arguments, received %zu", argc);
 
 	return mgCreateValueFloat((float) rand() / (float) RAND_MAX);
 }
@@ -775,9 +758,9 @@ static MGValue* mg_random(MGInstance *instance, size_t argc, const MGValue* cons
 static MGValue* mg_seed(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: seed expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: seed expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_INTEGER)
-		MG_FAIL("Error: seed expected argument %zu as \"%s\", received \"%s\"",
+		mgFatalError("Error: seed expected argument %zu as \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	srand((unsigned int) argv[0]->data.i);
@@ -793,17 +776,17 @@ static MGValue* mg_normalize(MGInstance *instance, size_t argc, const MGValue* c
 	const MGValue *max = (argc > 2) ? argv[2] : argv[1];
 
 	if (argc < 2)
-		MG_FAIL("Error: normalize expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: normalize expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: normalize expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: normalize expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if (min && (min->type != MG_VALUE_INTEGER) && (min->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min->type]);
 	else if ((max->type != MG_VALUE_INTEGER) && (max->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: normalize expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        min ? 3 : 2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -821,15 +804,15 @@ static MGValue* mg_lerp(MGInstance *instance, size_t argc, const MGValue* const*
 	const MGValue *t = argv[2];
 
 	if (argc != 3)
-		MG_FAIL("Error: lerp expects exactly 3 arguments, received %zu", argc);
+		mgFatalError("Error: lerp expects exactly 3 arguments, received %zu", argc);
 	else if ((a->type != MG_VALUE_INTEGER) && (a->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[a->type]);
 	else if ((b->type != MG_VALUE_INTEGER) && (b->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[b->type]);
 	else if ((t->type != MG_VALUE_INTEGER) && (t->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: lerp expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[t->type]);
 
 	float _a = (a->type == MG_VALUE_INTEGER) ? (float) a->data.i : a->data.f;
@@ -849,21 +832,21 @@ static MGValue* mg_map(MGInstance *instance, size_t argc, const MGValue* const* 
 	const MGValue *max2 = argv[4];
 
 	if (argc != 5)
-		MG_FAIL("Error: map expects exactly 5 arguments, received %zu", argc);
+		mgFatalError("Error: map expects exactly 5 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((min1->type != MG_VALUE_INTEGER) && (min1->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min1->type]);
 	else if ((max1->type != MG_VALUE_INTEGER) && (max1->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max1->type]);
 	else if ((min2->type != MG_VALUE_INTEGER) && (min2->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        4, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min2->type]);
 	else if ((max2->type != MG_VALUE_INTEGER) && (max2->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: map expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        5, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max2->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -883,15 +866,15 @@ static MGValue* mg_nearest(MGInstance *instance, size_t argc, const MGValue* con
 	const MGValue *b = argv[2];
 
 	if (argc != 3)
-		MG_FAIL("Error: nearest expects exactly 3 arguments, received %zu", argc);
+		mgFatalError("Error: nearest expects exactly 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((a->type != MG_VALUE_INTEGER) && (a->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[a->type]);
 	else if ((b->type != MG_VALUE_INTEGER) && (b->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: nearest expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[b->type]);
 
 	if ((value->type == MG_VALUE_FLOAT) || (a->type == MG_VALUE_FLOAT) || (b->type == MG_VALUE_FLOAT))
@@ -920,17 +903,17 @@ static MGValue* mg_snap(MGInstance *instance, size_t argc, const MGValue* const*
 	const MGValue *offset = (argc > 2) ? argv[2] : NULL;
 
 	if (argc < 2)
-		MG_FAIL("Error: snap expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: snap expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: snap expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: snap expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((n->type != MG_VALUE_INTEGER) && (n->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[n->type]);
 	else if (offset && (offset->type != MG_VALUE_INTEGER) && (offset->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[offset->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -948,17 +931,17 @@ static MGValue* mg_snap_ceil(MGInstance *instance, size_t argc, const MGValue* c
 	const MGValue *offset = (argc > 2) ? argv[2] : NULL;
 
 	if (argc < 2)
-		MG_FAIL("Error: snap_ceil expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: snap_ceil expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: snap_ceil expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: snap_ceil expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((n->type != MG_VALUE_INTEGER) && (n->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[n->type]);
 	else if (offset && (offset->type != MG_VALUE_INTEGER) && (offset->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_ceil expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[offset->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -976,17 +959,17 @@ static MGValue* mg_snap_floor(MGInstance *instance, size_t argc, const MGValue* 
 	const MGValue *offset = (argc > 2) ? argv[2] : NULL;
 
 	if (argc < 2)
-		MG_FAIL("Error: snap_floor expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: snap_floor expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: snap_floor expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: snap_floor expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((n->type != MG_VALUE_INTEGER) && (n->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[n->type]);
 	else if (offset && (offset->type != MG_VALUE_INTEGER) && (offset->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_floor expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[offset->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -1005,20 +988,20 @@ static MGValue* mg_snap_within(MGInstance *instance, size_t argc, const MGValue*
 	const MGValue *offset = (argc > 3) ? argv[3] : NULL;
 
 	if (argc < 3)
-		MG_FAIL("Error: snap_within expected at least 3 arguments, received %zu", argc);
+		mgFatalError("Error: snap_within expected at least 3 arguments, received %zu", argc);
 	else if (argc > 4)
-		MG_FAIL("Error: snap_within expected at most 4 arguments, received %zu", argc);
+		mgFatalError("Error: snap_within expected at most 4 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if ((n->type != MG_VALUE_INTEGER) && (n->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[n->type]);
 	else if ((within->type != MG_VALUE_INTEGER) && (within->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        3, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[within->type]);
 	else if (offset && (offset->type != MG_VALUE_INTEGER) && (offset->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: snap_within expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        4, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[offset->type]);
 
 	float _value = (value->type == MG_VALUE_INTEGER) ? (float) value->data.i : value->data.f;
@@ -1039,17 +1022,17 @@ static MGValue* mg_wrap(MGInstance *instance, size_t argc, const MGValue* const*
 	const MGValue *max = (argc > 2) ? argv[2] : argv[1];
 
 	if (argc < 2)
-		MG_FAIL("Error: wrap expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: wrap expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: wrap expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: wrap expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if (min && (min->type != MG_VALUE_INTEGER) && (min->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min->type]);
 	else if ((max->type != MG_VALUE_INTEGER) && (max->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: wrap expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        min ? 3 : 2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max->type]);
 
 	if ((value->type == MG_VALUE_FLOAT) || (min && (min->type == MG_VALUE_FLOAT)) || (max->type == MG_VALUE_FLOAT))
@@ -1087,17 +1070,17 @@ static MGValue* mg_ping_pong(MGInstance *instance, size_t argc, const MGValue* c
 	const MGValue *max = (argc > 2) ? argv[2] : argv[1];
 
 	if (argc < 2)
-		MG_FAIL("Error: ping_pong expected at least 2 arguments, received %zu", argc);
+		mgFatalError("Error: ping_pong expected at least 2 arguments, received %zu", argc);
 	else if (argc > 3)
-		MG_FAIL("Error: ping_pong expected at most 3 arguments, received %zu", argc);
+		mgFatalError("Error: ping_pong expected at most 3 arguments, received %zu", argc);
 	else if ((value->type != MG_VALUE_INTEGER) && (value->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[value->type]);
 	else if (min && (min->type != MG_VALUE_INTEGER) && (min->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[min->type]);
 	else if ((max->type != MG_VALUE_INTEGER) && (max->type != MG_VALUE_FLOAT))
-		MG_FAIL("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
+		mgFatalError("Error: ping_pong expected argument %zu as \"%s\" or \"%s\", received \"%s\"",
 		        min ? 3 : 2, _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT], _MG_VALUE_TYPE_NAMES[max->type]);
 
 	if ((value->type == MG_VALUE_FLOAT) || (min && (min->type == MG_VALUE_FLOAT)) || (max->type == MG_VALUE_FLOAT))

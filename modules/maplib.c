@@ -3,38 +3,21 @@
 
 #include "modelgen.h"
 #include "module.h"
+#include "error.h"
 
 
 extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv);
 
 
-static inline void _mgFail(const char *format, ...)
-{
-	fflush(stdout);
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	putc('\n', stderr);
-	fflush(stderr);
-
-	exit(1);
-}
-
-#define MG_FAIL(...) _mgFail(__VA_ARGS__)
-
-
 static MGValue* mg_map_has(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 2)
-		MG_FAIL("Error: has expects exactly 2 arguments, received %zu", argc);
+		mgFatalError("Error: has expects exactly 2 arguments, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_MAP)
-		MG_FAIL("Error: has expected argument %zu as \"%s\", received \"%s\"",
+		mgFatalError("Error: has expected argument %zu as \"%s\", received \"%s\"",
 		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 	else if (argv[1]->type != MG_VALUE_STRING)
-		MG_FAIL("Error: has expected argument %zu as \"%s\", received \"%s\"",
+		mgFatalError("Error: has expected argument %zu as \"%s\", received \"%s\"",
 		        2, _MG_VALUE_TYPE_NAMES[MG_VALUE_STRING], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
@@ -51,9 +34,9 @@ static MGValue* mg_map_has(MGInstance *instance, size_t argc, const MGValue* con
 static MGValue* mg_map_clear(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: clear expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: clear expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_MAP)
-		MG_FAIL("Error: clear expected argument as \"%s\", received \"%s\"",
+		mgFatalError("Error: clear expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	mgMapClear((MGValue*) argv[0]);
@@ -65,9 +48,9 @@ static MGValue* mg_map_clear(MGInstance *instance, size_t argc, const MGValue* c
 static MGValue* mg_map_keys(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: keys expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: keys expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_MAP)
-		MG_FAIL("Error: keys expected argument as \"%s\", received \"%s\"",
+		mgFatalError("Error: keys expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
@@ -83,9 +66,9 @@ static MGValue* mg_map_keys(MGInstance *instance, size_t argc, const MGValue* co
 static MGValue* mg_map_values(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: values expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: values expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_MAP)
-		MG_FAIL("Error: values expected argument as \"%s\", received \"%s\"",
+		mgFatalError("Error: values expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];
@@ -101,9 +84,9 @@ static MGValue* mg_map_values(MGInstance *instance, size_t argc, const MGValue* 
 static MGValue* mg_map_pairs(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	if (argc != 1)
-		MG_FAIL("Error: pairs expects exactly 1 argument, received %zu", argc);
+		mgFatalError("Error: pairs expects exactly 1 argument, received %zu", argc);
 	else if (argv[0]->type != MG_VALUE_MAP)
-		MG_FAIL("Error: pairs expected argument as \"%s\", received \"%s\"",
+		mgFatalError("Error: pairs expected argument as \"%s\", received \"%s\"",
 		        _MG_VALUE_TYPE_NAMES[MG_VALUE_MAP], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
 
 	MGValue *map = (MGValue*) argv[0];

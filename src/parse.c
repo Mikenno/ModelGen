@@ -5,35 +5,14 @@
 
 #include "modelgen.h"
 #include "inspect.h"
+#include "error.h"
 
 
-static inline void _mgFail(const char *file, int line, MGParser *parser, const MGToken *token, const char *format, ...)
-{
-	fflush(stdout);
+#define mgParserFatalError(format, ...) \
+	mgFatalError("%s:%d: %s:%u:%u: " format, parser->tokenizer.filename, token->begin.line, token->begin.character, __VA_ARGS__)
 
-	fprintf(stderr, "%s:%d: ", file, line);
-
-	if (parser->tokenizer.filename)
-		fprintf(stderr, "%s:", parser->tokenizer.filename);
-
-	if (token)
-		fprintf(stderr, "%u:%u: ", token->begin.line, token->begin.character);
-	else if (parser->tokenizer.filename)
-		fputc(' ', stderr);
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	putc('\n', stderr);
-	fflush(stderr);
-
-	exit(1);
-}
-
-#define MG_FAIL(...) _mgFail(__FILE__, __LINE__, parser, token, __VA_ARGS__)
-#define _MG_FAIL(...) _mgFail(__FILE__, __LINE__, parser, __VA_ARGS__)
+#define mgParserFatalErrorEx(token, format, ...) \
+	mgFatalError("%s:%d: %s:%u:%u: " format, parser->tokenizer.filename, token->begin.line, token->begin.character, __VA_ARGS__)
 
 
 #define _MG_TOKEN_SCAN_LINE(token)  for (; (token->type == MG_TOKEN_WHITESPACE) || (token->type == MG_TOKEN_COMMENT); ++token)
@@ -630,7 +609,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 				break;
 
 			if (end)
-				MG_FAIL("Error: Cannot have consecutive else");
+				mgParserFatalError("Error: Cannot have consecutive else", NULL);
 
 			end = MG_TRUE;
 
@@ -751,10 +730,10 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 				const size_t parameter2NameLength = parameter2NameToken->end.string - parameter2NameToken->begin.string;
 
 				if ((parameterNameLength == parameter2NameLength) && !strncmp(parameterName, parameter2Name, parameterNameLength))
-					_MG_FAIL(parameterNameToken, "Duplicate parameter \"%.*s\"", (int) parameterNameLength, parameterName);
+					mgParserFatalErrorEx(parameterNameToken, "Duplicate parameter \"%.*s\"", (int) parameterNameLength, parameterName);
 
 				if (parameterHasDefaultArgument && !parameter2HasDefaultArgument)
-					_MG_FAIL(parameterNameToken, "Default argument missing for parameter %zu \"%.*s\"", j + 1, (int) parameter2NameLength, parameter2Name);
+					mgParserFatalErrorEx(parameterNameToken, "Default argument missing for parameter %zu \"%.*s\"", j + 1, (int) parameter2NameLength, parameter2Name);
 			}
 		}
 
@@ -1039,7 +1018,7 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 		const MGNode *names = _mgListGet(node->children, 0);
 
 		if ((names->type != MG_NODE_NAME) && (names->type != MG_NODE_SUBSCRIPT) && (names->type != MG_NODE_ATTRIBUTE) && (names->type != MG_NODE_TUPLE))
-			_MG_FAIL(names->token, "Cannot assign to \"%s\"", _MG_NODE_NAMES[names->type]);
+			mgParserFatalErrorEx(names->token, "Cannot assign to \"%s\"", _MG_NODE_NAMES[names->type]);
 
 		if (node->type != MG_NODE_ASSIGN)
 		{
@@ -1109,6 +1088,8 @@ static MGNode* _mgParseModule(MGParser *parser, MGToken *token)
 
 inline MGNode* mgParse(MGParser *parser)
 {
+	MG_ASSERT(parser->tokenizer.filename);
+
 	parser->root = _mgParseModule(parser, parser->tokenizer.tokens.items);
 
 	return parser->root;

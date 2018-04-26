@@ -2,27 +2,8 @@
 #include <stdarg.h>
 
 #include "callable.h"
+#include "error.h"
 #include "utilities.h"
-
-
-static inline void _mgFail(const char *file, int line, const char *format, ...)
-{
-	fflush(stdout);
-
-	fprintf(stderr, "%s:%d: ", file, line);
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	putc('\n', stderr);
-	fflush(stderr);
-
-	exit(1);
-}
-
-#define MG_FAIL(...) _mgFail(__FILE__, __LINE__, __VA_ARGS__)
 
 
 extern MGValue* _mgVisitNode(MGValue *module, MGNode *node);
@@ -74,7 +55,7 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 	MG_ASSERT((argc == 0) || (argv != NULL));
 
 	if (!mgIsCallable(callable))
-		MG_FAIL("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[callable->type]);
+		mgFatalError("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[callable->type]);
 
 	MGValue *module = (MGValue*) _mgLastModule(instance);
 	MG_ASSERT(module);
@@ -111,7 +92,7 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 					MG_ASSERT(funcName);
 				}
 
-				MG_FAIL("Error: %s expected at most %zu arguments, received %zu", (funcName ? funcName : "<anonymous>"), _mgListLength(funcParametersNode->children), argc);
+				mgFatalError("Error: %s expected at most %zu arguments, received %zu", (funcName ? funcName : "<anonymous>"), _mgListLength(funcParametersNode->children), argc);
 
 				free(funcName);
 			}
@@ -149,7 +130,7 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 				else
 				{
 					if (funcParameterNode->type != MG_NODE_ASSIGN)
-						MG_FAIL("Error: Expected argument \"%s\"", funcParameterName);
+						mgFatalError("Error: Expected argument \"%s\"", funcParameterName);
 
 					_mgSetLocalValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
 				}
