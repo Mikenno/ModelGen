@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #include "modelgen.h"
+#include "utilities.h"
 
 
 #define _mg_sizeof_field(type, field) (sizeof(((type*)0)->field))
@@ -513,6 +514,7 @@ void mgDestroyTokenizer(MGTokenizer *tokenizer)
 
 	_mgListDestroy(tokenizer->tokens);
 
+	free(tokenizer->filename);
 	free(tokenizer->string);
 }
 
@@ -560,7 +562,7 @@ static inline MGToken* _mgTokenizeString(MGTokenizer *tokenizer, size_t *tokenCo
 
 MGToken* mgTokenizeFile(MGTokenizer *tokenizer, const char *filename, size_t *tokenCount)
 {
-	tokenizer->filename = filename;
+	tokenizer->filename = mgStringDuplicate(filename);
 	tokenizer->string = mgReadFile(filename, NULL);
 
 	if (!tokenizer->string)
@@ -572,7 +574,7 @@ MGToken* mgTokenizeFile(MGTokenizer *tokenizer, const char *filename, size_t *to
 
 MGToken* mgTokenizeFileHandle(MGTokenizer *tokenizer, FILE *file, size_t *tokenCount)
 {
-	tokenizer->filename = "<stdin>";
+	tokenizer->filename = mgStringDuplicate("<stdin>");
 	tokenizer->string = mgReadFileHandle(file, NULL);
 
 	if (!tokenizer->string)
@@ -584,7 +586,7 @@ MGToken* mgTokenizeFileHandle(MGTokenizer *tokenizer, FILE *file, size_t *tokenC
 
 MGToken* mgTokenizeString(MGTokenizer *tokenizer, const char *string, size_t *tokenCount)
 {
-	tokenizer->filename = "<string>";
+	tokenizer->filename = mgStringDuplicate("<string>");
 	tokenizer->string = strcpy(malloc((strlen(string) + 1) * sizeof(char)), string);
 
 	return _mgTokenizeString(tokenizer, tokenCount);

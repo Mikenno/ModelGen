@@ -49,7 +49,7 @@ typedef struct MGToken {
 } MGToken;
 
 typedef struct MGTokenizer {
-	const char *filename;
+	char *filename;
 	char *string;
 	_MGList(MGToken) tokens;
 } MGTokenizer;
