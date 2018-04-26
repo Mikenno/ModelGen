@@ -114,6 +114,8 @@ void mgCreateInstance(MGInstance *instance)
 
 		mgMapSet(instance->staticModules, _mgStaticModules[i].name, module);
 	}
+
+	instance->base = mgMapGet(instance->staticModules, "base");
 }
 
 
@@ -289,16 +291,6 @@ static inline MGValue* _mgModuleLoadString(MGInstance *instance, const char *str
 }
 
 
-static inline void _mgImportDefaultInto(MGInstance *instance, MGValue *module)
-{
-	MGValue *base = mgMapGet(instance->staticModules, "base");
-	MG_ASSERT(base);
-	MG_ASSERT(base->type == MG_VALUE_MODULE);
-
-	mgMapMerge(module->data.module.globals, base->data.module.globals, MG_TRUE);
-}
-
-
 static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 {
 	MG_ASSERT(instance);
@@ -311,7 +303,6 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 	mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(module->data.module.globals));
 
 	mgPushStackFrame(instance, &frame);
-	_mgImportDefaultInto(instance, module);
 	mgInterpret(module);
 	mgPopStackFrame(instance, &frame);
 

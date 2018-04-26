@@ -123,6 +123,7 @@ typedef struct MGInstance {
 	_MGList(char*) path;
 	MGValue *modules;
 	MGValue *staticModules;
+	MGValue *base;
 	_MGList(MGVertex) vertices;
 	struct {
 		unsigned int position : 3;

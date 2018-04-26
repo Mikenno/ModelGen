@@ -138,7 +138,7 @@ void _mgSetValue(MGValue *module, const char *name, MGValue *value)
 }
 
 
-MGValue* _mgGetValue(MGValue *module, const char *name)
+const MGValue* _mgGetValue(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_VALUE_MODULE);
@@ -150,6 +150,9 @@ MGValue* _mgGetValue(MGValue *module, const char *name)
 
 	if (!value)
 		value = mgModuleGet(module, name);
+
+	if (!value)
+		value = mgModuleGet(module->data.module.instance->base, name);
 
 	if (!value)
 		_MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", name);
@@ -946,7 +949,7 @@ static MGValue* _mgVisitName(MGValue *module, MGNode *node)
 	char *name = mgStringDuplicateFixed(node->token->begin.string, nameLength);
 	MG_ASSERT(name);
 
-	MGValue *value = _mgGetValue(module, name);
+	const MGValue *value = _mgGetValue(module, name);
 
 	free(name);
 
