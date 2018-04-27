@@ -37,6 +37,7 @@ void _mgCreateMap(MGValueMap *map, size_t capacity);
 void _mgDestroyMap(MGValueMap *map);
 
 void _mgMapClear(MGValueMap *map);
+#define _mgMapRemove(map, key) _mgMapSet(map, key, NULL)
 
 void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
 MGValue* _mgMapGet(const MGValueMap *map, const char *key);
@@ -92,6 +93,8 @@ void mgListClear(MGValue *list);
 #define mgListGet(list, index) _mgListGet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index))
 
 #define mgMapClear(map) _mgMapClear(&(map)->data.m)
+#define mgMapRemove(map, key) _mgMapRemove(&(map)->data.m, key)
+
 #define mgMapSet(map, key, value) _mgMapSet(&(map)->data.m, key, value)
 #define mgMapGet(map, key) _mgMapGet(&(map)->data.m, key)
 

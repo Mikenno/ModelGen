@@ -559,7 +559,7 @@ static void _mgDelete(MGValue *module, MGNode *node)
 			mgMapGet(object, attributeNode->token->value.s);
 #endif
 
-			mgMapSet(object, attributeNode->token->value.s, NULL);
+			mgMapRemove(object, attributeNode->token->value.s);
 		}
 		else if (object->type == MG_VALUE_MODULE)
 		{
@@ -568,7 +568,7 @@ static void _mgDelete(MGValue *module, MGNode *node)
 			mgMapGet(object->data.module.globals, attributeNode->token->value.s);
 #endif
 
-			mgMapSet(object->data.module.globals, attributeNode->token->value.s, NULL);
+			mgMapRemove(object->data.module.globals, attributeNode->token->value.s);
 		}
 
 		mgDestroyValue(object);
