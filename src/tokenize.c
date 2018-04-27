@@ -63,12 +63,6 @@ void _mgParseString(MGToken *token)
 {
 	const size_t len = token->end.string - token->begin.string - 2;
 
-	if (len < 1)
-	{
-		token->value.s = NULL;
-		return;
-	}
-
 	token->value.s = (char*) malloc((len + 1) * sizeof(char));
 	token->value.s[0] = '\0';
 
@@ -312,7 +306,7 @@ void mgTokenizeNext(MGToken *token)
 		while (isalnum(*token->end.string) || (*token->end.string == '_'))
 			_mgTokenNextCharacter(token);
 
-		const unsigned long int len = token->end.string - token->begin.string;
+		const size_t len = token->end.string - token->begin.string;
 
 		switch (len)
 		{
@@ -370,6 +364,13 @@ void mgTokenizeNext(MGToken *token)
 			break;
 		default:
 			break;
+		}
+
+		if (token->type == MG_TOKEN_NAME)
+		{
+			token->value.s = (char*) malloc((len + 1) * sizeof(char));
+			strncpy(token->value.s, token->begin.string, len);
+			token->value.s[len] = '\0';
 		}
 	}
 	else if (isdigit(c))
@@ -509,7 +510,7 @@ void mgCreateTokenizer(MGTokenizer *tokenizer)
 void mgDestroyTokenizer(MGTokenizer *tokenizer)
 {
 	for (size_t i = 0; i < _mgListLength(tokenizer->tokens); ++i)
-		if ((_mgListGet(tokenizer->tokens, i).type == MG_TOKEN_STRING) && _mgListGet(tokenizer->tokens, i).value.s)
+		if (((_mgListGet(tokenizer->tokens, i).type == MG_TOKEN_NAME) || (_mgListGet(tokenizer->tokens, i).type == MG_TOKEN_STRING)) && _mgListGet(tokenizer->tokens, i).value.s)
 			free(_mgListGet(tokenizer->tokens, i).value.s);
 
 	_mgListDestroy(tokenizer->tokens);

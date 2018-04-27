@@ -80,21 +80,16 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 			if (_mgListLength(funcParametersNode->children) < argc)
 			{
 				MGNode *funcNameNode = _mgListGet(callableNode->children, 0);
-				char *funcName = NULL;
+				const char *funcName = NULL;
 
 				if (funcNameNode->type == MG_NODE_NAME)
 				{
 					MG_ASSERT(funcNameNode->token);
 
-					const size_t funcNameLength = funcNameNode->token->end.string - funcNameNode->token->begin.string;
-					MG_ASSERT(funcNameLength > 0);
-					funcName = mgStringDuplicateFixed(funcNameNode->token->begin.string, funcNameLength);
-					MG_ASSERT(funcName);
+					funcName = funcNameNode->token->value.s;
 				}
 
 				mgFatalError("Error: %s expected at most %zu arguments, received %zu", (funcName ? funcName : "<anonymous>"), _mgListLength(funcParametersNode->children), argc);
-
-				free(funcName);
 			}
 
 			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
@@ -102,13 +97,13 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 				MGNode *funcParameterNode = _mgListGet(funcParametersNode->children, i);
 				MG_ASSERT((funcParameterNode->type == MG_NODE_NAME) || (funcParameterNode->type == MG_NODE_ASSIGN));
 
-				char *funcParameterName = NULL;
+				const char *funcParameterName = NULL;
 
 				if (funcParameterNode->type == MG_NODE_NAME)
 				{
-					const size_t funcParameterNameLength = funcParameterNode->token->end.string - funcParameterNode->token->begin.string;
-					MG_ASSERT(funcParameterNameLength > 0);
-					funcParameterName = mgStringDuplicateFixed(funcParameterNode->token->begin.string, funcParameterNameLength);
+					MG_ASSERT(funcParameterNode->token);
+
+					funcParameterName = funcParameterNode->token->value.s;
 				}
 				else if (funcParameterNode->type == MG_NODE_ASSIGN)
 				{
@@ -118,9 +113,7 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 					MG_ASSERT(funcParameterNameNode->type == MG_NODE_NAME);
 					MG_ASSERT(funcParameterNameNode->token);
 
-					const size_t funcParameterNameLength = funcParameterNameNode->token->end.string - funcParameterNameNode->token->begin.string;
-					MG_ASSERT(funcParameterNameLength > 0);
-					funcParameterName = mgStringDuplicateFixed(funcParameterNameNode->token->begin.string, funcParameterNameLength);
+					funcParameterName = funcParameterNameNode->token->value.s;
 				}
 
 				MG_ASSERT(funcParameterName);
@@ -134,8 +127,6 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 
 					_mgSetLocalValue(module, funcParameterName, _mgVisitNode(module, _mgListGet(funcParameterNode->children, 1)));
 				}
-
-				free(funcParameterName);
 			}
 
 			if (_mgListLength(callableNode->children) == 3)
