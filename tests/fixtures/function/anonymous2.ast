@@ -1,0 +1,179 @@
+Module
+- Call
+-- Name print
+-- Call
+--- Name map
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+---- Return
+----- BinOpMul
+------ Name a
+------ Name a
+--- Call
+---- Name range
+---- Integer 5
+- Call
+-- Name print
+-- Call
+--- Name map
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+---- Return
+----- BinOpMul
+------ Name a
+------ Name a
+--- Call
+---- Name range
+---- Integer 5
+- Call
+-- Name print
+- Call
+-- Name print
+-- Call
+--- Name map
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+----- Name b
+---- Return
+----- BinOpMul
+------ Name a
+------ Name b
+--- Call
+---- Name range
+---- Integer 5
+--- Call
+---- Name range
+---- Integer 10
+---- Integer 15
+- Call
+-- Name print
+
+-- Call
+--- Name map
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+----- Name b
+---- Return
+----- BinOpMul
+------ Name a
+------ Name b
+--- Call
+---- Name range
+---- Integer 5
+--- Call
+---- Name range
+---- Integer 10
+---- Integer 15
+- Call
+-- Name print
+
+- Assign
+-- Name f
+-- Function
+--- Invalid
+--- Tuple
+--- Return
+---- Integer 1
+- Call
+-- Name print
+-- Call
+--- Name f
+-- Call
+--- Function
+---- Invalid
+---- Tuple
+---- Return
+----- Integer 1
+
+- Assign
+-- Name f
+-- Function
+--- Invalid
+--- Tuple
+---- Name a
+--- Return
+---- Call
+----- Name print
+----- Name a
+- Call
+-- Name f
+-- Integer 123
+- Call
+-- Function
+--- Invalid
+--- Tuple
+---- Name a
+--- Return
+---- Call
+----- Name print
+----- Name a
+-- Integer 456
+- Call
+-- Name print
+
+- Assign
+-- Tuple
+--- Name add
+--- Name square
+-- Tuple
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+------ Name float
+----- Name b
+------ Name float
+---- Return
+----- BinOpAdd
+------ Name a
+------ Name b
+--- Function
+---- Invalid
+---- Tuple
+----- Name a
+------ Name float
+---- Return
+----- BinOpMul
+------ Name a
+------ Name a
+
+- Call
+-- Name print
+-- Call
+--- Name add
+--- Integer 1
+--- Integer 1
+-- Call
+--- Name add
+--- Integer 1
+--- Integer 2
+-- Call
+--- Name add
+--- Integer 2
+--- Integer 1
+-- Call
+--- Name add
+--- Integer 2
+--- Integer 2
+- Call
+-- Name print
+-- Call
+--- Name square
+--- Integer 1
+-- Call
+--- Name square
+--- Integer 2
+-- Call
+--- Name square
+--- Integer 3
+-- Call
+--- Name square
+--- Integer 4

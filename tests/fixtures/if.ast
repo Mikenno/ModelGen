@@ -166,3 +166,40 @@ Module
 ------- Name i
 ------- Integer 0
 ------- Integer 0
+
+- Call
+-- Name print
+-- Integer 1
+- If
+-- Integer 2
+- Call
+-- Name print
+-- Integer 3
+
+- If
+-- Integer 1
+-- If
+--- Integer 2
+--- If
+---- Integer 3
+---- NoOperation
+---- Call
+----- Name print
+----- String "else 1"
+-- If
+--- Integer 4
+--- If
+---- Integer 5
+---- If
+----- Integer 6
+----- If
+------ Integer 7
+----- If
+------ Integer 8
+------ NoOperation
+------ Call
+------- Name print
+------- String "else 2"
+--- Call
+---- Name print
+---- String "else 3"
