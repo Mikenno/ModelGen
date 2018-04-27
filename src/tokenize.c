@@ -181,6 +181,10 @@ void mgTokenizeNext(MGToken *token)
 			token->type = MG_TOKEN_SUB_ASSIGN;
 			_mgTokenNextCharacter(token);
 			return;
+		case '>':
+			token->type = MG_TOKEN_ARROW;
+			_mgTokenNextCharacter(token);
+			return;
 		default:
 			token->type = MG_TOKEN_SUB;
 			return;

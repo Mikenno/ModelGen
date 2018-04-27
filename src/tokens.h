@@ -45,6 +45,7 @@
 	_MG_T(INT_DIV, "//") \
 	_MG_T(MOD, "%") \
 	_MG_T(COALESCE, "??") \
+	_MG_T(ARROW, "->") \
 	_MG_T(ASSIGN, "=") \
 	_MG_T(ADD_ASSIGN, "+=") \
 	_MG_T(SUB_ASSIGN, "-=") \

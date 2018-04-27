@@ -715,7 +715,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		else
 		{
 			// TODO: Invalid is not the best way to differentiate between anonymous functions
-			name = mgCreateNode(token, MG_NODE_INVALID);
+			name = mgCreateNode(NULL, MG_NODE_INVALID);
 			_mgAddChild(node, name);
 		}
 
@@ -976,9 +976,29 @@ static MGNode* _mgParseExpression(MGParser *parser, MGToken *token, MGbool eatTu
 	MGNode *node = _mgParseRange(parser, token);
 	MG_ASSERT(node);
 
+	token = node->tokenEnd + 1;
+	_MG_TOKEN_SCAN_LINE(token);
+
+	if (token->type == MG_TOKEN_ARROW)
+	{
+		if (node->type != MG_NODE_TUPLE)
+			node = _mgWrapNode(node, MG_NODE_TUPLE);
+
+		MGNode *func = mgCreateNode(token, MG_NODE_FUNCTION);
+		_mgAddChild(func, mgCreateNode(NULL, MG_NODE_INVALID));
+		_mgAddChild(func, node);
+
+		node = mgCreateNode(token, MG_NODE_RETURN);
+		_mgAddChild(node, _mgParseExpression(parser, ++token, MG_FALSE));
+		_mgAddChild(func, node);
+
+		node = func;
+
+		token = node->tokenEnd + 1;
+	}
+
 	if (eatTuple)
 	{
-		token = node->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINE(token);
 
 		if (token->type == MG_TOKEN_COMMA)
