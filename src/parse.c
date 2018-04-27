@@ -96,6 +96,7 @@ MGNode* mgCreateNode(MGToken *token, MGNodeType type)
 	MGNode *node = (MGNode*) calloc(1, sizeof(MGNode));
 
 	node->type = type;
+	node->refCount = 1;
 	node->token = token;
 	node->tokenBegin = token;
 	node->tokenEnd = token;
@@ -106,6 +107,11 @@ MGNode* mgCreateNode(MGToken *token, MGNodeType type)
 
 void mgDestroyNode(MGNode *node)
 {
+	MG_ASSERT(node);
+
+	if (--node->refCount > 0)
+		return;
+
 	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 		if (_mgListGet(node->children, i))
 			mgDestroyNode(_mgListGet(node->children, i));
@@ -162,6 +168,7 @@ static inline MGNode* _mgDeepCopyNode(const MGNode *node)
 	MG_ASSERT(copy);
 
 	*copy = *node;
+	copy->refCount = 1;
 
 	if (_mgListLength(node->children))
 	{
@@ -173,6 +180,17 @@ static inline MGNode* _mgDeepCopyNode(const MGNode *node)
 		_mgListInitialize(copy->children);
 
 	return copy;
+}
+
+
+MGNode* mgReferenceNode(const MGNode *node)
+{
+	MG_ASSERT(node);
+
+	MGNode *referenced = (MGNode*) node;
+	++referenced->refCount;
+
+	return referenced;
 }
 
 

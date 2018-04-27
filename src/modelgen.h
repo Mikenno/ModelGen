@@ -58,6 +58,7 @@ typedef struct MGNode MGNode;
 
 typedef struct MGNode {
 	MGNodeType type;
+	size_t refCount;
 	MGToken *token;
 	MGToken *tokenBegin;
 	MGToken *tokenEnd;

@@ -10,6 +10,8 @@
 #include "utilities.h"
 
 
+extern MGNode* mgReferenceNode(const MGNode *node);
+
 extern MGValue* _mg_rangei(int start, int stop, int step);
 
 
@@ -48,7 +50,7 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node);
 inline MGValue* mgDeepCopyValue(const MGValue *value)
 {
 	MG_ASSERT(value);
-	MG_ASSERT((value->type != MG_VALUE_PROCEDURE) && (value->type != MG_VALUE_FUNCTION));
+	MG_ASSERT(value->type != MG_VALUE_MODULE);
 
 	MGValue *copy = (MGValue*) malloc(sizeof(MGValue));
 	MG_ASSERT(copy);
@@ -89,8 +91,10 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		break;
 	case MG_VALUE_PROCEDURE:
 	case MG_VALUE_FUNCTION:
-		copy->data.func.locals = mgDeepCopyValue(value->data.func.locals);
 		copy->data.func.module = mgReferenceValue(value->data.func.module);
+		copy->data.func.node = mgReferenceNode(value->data.func.node);
+		if (value->data.func.locals)
+			copy->data.func.locals = mgDeepCopyValue(value->data.func.locals);
 		break;
 	default:
 		break;
@@ -781,8 +785,8 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 
 	MGValue *func = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
 
-	func->data.func.module = module;
-	func->data.func.node = node;
+	func->data.func.module = mgReferenceValue(module);
+	func->data.func.node = mgReferenceNode(node);
 
 	MGbool isClosure = MG_FALSE;
 

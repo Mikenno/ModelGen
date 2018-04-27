@@ -47,6 +47,13 @@ void mgDestroyValue(MGValue *value)
 		free(value->data.module.filename);
 		mgDestroyValue(value->data.module.globals);
 		break;
+	case MG_VALUE_PROCEDURE:
+	case MG_VALUE_FUNCTION:
+		mgDestroyValue(value->data.func.module);
+		mgDestroyNode(value->data.func.node);
+		if (value->data.func.locals)
+			mgDestroyValue(value->data.func.locals);
+		break;
 	default:
 		break;
 	}
