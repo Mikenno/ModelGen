@@ -6,6 +6,7 @@
 #include "modelgen.h"
 #include "module.h"
 #include "callable.h"
+#include "eval.h"
 #include "inspect.h"
 #include "error.h"
 #include "utilities.h"
@@ -448,6 +449,17 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, const MGValue* cons
 }
 
 
+static MGValue* mg_eval(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	MG_ASSERT(instance);
+
+	mgCheckArgumentCount(instance, argc, 1, 2);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_STRING, 1, MG_VALUE_MAP);
+
+	return mgEvalEx(instance, argv[0]->data.str.s, (argc > 1) ? argv[1] : NULL);
+}
+
+
 MGValue* mgCreateBaseLib(void)
 {
 	MGValue *module = mgCreateValueModule();
@@ -484,6 +496,8 @@ MGValue* mgCreateBaseLib(void)
 	mgModuleSetCFunction(module, "locals", mg_locals);
 
 	mgModuleSetCFunction(module, "__import", mg_import);
+
+	mgModuleSetCFunction(module, "__eval", mg_eval);
 
 	return module;
 }
