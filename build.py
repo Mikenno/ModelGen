@@ -19,7 +19,7 @@ cflags = release_cflags
 ldflags = ["-lm"]
 
 
-modelgen_dir = os.path.dirname(__file__)
+modelgen_dir = os.path.abspath(os.path.dirname(__file__))
 modelgen_src_dir = os.path.join(modelgen_dir, "src")
 modelgen_tests_dir = os.path.join(modelgen_dir, "tests")
 modelgen_modules_dir = os.path.join(modelgen_dir, "modules")
@@ -127,22 +127,29 @@ def clean(dirname):
 
 
 def gcc(*args):
-	result = run(["gcc", *args], shell=True)
+	result = run(["gcc", *args], cwd=modelgen_dir)
 	if result.returncode != 0:
 		exit(result.returncode)
 
 
 def compile(src, obj, cflags=cflags, include_directories=[]):
+	assert os.path.isfile(src)
 	if has_changed(src, obj, include_directories):
 		print(f"Compiling: {os.path.relpath(src)} -> {os.path.relpath(obj)}", flush=True)
 		os.makedirs(os.path.dirname(obj), exist_ok=True)
-		gcc(*cflags, *[f"-I{include_directory}" for include_directory in include_directories], "-c", src, "-o", obj)
+		assert os.path.isdir(os.path.dirname(obj))
+		if include_directories:
+			gcc(*cflags, *[f"-I{include_directory}" for include_directory in include_directories], "-c", src, "-o", obj)
+		else:
+			gcc(*cflags, "-c", src, "-o", obj)
 
 
 def link(out, objects, ldflags=ldflags):
 	assert len(objects) > 0
 	if not os.path.isfile(out) or max(os.path.getmtime(obj) for obj in objects) >= os.path.getmtime(out):
 		print("Linking:", os.path.relpath(out), flush=True)
+		os.makedirs(os.path.dirname(out), exist_ok=True)
+		assert os.path.isdir(os.path.dirname(out))
 		gcc(*objects, *ldflags, "-o", out)
 
 
