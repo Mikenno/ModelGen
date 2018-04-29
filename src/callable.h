@@ -2,7 +2,7 @@
 #define MODELGEN_CALLABLE_H
 
 #include "modelgen.h"
-#include "module.h"
+#include "value.h"
 
 #define mgIsCallable(value) ((value->type == MG_TYPE_CFUNCTION) || (value->type == MG_TYPE_PROCEDURE) || (value->type == MG_TYPE_FUNCTION))
 

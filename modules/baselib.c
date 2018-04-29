@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #include "modelgen.h"
+#include "value.h"
 #include "module.h"
 #include "callable.h"
 #include "eval.h"

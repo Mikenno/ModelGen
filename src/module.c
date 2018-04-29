@@ -4,66 +4,12 @@
 #include <stdarg.h>
 
 #include "modelgen.h"
+#include "value.h"
 #include "module.h"
 #include "utilities.h"
 
 
-inline MGValue* mgCreateValueEx(MGType type)
-{
-	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
-	MG_ASSERT(value);
-
-	value->type = type;
-	value->refCount = 1;
-
-	return value;
-}
-
-
-void mgDestroyValue(MGValue *value)
-{
-	MG_ASSERT(value);
-
-	if (--value->refCount > 0)
-		return;
-
-	switch (value->type)
-	{
-	case MG_TYPE_STRING:
-		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
-			free(value->data.str.s);
-		break;
-	case MG_TYPE_TUPLE:
-	case MG_TYPE_LIST:
-		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
-			mgDestroyValue(_mgListGet(value->data.a, i));
-		_mgListDestroy(value->data.a);
-		break;
-	case MG_TYPE_MAP:
-		_mgDestroyMap(&value->data.m);
-		break;
-	case MG_TYPE_MODULE:
-		MG_ASSERT(value->data.module.globals);
-		mgDestroyParser(&value->data.module.parser);
-		free(value->data.module.filename);
-		mgDestroyValue(value->data.module.globals);
-		break;
-	case MG_TYPE_PROCEDURE:
-	case MG_TYPE_FUNCTION:
-		mgDestroyValue(value->data.func.module);
-		mgDestroyNode(value->data.func.node);
-		if (value->data.func.locals)
-			mgDestroyValue(value->data.func.locals);
-		break;
-	default:
-		break;
-	}
-
-	free(value);
-}
-
-
-inline MGValue* mgCreateValueModule(void)
+MGValue* mgCreateValueModule(void)
 {
 	MGValue *module = mgCreateValueEx(MG_TYPE_MODULE);
 	MG_ASSERT(module);

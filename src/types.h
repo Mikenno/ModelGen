@@ -15,8 +15,17 @@ typedef enum MGType {
 	MG_TYPE_MODULE
 } MGType;
 
+typedef struct MGValue MGValue;
+
+typedef void (*MGTypeCreate)(MGValue *value);
+typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value);
+typedef void (*MGTypeDestroy)(MGValue *value);
+
 typedef struct MGTypeData {
 	const char *name;
+	MGTypeCreate create;
+	MGTypeCopy copy;
+	MGTypeDestroy destroy;
 } MGTypeData;
 
 extern const MGTypeData _mgTypes[];

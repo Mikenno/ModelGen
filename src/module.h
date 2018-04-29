@@ -13,13 +13,6 @@ typedef struct MGMapIterator {
 	size_t index;
 } MGMapIterator;
 
-#define mgCreateValue(type) mgCreateValueEx(type, NULL)
-MGValue* mgCreateValueEx(MGType type);
-void mgDestroyValue(MGValue *value);
-
-MGValue* mgDeepCopyValue(const MGValue *value);
-MGValue* mgReferenceValue(const MGValue *value);
-
 MGValue* mgCreateValueModule(void);
 
 void mgModuleSet(MGValue *module, const char *name, MGValue *value);

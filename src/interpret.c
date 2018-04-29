@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #include "modelgen.h"
+#include "value.h"
 #include "module.h"
 #include "callable.h"
 #include "inspect.h"
@@ -45,75 +46,6 @@ static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *
 
 
 MGValue* _mgVisitNode(MGValue *module, MGNode *node);
-
-
-inline MGValue* mgDeepCopyValue(const MGValue *value)
-{
-	MG_ASSERT(value);
-	MG_ASSERT(value->type != MG_TYPE_MODULE);
-
-	MGValue *copy = (MGValue*) malloc(sizeof(MGValue));
-	MG_ASSERT(copy);
-
-	*copy = *value;
-	copy->refCount = 1;
-
-	switch (copy->type)
-	{
-	case MG_TYPE_STRING:
-		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
-			copy->data.str.s = mgStringDuplicate(value->data.str.s);
-		break;
-	case MG_TYPE_TUPLE:
-	case MG_TYPE_LIST:
-		if (mgListLength(value))
-		{
-			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
-			for (size_t i = 0; i < mgListLength(value); ++i)
-				_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(_mgListGet(value->data.a, i)));
-		}
-		else if (mgListCapacity(value))
-			_mgListInitialize(copy->data.a);
-		break;
-	case MG_TYPE_MAP:
-		if (_mgMapSize(value->data.m))
-		{
-			MGMapIterator iterator;
-			mgCreateMapIterator(&iterator, (MGValue*) value);
-
-			MGValue *k, *v;
-			while (mgMapNext(&iterator, &k, &v))
-				mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
-
-			mgDestroyMapIterator(&iterator);
-		}
-		else
-			_mgCreateMap(&copy->data.m, 0);
-		break;
-	case MG_TYPE_PROCEDURE:
-	case MG_TYPE_FUNCTION:
-		copy->data.func.module = mgReferenceValue(value->data.func.module);
-		copy->data.func.node = mgReferenceNode(value->data.func.node);
-		if (value->data.func.locals)
-			copy->data.func.locals = mgDeepCopyValue(value->data.func.locals);
-		break;
-	default:
-		break;
-	}
-
-	return copy;
-}
-
-
-MGValue* mgReferenceValue(const MGValue *value)
-{
-	MG_ASSERT(value);
-
-	MGValue *referenced = (MGValue*) value;
-	++referenced->refCount;
-
-	return referenced;
-}
 
 
 void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
