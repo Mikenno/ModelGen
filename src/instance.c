@@ -75,12 +75,12 @@ void mgCreateInstance(MGInstance *instance)
 	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
 
 #ifdef _WIN32
-	char path[MAX_PATH + 1];
+	char path[MG_PATH_MAX + 1];
 
-	if (GetCurrentDirectoryA(MAX_PATH + 1, path))
+	if (GetCurrentDirectoryA(MG_PATH_MAX + 1, path))
 		_mgListAdd(char*, instance->path, mgStringDuplicate(path));
 
-	if (GetModuleFileNameA(NULL, path, MAX_PATH + 1))
+	if (GetModuleFileNameA(NULL, path, MG_PATH_MAX + 1))
 	{
 		size_t dirnameEnd = mgDirnameEnd(path);
 
@@ -319,8 +319,8 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *nam
 
 	if (module == NULL)
 	{
-		char filename[MAX_PATH + 1];
-		char _name[MAX_PATH + 1];
+		char filename[MG_PATH_MAX + 1];
+		char _name[MG_PATH_MAX + 1];
 
 		strcpy(_name, "/");
 		strcat(_name, name);

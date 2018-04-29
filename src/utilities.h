@@ -3,7 +3,14 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 #include <math.h>
+
+#ifdef _WIN32
+#   define MG_PATH_MAX MAX_PATH
+#else
+#   define MG_PATH_MAX FILENAME_MAX
+#endif
 
 #define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) (x))) + 1)
 
