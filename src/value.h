@@ -10,4 +10,6 @@ void mgDestroyValue(MGValue *value);
 MGValue* mgDeepCopyValue(const MGValue *value);
 MGValue* mgReferenceValue(const MGValue *value);
 
+MGbool mgValueTruthValue(const MGValue *value);
+
 #endif

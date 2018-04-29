@@ -94,71 +94,106 @@ void mgAnyDestroy(MGValue *value)
 }
 
 
+MGbool mgAnyTruthValue(const MGValue *value)
+{
+	switch (value->type)
+	{
+	case MG_TYPE_NULL:
+		return MG_FALSE;
+	case MG_TYPE_INTEGER:
+		return (MGbool) (value->data.i != 0);
+	case MG_TYPE_FLOAT:
+		return (MGbool) !_MG_FEQUAL(value->data.f, 0.0f);
+	case MG_TYPE_STRING:
+		return (MGbool) (mgStringLength(value) != 0);
+	case MG_TYPE_TUPLE:
+		return (MGbool) (mgTupleLength(value) > 0);
+	case MG_TYPE_LIST:
+		return (MGbool) (mgListLength(value) > 0);
+	case MG_TYPE_MAP:
+		return (MGbool) (mgMapSize(value) > 0);
+	default:
+		return MG_TRUE;
+	}
+}
+
+
 const MGTypeData _mgTypes[] = {
 	{
 		"null",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"int",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"float",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"string",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"tuple",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"list",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"map",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"cfunc",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"func",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"proc",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	},
 	{
 		"module",
 		NULL,
 		mgAnyCopy,
-		mgAnyDestroy
+		mgAnyDestroy,
+		mgAnyTruthValue
 	}
 };

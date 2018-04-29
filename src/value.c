@@ -61,3 +61,15 @@ MGValue* mgReferenceValue(const MGValue *value)
 
 	return referenced;
 }
+
+
+MGbool mgValueTruthValue(const MGValue *value)
+{
+	MG_ASSERT(value);
+
+	const MGTypeData *type = mgGetType(value->type);
+	if (type && type->truth)
+		return type->truth(value);
+
+	return MG_FALSE;
+}

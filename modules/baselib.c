@@ -310,6 +310,36 @@ static MGValue* mg_reduce(MGInstance *instance, size_t argc, const MGValue* cons
 }
 
 
+static MGValue* mg_all(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
+
+	const MGValue *list = argv[0];
+
+	for (size_t i = 0; i < mgListLength(list); ++i)
+		if (!mgValueTruthValue(_mgListGet(list->data.a, i)))
+			return mgCreateValueInteger(MG_FALSE);
+
+	return mgCreateValueInteger(MG_TRUE);
+}
+
+
+static MGValue* mg_any(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
+
+	const MGValue *list = argv[0];
+
+	for (size_t i = 0; i < mgListLength(list); ++i)
+		if (mgValueTruthValue(_mgListGet(list->data.a, i)))
+			return mgCreateValueInteger(MG_TRUE);
+
+	return mgCreateValueInteger(MG_FALSE);
+}
+
+
 static MGValue* mg_type(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
@@ -336,6 +366,14 @@ MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv)
 		mgFatalError("Error: \"%s\" has no length", mgGetTypeName(argv[0]->type));
 		return mgCreateValueNull();
 	}
+}
+
+
+static MGValue* mg_bool(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+
+	return mgCreateValueInteger(mgValueTruthValue(argv[0]));
 }
 
 
@@ -485,9 +523,13 @@ MGValue* mgCreateBaseLib(void)
 	mgModuleSetCFunction(module, "filter", mg_filter);
 	mgModuleSetCFunction(module, "reduce", mg_reduce);
 
+	mgModuleSetCFunction(module, "all", mg_all);
+	mgModuleSetCFunction(module, "any", mg_any);
+
 	mgModuleSetCFunction(module, "type", mg_type);
 	mgModuleSetCFunction(module, "len", mg_len);
 
+	mgModuleSetCFunction(module, "bool", mg_bool);
 	mgModuleSetCFunction(module, "int", mg_int);
 	mgModuleSetCFunction(module, "float", mg_float);
 

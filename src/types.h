@@ -15,17 +15,25 @@ typedef enum MGType {
 	MG_TYPE_MODULE
 } MGType;
 
+typedef unsigned char MGbool;
+
+typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
+
+typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, const MGValue* const* argv);
 
 typedef void (*MGTypeCreate)(MGValue *value);
 typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value);
 typedef void (*MGTypeDestroy)(MGValue *value);
+
+typedef MGbool (*MGTypeTruthValue)(const MGValue *value);
 
 typedef struct MGTypeData {
 	const char *name;
 	MGTypeCreate create;
 	MGTypeCopy copy;
 	MGTypeDestroy destroy;
+	MGTypeTruthValue truth;
 } MGTypeData;
 
 extern const MGTypeData _mgTypes[];

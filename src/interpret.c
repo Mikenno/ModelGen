@@ -668,32 +668,7 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 	MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(condition);
 
-	int _condition = 0;
-
-	switch (condition->type)
-	{
-	case MG_TYPE_NULL:
-		break;
-	case MG_TYPE_INTEGER:
-		_condition = condition->data.i != 0;
-		break;
-	case MG_TYPE_FLOAT:
-		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
-		break;
-	case MG_TYPE_STRING:
-		_condition = mgStringLength(condition) != 0;
-		break;
-	case MG_TYPE_TUPLE:
-	case MG_TYPE_LIST:
-		_condition = mgListLength(condition) > 0;
-		break;
-	case MG_TYPE_MAP:
-		_condition = mgMapSize(condition) > 0;
-		break;
-	default:
-		_condition = 1;
-		break;
-	}
+	MGbool _condition = mgValueTruthValue(condition);
 
 	if (_mgListLength(node->children) > 1)
 	{
@@ -1549,101 +1524,23 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 		}
 		break;
 	case MG_NODE_BIN_OP_AND:
-		switch (lhs->type)
+		if (!mgValueTruthValue(lhs))
+			value = mgCreateValueInteger(MG_FALSE);
+		else
 		{
-		case MG_TYPE_INTEGER:
-			if (lhs->data.i)
-			{
-				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-				MG_ASSERT(rhs);
-
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(rhs->data.i != 0);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
-					break;
-				default:
-					break;
-				}
-			}
-			else
-				value = mgCreateValueInteger(0);
-			break;
-		case MG_TYPE_FLOAT:
-			if (!_MG_FEQUAL(lhs->data.f, 0.0f))
-			{
-				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-				MG_ASSERT(rhs);
-
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(rhs->data.i != 0);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
-					break;
-				default:
-					break;
-				}
-			}
-			else
-				value = mgCreateValueInteger(0);
-			break;
-		default:
-			break;
+			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+			MG_ASSERT(rhs);
+			value = mgCreateValueInteger(mgValueTruthValue(rhs));
 		}
 		break;
 	case MG_NODE_BIN_OP_OR:
-		switch (lhs->type)
+		if (mgValueTruthValue(lhs))
+			value = mgCreateValueInteger(MG_TRUE);
+		else
 		{
-		case MG_TYPE_INTEGER:
-			if (!lhs->data.i)
-			{
-				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-				MG_ASSERT(rhs);
-
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(rhs->data.i != 0);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
-					break;
-				default:
-					break;
-				}
-			}
-			else
-				value = mgCreateValueInteger(1);
-			break;
-		case MG_TYPE_FLOAT:
-			if (_MG_FEQUAL(lhs->data.f, 0.0f))
-			{
-				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-				MG_ASSERT(rhs);
-
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(rhs->data.i != 0);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
-					break;
-				default:
-					break;
-				}
-			}
-			else
-				value = mgCreateValueInteger(1);
-			break;
-		default:
-			break;
+			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+			MG_ASSERT(rhs);
+			value = mgCreateValueInteger(mgValueTruthValue(rhs));
 		}
 		break;
 	default:
