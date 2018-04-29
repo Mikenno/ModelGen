@@ -26,10 +26,6 @@ typedef enum MGValueType {
 } MGValueType;
 
 
-static char *_MG_VALUE_TYPE_NAMES[] = {
-#define _MG_V(value, name) name,
-	_MG_VALUES
-#undef _MG_V
-};
+extern const char* const _MG_VALUE_TYPE_NAMES[];
 
 #endif
