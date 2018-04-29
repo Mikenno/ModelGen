@@ -314,7 +314,7 @@ static MGValue* mg_type(MGInstance *instance, size_t argc, const MGValue* const*
 	mgCheckArgumentCount(instance, argc, 1, 1);
 	mgCheckArgumentTypes(instance, argc, argv, 0);
 
-	return mgCreateValueString(_MG_VALUE_TYPE_NAMES[argv[0]->type]);
+	return mgCreateValueStringEx(_MG_VALUE_TYPE_NAMES[argv[0]->type], MG_STRING_USAGE_STATIC);
 }
 
 

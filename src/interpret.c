@@ -61,7 +61,8 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 	switch (copy->type)
 	{
 	case MG_VALUE_STRING:
-		copy->data.str.s = mgStringDuplicate(value->data.str.s);
+		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
+			copy->data.str.s = mgStringDuplicate(value->data.str.s);
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
@@ -1090,8 +1091,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				snprintf(s, len + 1, "%d", lhs->data.i);
 				strcpy(s + len, rhs->data.str.s);
 				s[len + rhs->data.str.length] = '\0';
-				value = mgCreateValueString(s);
-				free(s);
+				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
 				break;
 			default:
 				break;
@@ -1113,8 +1113,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				snprintf(s, len + 1, "%f", lhs->data.f);
 				strcpy(s + len, rhs->data.str.s);
 				s[len + rhs->data.str.length] = '\0';
-				value = mgCreateValueString(s);
-				free(s);
+				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
 				break;
 			default:
 				break;
@@ -1151,10 +1150,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			}
 			if (s)
-			{
-				value = mgCreateValueString(s);
-				free(s);
-			}
+				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
 			break;
 		case MG_VALUE_TUPLE:
 		case MG_VALUE_LIST:
@@ -1222,14 +1218,9 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			case MG_VALUE_STRING:
 			{
 				if ((rhs->data.str.length > 0) && (lhs->data.i > 0))
-				{
-					char *str = mgStringRepeatDuplicate(rhs->data.str.s, rhs->data.str.length, (size_t) lhs->data.i);
-					value = mgCreateValueString(str);
-					free(str);
-				}
+					value = mgCreateValueStringEx(mgStringRepeatDuplicate(rhs->data.str.s, rhs->data.str.length, (size_t) lhs->data.i), MG_STRING_USAGE_KEEP);
 				else
-					value = mgCreateValueString("");
-
+					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
 				break;
 			}
 			case MG_VALUE_TUPLE:
@@ -1264,13 +1255,9 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			if (rhs->type == MG_VALUE_INTEGER)
 			{
 				if ((lhs->data.str.length > 0) && (rhs->data.i > 0))
-				{
-					char *str = mgStringRepeatDuplicate(lhs->data.str.s, lhs->data.str.length, (size_t) rhs->data.i);
-					value = mgCreateValueString(str);
-					free(str);
-				}
+					value = mgCreateValueStringEx(mgStringRepeatDuplicate(lhs->data.str.s, lhs->data.str.length, (size_t) rhs->data.i), MG_STRING_USAGE_KEEP);
 				else
-					value = mgCreateValueString("");
+					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
 			}
 			break;
 		case MG_VALUE_TUPLE:

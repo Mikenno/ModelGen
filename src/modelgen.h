@@ -76,6 +76,12 @@ typedef _MGList(MGValue*) MGValueList;
 typedef _MGPair(char*, MGValue*) MGValueMapPair;
 typedef _MGList(MGValueMapPair) MGValueMap;
 
+typedef enum MGStringUsage {
+	MG_STRING_USAGE_COPY,
+	MG_STRING_USAGE_KEEP,
+	MG_STRING_USAGE_STATIC
+} MGStringUsage;
+
 typedef struct MGValue {
 	MGValueType type;
 	size_t refCount;
@@ -85,6 +91,7 @@ typedef struct MGValue {
 		struct {
 			char *s;
 			size_t length;
+			MGStringUsage usage;
 		} str;
 		MGCFunction cfunc;
 		MGValueList a;

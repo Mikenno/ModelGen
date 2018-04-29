@@ -30,7 +30,8 @@ void mgDestroyValue(MGValue *value)
 	switch (value->type)
 	{
 	case MG_VALUE_STRING:
-		free(value->data.str.s);
+		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
+			free(value->data.str.s);
 		break;
 	case MG_VALUE_TUPLE:
 	case MG_VALUE_LIST:
@@ -250,11 +251,11 @@ inline MGValue* mgCreateValueFloat(float f)
 }
 
 
-inline MGValue* mgCreateValueString(const char *s)
+inline MGValue* mgCreateValueStringEx(const char *s, MGStringUsage usage)
 {
 	MGValue *value = mgCreateValue(MG_VALUE_STRING);
 	value->data.str.s = NULL;
-	mgStringSet(value, s);
+	mgStringSetEx(value, s, usage);
 	return value;
 }
 
@@ -277,13 +278,16 @@ inline MGValue* mgCreateValueMap(size_t capacity)
 }
 
 
-inline void mgStringSet(MGValue *value, const char *s)
+inline void mgStringSetEx(MGValue *value, const char *s, MGStringUsage usage)
 {
 	MG_ASSERT(s);
 
-	free(value->data.str.s);
-	value->data.str.s = mgStringDuplicate(s);
+	if (value->data.str.usage != MG_STRING_USAGE_STATIC)
+		free(value->data.str.s);
+
+	value->data.str.s = (usage == MG_STRING_USAGE_COPY) ? mgStringDuplicate(s) : (char*) s;
 	value->data.str.length = strlen(value->data.str.s);
+	value->data.str.usage = usage;
 }
 
 

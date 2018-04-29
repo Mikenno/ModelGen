@@ -45,7 +45,8 @@ MGValue* _mgMapGet(const MGValueMap *map, const char *key);
 #define mgCreateValueNull() mgCreateValue(MG_VALUE_NULL)
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);
-MGValue* mgCreateValueString(const char *s);
+#define mgCreateValueString(s) mgCreateValueStringEx(s, MG_STRING_USAGE_COPY)
+MGValue* mgCreateValueStringEx(const char *s, MGStringUsage usage);
 MGValue* mgCreateValueCFunction(MGCFunction cfunc);
 MGValue* mgCreateValueTuple(size_t capacity);
 MGValue* mgCreateValueTupleEx(size_t n, ...);
@@ -58,7 +59,8 @@ MGValue* mgCreateValueMap(size_t capacity);
 #define mgFloatSet(value, _f) value->data.f = _f
 #define mgFloatGet(value) value->data.f
 
-void mgStringSet(MGValue *value, const char *s);
+#define mgStringSet(value, s) mgStringSetEx(value, s, MG_STRING_USAGE_COPY)
+void mgStringSetEx(MGValue *value, const char *s, MGStringUsage usage);
 #define mgStringGet(value) ((const char*) (value)->data.str.s)
 #define mgStringLength(value) (value)->data.str.length
 
