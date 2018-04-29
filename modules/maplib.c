@@ -13,7 +13,7 @@ extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_map_has(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_MAP, 1, MG_VALUE_STRING);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_MAP, 1, MG_TYPE_STRING);
 
 	MGValue *map = (MGValue*) argv[0];
 	const char *key = argv[1]->data.str.s;
@@ -29,7 +29,7 @@ static MGValue* mg_map_has(MGInstance *instance, size_t argc, const MGValue* con
 static MGValue* mg_map_clear(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_MAP);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_MAP);
 
 	mgMapClear((MGValue*) argv[0]);
 
@@ -40,7 +40,7 @@ static MGValue* mg_map_clear(MGInstance *instance, size_t argc, const MGValue* c
 static MGValue* mg_map_keys(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_MAP);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_MAP);
 
 	MGValue *map = (MGValue*) argv[0];
 	MGValue *keys = mgCreateValueList(mgMapSize(map));
@@ -55,7 +55,7 @@ static MGValue* mg_map_keys(MGInstance *instance, size_t argc, const MGValue* co
 static MGValue* mg_map_values(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_MAP);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_MAP);
 
 	MGValue *map = (MGValue*) argv[0];
 	MGValue *values = mgCreateValueList(mgMapSize(map));
@@ -70,7 +70,7 @@ static MGValue* mg_map_values(MGInstance *instance, size_t argc, const MGValue* 
 static MGValue* mg_map_pairs(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_MAP);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_MAP);
 
 	MGValue *map = (MGValue*) argv[0];
 	MGValue *pairs = mgCreateValueList(mgMapSize(map));
@@ -87,7 +87,7 @@ MGValue* mgCreateMapLib(void)
 	MGValue *module = mgCreateValueModule();
 
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 
 	mgModuleSetCFunction(module, "has", mg_map_has); // map.has(map, key): bool
 

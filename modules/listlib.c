@@ -13,13 +13,13 @@ extern MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 8);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 0, 0, 0, 0, 0, 0, 0);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 0, 0, 0, 0, 0, 0, 0);
 
 	if (argc < 2)
 		mgFatalError("Error: add expected at least 2 arguments, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
+	else if (argv[0]->type != MG_TYPE_LIST)
 		mgFatalError("Error: add expected argument %zu as \"%s\", received \"%s\"",
-		        1, _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		        1, mgGetTypeName(MG_TYPE_LIST), mgGetTypeName(argv[0]->type));
 
 	for (size_t i = 1; i < argc; ++i)
 		mgListAdd((MGValue*) argv[0], mgReferenceValue(argv[i]));
@@ -31,7 +31,7 @@ static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* co
 static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 2, MG_VALUE_TUPLE, MG_VALUE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	for (size_t i = 0, end = mgListLength(argv[1]); i < end; ++i)
 		mgListAdd((MGValue*) argv[0], mgReferenceValue(_mgListGet(argv[1]->data.a, i)));
@@ -43,7 +43,7 @@ static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValu
 static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 3, 3);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 1, MG_VALUE_INTEGER, 0);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 1, MG_TYPE_INTEGER, 0);
 
 	intmax_t index = _mgListIndexRelativeToAbsolute(argv[0]->data.a, argv[1]->data.i);
 	index = (index > 0) ? index : 0;
@@ -58,13 +58,13 @@ static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue*
 static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST);
 
 	if (argc != 1)
 		mgFatalError("Error: clear expects exactly 1 argument, received %zu", argc);
-	else if (argv[0]->type != MG_VALUE_LIST)
+	else if (argv[0]->type != MG_TYPE_LIST)
 		mgFatalError("Error: clear expected argument as \"%s\", received \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[MG_VALUE_LIST], _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		        mgGetTypeName(MG_TYPE_LIST), mgGetTypeName(argv[0]->type));
 
 	mgListClear((MGValue*) argv[0]);
 
@@ -75,7 +75,7 @@ static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* 
 static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 4);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_TUPLE, MG_VALUE_LIST, 1, MG_VALUE_INTEGER, 1, MG_VALUE_INTEGER, 1, MG_VALUE_INTEGER);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_TUPLE, MG_TYPE_LIST, 1, MG_TYPE_INTEGER, 1, MG_TYPE_INTEGER, 1, MG_TYPE_INTEGER);
 
 	const MGValue *list = argv[0];
 	const intmax_t length = (intmax_t) mgListLength(list);
@@ -120,7 +120,7 @@ static MGValue* mg_list_slice(MGInstance *instance, size_t argc, const MGValue* 
 static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST);
 
 	const MGValue *list = argv[0];
 	const size_t length = mgListLength(list);
@@ -141,7 +141,7 @@ static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue
 static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_LIST, 2, MG_VALUE_FUNCTION, MG_VALUE_CFUNCTION);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION);
 
 	const MGValue *list = argv[0];
 	const intmax_t length = (intmax_t) mgListLength(list);
@@ -159,7 +159,7 @@ static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* c
 
 			MGValue *comparison = mgCall(instance, comparator, 2, argv2);
 			MG_ASSERT(comparison);
-			MG_ASSERT(comparison->type == MG_VALUE_INTEGER);
+			MG_ASSERT(comparison->type == MG_TYPE_INTEGER);
 
 			if (comparison->data.i)
 			{

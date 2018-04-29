@@ -21,7 +21,7 @@ static MGValue* mg_print(MGInstance *instance, size_t argc, const MGValue* const
 
 		const MGValue *value = argv[i];
 
-		if (value->type != MG_VALUE_STRING)
+		if (value->type != MG_TYPE_STRING)
 			mgInspectValueEx(argv[i], MG_FALSE);
 		else if (value->data.str.s)
 			fputs(value->data.str.s, stdout);
@@ -83,7 +83,7 @@ static MGValue* _mg_rangef(float start, float stop, float step)
 static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 3);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_INTEGER, MG_VALUE_FLOAT, 2, MG_VALUE_INTEGER, MG_VALUE_FLOAT, 2, MG_VALUE_INTEGER, MG_VALUE_FLOAT);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT);
 
 	if (argc < 1)
 		mgFatalError("Error: range expected at least 1 argument, received %zu", argc);
@@ -93,7 +93,7 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const
 	MGbool isInt = MG_TRUE;
 
 	for (size_t i = 0; i < argc; ++i)
-		if (argv[i]->type == MG_VALUE_FLOAT)
+		if (argv[i]->type == MG_TYPE_FLOAT)
 			isInt = MG_FALSE;
 
 	union {
@@ -115,9 +115,9 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const
 	{
 		if (argc > 1)
 			for (size_t i = 0; i < argc; ++i)
-				range.f[i] = (argv[i]->type == MG_VALUE_INTEGER) ? (float) argv[i]->data.i : argv[i]->data.f;
+				range.f[i] = (argv[i]->type == MG_TYPE_INTEGER) ? (float) argv[i]->data.i : argv[i]->data.f;
 		else
-			range.f[1] = (argv[0]->type == MG_VALUE_INTEGER) ? (float) argv[0]->data.i : argv[0]->data.f;
+			range.f[1] = (argv[0]->type == MG_TYPE_INTEGER) ? (float) argv[0]->data.i : argv[0]->data.f;
 	}
 
 	if (argc > 2)
@@ -133,7 +133,7 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const
 static MGValue* mg_enumerate(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_TUPLE, MG_VALUE_LIST, 1, MG_VALUE_INTEGER);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_TUPLE, MG_TYPE_LIST, 1, MG_TYPE_INTEGER);
 
 	int start = (argc > 1) ? argv[1]->data.i : 0;
 
@@ -150,7 +150,7 @@ static MGValue* mg_enumerate(MGInstance *instance, size_t argc, const MGValue* c
 static MGValue* mg_consecutive(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_TUPLE, MG_VALUE_LIST, 1, MG_VALUE_INTEGER);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_TUPLE, MG_TYPE_LIST, 1, MG_TYPE_INTEGER);
 
 	intmax_t n = (argc > 1) ? (intmax_t) argv[1]->data.i : 2;
 
@@ -180,14 +180,14 @@ static MGValue* mg_zip(MGInstance *instance, size_t argc, const MGValue* const* 
 {
 	mgCheckArgumentCount(instance, argc, 2, 8);
 	mgCheckArgumentTypes(instance, argc, argv,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST);
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	size_t minLength = SIZE_MAX;
 
@@ -214,15 +214,15 @@ static MGValue* mg_map(MGInstance *instance, size_t argc, const MGValue* const* 
 {
 	mgCheckArgumentCount(instance, argc, 2, 9);
 	mgCheckArgumentTypes(instance, argc, argv,
-	                     2, MG_VALUE_FUNCTION, MG_VALUE_CFUNCTION,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST,
-	                     2, MG_VALUE_TUPLE, MG_VALUE_LIST);
+	                     2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
+	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	size_t minLength = SIZE_MAX;
 
@@ -249,7 +249,7 @@ static MGValue* mg_map(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_filter(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_FUNCTION, MG_VALUE_CFUNCTION, 2, MG_VALUE_TUPLE, MG_VALUE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	const MGValue *callable = argv[0];
 	const MGValue *list = argv[1];
@@ -264,7 +264,7 @@ static MGValue* mg_filter(MGInstance *instance, size_t argc, const MGValue* cons
 
 		MGValue *filtered = mgCall(instance, callable, 1, argv2);
 		MG_ASSERT(filtered);
-		MG_ASSERT(filtered->type == MG_VALUE_INTEGER);
+		MG_ASSERT(filtered->type == MG_TYPE_INTEGER);
 
 		if (filtered->data.i)
 			mgListAdd(result, mgReferenceValue(item));
@@ -279,7 +279,7 @@ static MGValue* mg_filter(MGInstance *instance, size_t argc, const MGValue* cons
 static MGValue* mg_reduce(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_VALUE_FUNCTION, MG_VALUE_CFUNCTION, 2, MG_VALUE_TUPLE, MG_VALUE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	const MGValue *callable = argv[0];
 	const MGValue *list = argv[1];
@@ -287,7 +287,7 @@ static MGValue* mg_reduce(MGInstance *instance, size_t argc, const MGValue* cons
 
 	if (length < 1)
 		mgFatalError("Error: reduce expected argument %zu as a non-empty \"%s\"",
-		        2, _MG_VALUE_TYPE_NAMES[list->type]);
+		        2, mgGetTypeName(list->type));
 
 	MGValue *result = mgReferenceValue(_mgListGet(list->data.a, 0));
 
@@ -314,7 +314,7 @@ static MGValue* mg_type(MGInstance *instance, size_t argc, const MGValue* const*
 	mgCheckArgumentCount(instance, argc, 1, 1);
 	mgCheckArgumentTypes(instance, argc, argv, 0);
 
-	return mgCreateValueStringEx(_MG_VALUE_TYPE_NAMES[argv[0]->type], MG_STRING_USAGE_STATIC);
+	return mgCreateValueStringEx(mgGetTypeName(argv[0]->type), MG_STRING_USAGE_STATIC);
 }
 
 
@@ -324,15 +324,15 @@ MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv)
 
 	switch (argv[0]->type)
 	{
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
 		return mgCreateValueInteger((int) mgListLength(argv[0]));
-	case MG_VALUE_MAP:
+	case MG_TYPE_MAP:
 		return mgCreateValueInteger((int) mgMapSize(argv[0]));
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		return mgCreateValueInteger((int) mgStringLength(argv[0]));
 	default:
-		mgFatalError("Error: \"%s\" has no length", _MG_VALUE_TYPE_NAMES[argv[0]->type]);
+		mgFatalError("Error: \"%s\" has no length", mgGetTypeName(argv[0]->type));
 		return mgCreateValueNull();
 	}
 }
@@ -343,19 +343,19 @@ static MGValue* mg_int(MGInstance *instance, size_t argc, const MGValue* const* 
 	mgCheckArgumentCount(instance, argc, 1, 2);
 
 	if (argc == 2)
-		mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_STRING, 1, MG_VALUE_INTEGER);
+		mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_STRING, 1, MG_TYPE_INTEGER);
 	else
-		mgCheckArgumentTypes(instance, argc, argv, 3, MG_VALUE_INTEGER, MG_VALUE_FLOAT, MG_VALUE_STRING);
+		mgCheckArgumentTypes(instance, argc, argv, 3, MG_TYPE_INTEGER, MG_TYPE_FLOAT, MG_TYPE_STRING);
 
 	int base = (argc == 2) ? argv[1]->data.i : 10;
 
 	switch (argv[0]->type)
 	{
-	case MG_VALUE_INTEGER:
+	case MG_TYPE_INTEGER:
 		return mgCreateValueInteger(argv[0]->data.i);
-	case MG_VALUE_FLOAT:
+	case MG_TYPE_FLOAT:
 		return mgCreateValueInteger((int) argv[0]->data.f);
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		return mgCreateValueInteger(strtol(argv[0]->data.str.s, NULL, base));
 	default:
 		return mgCreateValueNull();
@@ -366,15 +366,15 @@ static MGValue* mg_int(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_float(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 3, MG_VALUE_INTEGER, MG_VALUE_FLOAT, MG_VALUE_STRING);
+	mgCheckArgumentTypes(instance, argc, argv, 3, MG_TYPE_INTEGER, MG_TYPE_FLOAT, MG_TYPE_STRING);
 
 	switch (argv[0]->type)
 	{
-	case MG_VALUE_INTEGER:
+	case MG_TYPE_INTEGER:
 		return mgCreateValueFloat((float) argv[0]->data.i);
-	case MG_VALUE_FLOAT:
+	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(argv[0]->data.f);
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		return mgCreateValueFloat(strtof(argv[0]->data.str.s, NULL));
 	default:
 		return mgCreateValueNull();
@@ -416,7 +416,7 @@ static MGValue* mg_globals(MGInstance *instance, size_t argc, const MGValue* con
 	MG_ASSERT(instance);
 	MG_ASSERT(instance->callStackTop);
 	MG_ASSERT(instance->callStackTop->module);
-	MG_ASSERT(instance->callStackTop->module->type == MG_VALUE_MODULE);
+	MG_ASSERT(instance->callStackTop->module->type == MG_TYPE_MODULE);
 	MG_ASSERT(instance->callStackTop->module->data.module.globals);
 
 	mgCheckArgumentCount(instance, argc, 0, 0);
@@ -443,7 +443,7 @@ static MGValue* mg_import(MGInstance *instance, size_t argc, const MGValue* cons
 	MG_ASSERT(instance);
 
 	mgCheckArgumentCount(instance, argc, 1, 1);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_STRING);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_STRING);
 
 	return mgImportModule(instance, argv[0]->data.str.s);
 }
@@ -454,7 +454,7 @@ static MGValue* mg_eval(MGInstance *instance, size_t argc, const MGValue* const*
 	MG_ASSERT(instance);
 
 	mgCheckArgumentCount(instance, argc, 1, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_VALUE_STRING, 1, MG_VALUE_MAP);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_STRING, 1, MG_TYPE_MAP);
 
 	return mgEvalEx(instance, argv[0]->data.str.s, (argc > 1) ? argv[1] : NULL);
 }
@@ -465,7 +465,7 @@ MGValue* mgCreateBaseLib(void)
 	MGValue *module = mgCreateValueModule();
 
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 
 	mgModuleSetInteger(module, "false", 0);
 	mgModuleSetInteger(module, "true", 1);

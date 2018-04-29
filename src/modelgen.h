@@ -7,7 +7,7 @@
 
 #include "tokens.h"
 #include "ast.h"
-#include "value.h"
+#include "types.h"
 #include "frame.h"
 #include "collections.h"
 
@@ -83,7 +83,7 @@ typedef enum MGStringUsage {
 } MGStringUsage;
 
 typedef struct MGValue {
-	MGValueType type;
+	MGType type;
 	size_t refCount;
 	union {
 		int i;

@@ -32,7 +32,7 @@ MGValue* mgCall(MGInstance *instance, const MGValue *callable, size_t argc, cons
 
 	MGStackFrame frame;
 
-	if ((callable->type != MG_VALUE_CFUNCTION) && callable->data.func.locals)
+	if ((callable->type != MG_TYPE_CFUNCTION) && callable->data.func.locals)
 		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(callable->data.func.locals));
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
@@ -55,12 +55,12 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 	MG_ASSERT((argc == 0) || (argv != NULL));
 
 	if (!mgIsCallable(callable))
-		mgFatalError("Error: \"%s\" is not callable", _MG_VALUE_TYPE_NAMES[callable->type]);
+		mgFatalError("Error: \"%s\" is not callable", mgGetTypeName(callable->type));
 
 	MGValue *module = (MGValue*) _mgLastModule(instance);
 	MG_ASSERT(module);
 
-	if (callable->type == MG_VALUE_CFUNCTION)
+	if (callable->type == MG_TYPE_CFUNCTION)
 		frame->value = callable->data.cfunc(module->data.module.instance, argc, argv);
 	else
 	{
@@ -167,21 +167,21 @@ void mgCheckArgumentTypes(MGInstance *instance, size_t argc, const MGValue* cons
 		MGbool match = (MGbool) (types == 0);
 
 		for (int j = 0; j < types; ++j)
-			if (argv[i]->type == va_arg(args, MGValueType))
+			if (argv[i]->type == va_arg(args, MGType))
 				match = MG_TRUE;
 
 		if (!match)
 		{
-			size_t messageLength = 100 + (size_t) types * (_MG_LONGEST_VALUE_NAME_LENGTH + 10);
+			size_t messageLength = 100 + (size_t) types * (_MG_LONGEST_TYPE_NAME_LENGTH + 10);
 			char *message = (char*) malloc(messageLength * sizeof(char*));
 			char *end = message;
 
 			end += snprintf(end, messageLength - (end - message), "Error: %s expected argument %zu as", mgGetCalleeName(instance), i + 1);
 
 			for (int j = 0; j < types; ++j)
-				end += snprintf(end, messageLength - (end - message), "%s \"%s\"", (j > 0) ? " or" : "", _MG_VALUE_TYPE_NAMES[va_arg(args2, MGValueType)]);
+				end += snprintf(end, messageLength - (end - message), "%s \"%s\"", (j > 0) ? " or" : "", mgGetTypeName(va_arg(args2, MGType)));
 
-			end += snprintf(end, messageLength - (end - message), ", received \"%s\"", _MG_VALUE_TYPE_NAMES[argv[i]->type]);
+			end += snprintf(end, messageLength - (end - message), ", received \"%s\"", mgGetTypeName(argv[i]->type));
 
 			message[messageLength - 1] = '\0';
 			*end = '\0';

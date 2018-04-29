@@ -8,7 +8,7 @@
 #include "utilities.h"
 
 
-inline MGValue* mgCreateValue(MGValueType type)
+inline MGValue* mgCreateValueEx(MGType type)
 {
 	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
 	MG_ASSERT(value);
@@ -29,27 +29,27 @@ void mgDestroyValue(MGValue *value)
 
 	switch (value->type)
 	{
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
 			free(value->data.str.s);
 		break;
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
 		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
 			mgDestroyValue(_mgListGet(value->data.a, i));
 		_mgListDestroy(value->data.a);
 		break;
-	case MG_VALUE_MAP:
+	case MG_TYPE_MAP:
 		_mgDestroyMap(&value->data.m);
 		break;
-	case MG_VALUE_MODULE:
+	case MG_TYPE_MODULE:
 		MG_ASSERT(value->data.module.globals);
 		mgDestroyParser(&value->data.module.parser);
 		free(value->data.module.filename);
 		mgDestroyValue(value->data.module.globals);
 		break;
-	case MG_VALUE_PROCEDURE:
-	case MG_VALUE_FUNCTION:
+	case MG_TYPE_PROCEDURE:
+	case MG_TYPE_FUNCTION:
 		mgDestroyValue(value->data.func.module);
 		mgDestroyNode(value->data.func.node);
 		if (value->data.func.locals)
@@ -65,7 +65,7 @@ void mgDestroyValue(MGValue *value)
 
 inline MGValue* mgCreateValueModule(void)
 {
-	MGValue *module = mgCreateValue(MG_VALUE_MODULE);
+	MGValue *module = mgCreateValueEx(MG_TYPE_MODULE);
 	MG_ASSERT(module);
 
 	module->data.module.instance = NULL;
@@ -81,7 +81,7 @@ inline MGValue* mgCreateValueModule(void)
 inline void mgModuleSet(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(name);
 
 	_mgMapSet(&module->data.module.globals->data.m, name, value);
@@ -91,7 +91,7 @@ inline void mgModuleSet(MGValue *module, const char *name, MGValue *value)
 inline MGValue* mgModuleGet(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(name);
 
 	return _mgMapGet(&module->data.module.globals->data.m, name);
@@ -101,21 +101,21 @@ inline MGValue* mgModuleGet(MGValue *module, const char *name)
 inline int mgModuleGetInteger(MGValue *module, const char *name, int defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
-	return (value && (value->type == MG_VALUE_INTEGER)) ? value->data.i : defaultValue;
+	return (value && (value->type == MG_TYPE_INTEGER)) ? value->data.i : defaultValue;
 }
 
 
 inline float mgModuleGetFloat(MGValue *module, const char *name, float defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
-	return (value && (value->type == MG_VALUE_FLOAT)) ? value->data.f : defaultValue;
+	return (value && (value->type == MG_TYPE_FLOAT)) ? value->data.f : defaultValue;
 }
 
 
 inline const char* mgModuleGetString(MGValue *module, const char *name, const char *defaultValue)
 {
 	MGValue *value = mgModuleGet(module, name);
-	return (value && (value->type == MG_VALUE_STRING)) ? value->data.str.s : defaultValue;
+	return (value && (value->type == MG_TYPE_STRING)) ? value->data.str.s : defaultValue;
 }
 
 
@@ -237,7 +237,7 @@ MGValue* _mgMapGet(const MGValueMap *map, const char *key)
 
 inline MGValue* mgCreateValueInteger(int i)
 {
-	MGValue *value = mgCreateValue(MG_VALUE_INTEGER);
+	MGValue *value = mgCreateValueEx(MG_TYPE_INTEGER);
 	value->data.i = i;
 	return value;
 }
@@ -245,7 +245,7 @@ inline MGValue* mgCreateValueInteger(int i)
 
 inline MGValue* mgCreateValueFloat(float f)
 {
-	MGValue *value = mgCreateValue(MG_VALUE_FLOAT);
+	MGValue *value = mgCreateValueEx(MG_TYPE_FLOAT);
 	value->data.f = f;
 	return value;
 }
@@ -253,7 +253,7 @@ inline MGValue* mgCreateValueFloat(float f)
 
 inline MGValue* mgCreateValueStringEx(const char *s, MGStringUsage usage)
 {
-	MGValue *value = mgCreateValue(MG_VALUE_STRING);
+	MGValue *value = mgCreateValueEx(MG_TYPE_STRING);
 	value->data.str.s = NULL;
 	mgStringSetEx(value, s, usage);
 	return value;
@@ -264,7 +264,7 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 {
 	MG_ASSERT(cfunc);
 
-	MGValue *value = mgCreateValue(MG_VALUE_CFUNCTION);
+	MGValue *value = mgCreateValueEx(MG_TYPE_CFUNCTION);
 	value->data.cfunc = cfunc;
 	return value;
 }
@@ -272,7 +272,7 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 
 inline MGValue* mgCreateValueMap(size_t capacity)
 {
-	MGValue *value = mgCreateValue(MG_VALUE_MAP);
+	MGValue *value = mgCreateValueEx(MG_TYPE_MAP);
 	_mgCreateMap(&value->data.m, capacity > 0 ? (size_t) mgNextPowerOfTwo((uint32_t) capacity) : 0);
 	return value;
 }
@@ -294,7 +294,7 @@ inline void mgStringSetEx(MGValue *value, const char *s, MGStringUsage usage)
 inline MGValue* mgCreateValueTuple(size_t capacity)
 {
 	MGValue *value = mgCreateValueList(capacity);
-	value->type = MG_VALUE_TUPLE;
+	value->type = MG_TYPE_TUPLE;
 	return value;
 }
 
@@ -320,7 +320,7 @@ MGValue* mgCreateValueTupleEx(size_t n, ...)
 
 MGValue* mgCreateValueList(size_t capacity)
 {
-	MGValue *value = mgCreateValue(MG_VALUE_LIST);
+	MGValue *value = mgCreateValueEx(MG_TYPE_LIST);
 
 	if (capacity > 0)
 		_mgListCreate(MGValue*, value->data.a, (size_t) mgNextPowerOfTwo((uint32_t) capacity));
@@ -334,7 +334,7 @@ MGValue* mgCreateValueList(size_t capacity)
 void mgListAdd(MGValue *list, MGValue *value)
 {
 	MG_ASSERT(list);
-	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
 	MG_ASSERT(value);
 
 	_mgListAdd(MGValue*, list->data.a, value);
@@ -344,7 +344,7 @@ void mgListAdd(MGValue *list, MGValue *value)
 void mgListInsert(MGValue *list, intmax_t index, MGValue *value)
 {
 	MG_ASSERT(list);
-	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
 	MG_ASSERT(value);
 
 	index = _mgListIndexRelativeToAbsolute(list->data.a, index);
@@ -360,7 +360,7 @@ void mgListInsert(MGValue *list, intmax_t index, MGValue *value)
 void mgListRemove(MGValue *list, intmax_t index)
 {
 	MG_ASSERT(list);
-	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
 
 	index = _mgListIndexRelativeToAbsolute(list->data.a, index);
 	MG_ASSERT((index >= 0) && (index < _mgListLength(list->data.a)));
@@ -374,7 +374,7 @@ void mgListRemove(MGValue *list, intmax_t index)
 void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end)
 {
 	MG_ASSERT(list);
-	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
 
 	begin = _mgListIndexRelativeToAbsolute(list->data.a, begin);
 	end = _mgListIndexRelativeToAbsolute(list->data.a, end);
@@ -397,7 +397,7 @@ void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end)
 inline void mgListClear(MGValue *list)
 {
 	MG_ASSERT(list);
-	MG_ASSERT((list->type == MG_VALUE_TUPLE) || (list->type == MG_VALUE_LIST));
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
 
 	for (size_t i = 0; i < _mgListLength(list->data.a); ++i)
 		mgDestroyValue(_mgListGet(list->data.a, i));
@@ -410,7 +410,7 @@ void mgCreateMapIterator(MGMapIterator *iterator, MGValue *map)
 {
 	MG_ASSERT(iterator);
 	MG_ASSERT(map);
-	MG_ASSERT(map->type == MG_VALUE_MAP);
+	MG_ASSERT(map->type == MG_TYPE_MAP);
 
 	memset(iterator, 0, sizeof(MGMapIterator));
 
@@ -461,9 +461,9 @@ MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value)
 void mgMapMerge(MGValue *destination, const MGValue *source, MGbool replace)
 {
 	MG_ASSERT(destination);
-	MG_ASSERT(destination->type == MG_VALUE_MAP);
+	MG_ASSERT(destination->type == MG_TYPE_MAP);
 	MG_ASSERT(source);
-	MG_ASSERT(source->type == MG_VALUE_MAP);
+	MG_ASSERT(source->type == MG_TYPE_MAP);
 
 	MGMapIterator iterator;
 	mgCreateMapIterator(&iterator, (MGValue*) source);
@@ -485,7 +485,7 @@ void mgMapMerge(MGValue *destination, const MGValue *source, MGbool replace)
 MGValue* mgMapCopy(const MGValue *map)
 {
 	MG_ASSERT(map);
-	MG_ASSERT(map->type == MG_VALUE_MAP);
+	MG_ASSERT(map->type == MG_TYPE_MAP);
 
 	MGValue *copy = mgCreateValueMap(mgMapSize(map));
 	MG_ASSERT(copy);

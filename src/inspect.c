@@ -220,13 +220,13 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 
 static inline void _mgInspectValueType(const MGValue *value)
 {
-	fputs(_MG_VALUE_TYPE_NAMES[value->type], stdout);
+	fputs(mgGetTypeName(value->type), stdout);
 
-	if ((value->type == MG_VALUE_TUPLE) || (value->type == MG_VALUE_LIST))
+	if ((value->type == MG_TYPE_TUPLE) || (value->type == MG_TYPE_LIST))
 		printf("[%zu]", _mgListLength(value->data.a));
-	else if (value->type == MG_VALUE_MAP)
+	else if (value->type == MG_TYPE_MAP)
 		printf("[%zu]", _mgListLength(value->data.m));
-	else if ((value->type == MG_VALUE_MODULE) && value->data.module.filename)
+	else if ((value->type == MG_TYPE_MODULE) && value->data.module.filename)
 		printf(" \"%s\"", value->data.module.filename);
 }
 
@@ -259,13 +259,13 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 
 	switch (value->type)
 	{
-	case MG_VALUE_INTEGER:
+	case MG_TYPE_INTEGER:
 		printf("%d", value->data.i);
 		break;
-	case MG_VALUE_FLOAT:
+	case MG_TYPE_FLOAT:
 		printf("%f", value->data.f);
 		break;
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 	{
 		char *str = (char*) malloc((mgInlineRepresentationLength(value->data.str.s, NULL) + 1) * sizeof(char));
 		mgInlineRepresentation(str, value->data.str.s, NULL);
@@ -273,9 +273,9 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		free(str);
 		break;
 	}
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
-		putchar((value->type == MG_VALUE_TUPLE) ? '(' : '[');
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
+		putchar((value->type == MG_TYPE_TUPLE) ? '(' : '[');
 		if (_mgListLength(value->data.m))
 		{
 			_mgMetadataAdd(metadata, value);
@@ -286,11 +286,11 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 				_mgInspectValue(_mgListGet(value->data.a, i), depth, metadata);
 			}
 		}
-		if ((_mgListLength(value->data.a) == 1) && (value->type == MG_VALUE_TUPLE))
+		if ((_mgListLength(value->data.a) == 1) && (value->type == MG_TYPE_TUPLE))
 			putchar(',');
-		putchar((value->type == MG_VALUE_TUPLE) ? ')' : ']');
+		putchar((value->type == MG_TYPE_TUPLE) ? ')' : ']');
 		break;
-	case MG_VALUE_MAP:
+	case MG_TYPE_MAP:
 		putchar('{');
 		if (_mgMapSize(value->data.m))
 		{
@@ -303,11 +303,11 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		}
 		putchar('}');
 		break;
-	case MG_VALUE_CFUNCTION:
+	case MG_TYPE_CFUNCTION:
 		printf("%p", value->data.cfunc);
 		break;
-	case MG_VALUE_PROCEDURE:
-	case MG_VALUE_FUNCTION:
+	case MG_TYPE_PROCEDURE:
+	case MG_TYPE_FUNCTION:
 		printf("%p", value->data.func.node);
 		if (value->data.func.locals && mgListLength(value->data.func.locals))
 		{
@@ -317,10 +317,10 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 			_mgInspectValue(value->data.func.locals, depth, metadata);
 		}
 		break;
-	case MG_VALUE_MODULE:
+	case MG_TYPE_MODULE:
 		_mgInspectValue(value->data.module.globals, depth, metadata);
 		break;
-	case MG_VALUE_NULL:
+	case MG_TYPE_NULL:
 		fputs("<null>", stdout);
 		break;
 	default:
@@ -373,7 +373,7 @@ void mgInspectStackFrame(const MGStackFrame *frame)
 		if (token)
 		{
 			MG_ASSERT(frame->module);
-			MG_ASSERT(frame->module->type == MG_VALUE_MODULE);
+			MG_ASSERT(frame->module->type == MG_TYPE_MODULE);
 			MG_ASSERT(frame->module->data.module.filename);
 
 			printf("Caller: %s:%u:%u\n",

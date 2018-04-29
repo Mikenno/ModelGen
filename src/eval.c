@@ -10,7 +10,7 @@ MGValue* mgEvalEx(MGInstance *instance, const char *string, const MGValue *local
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(string);
-	MG_ASSERT(!locals || (locals->type == MG_VALUE_MAP));
+	MG_ASSERT(!locals || (locals->type == MG_TYPE_MAP));
 
 	MGValue *module = mgCreateValueModule();
 	module->data.module.instance = instance;
@@ -30,7 +30,7 @@ MGValue* mgEvalEx(MGInstance *instance, const char *string, const MGValue *local
 	MGValue *value = _mgVisitNode(module, _mgListGet(root->children, 0));
 	MG_ASSERT(value);
 
-	if ((value->type == MG_VALUE_FUNCTION) && locals && mgMapSize(locals))
+	if ((value->type == MG_TYPE_FUNCTION) && locals && mgMapSize(locals))
 	{
 		if (value->data.func.locals)
 			mgMapMerge(value->data.func.locals, locals, MG_TRUE);

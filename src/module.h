@@ -13,7 +13,8 @@ typedef struct MGMapIterator {
 	size_t index;
 } MGMapIterator;
 
-MGValue* mgCreateValue(MGValueType type);
+#define mgCreateValue(type) mgCreateValueEx(type, NULL)
+MGValue* mgCreateValueEx(MGType type);
 void mgDestroyValue(MGValue *value);
 
 MGValue* mgDeepCopyValue(const MGValue *value);
@@ -42,7 +43,7 @@ void _mgMapClear(MGValueMap *map);
 void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
 MGValue* _mgMapGet(const MGValueMap *map, const char *key);
 
-#define mgCreateValueNull() mgCreateValue(MG_VALUE_NULL)
+#define mgCreateValueNull() mgCreateValueEx(MG_TYPE_NULL)
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);
 #define mgCreateValueString(s) mgCreateValueStringEx(s, MG_STRING_USAGE_COPY)

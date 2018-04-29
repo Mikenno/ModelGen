@@ -107,7 +107,7 @@ void mgCreateInstance(MGInstance *instance)
 
 		MGValue *module = _mgStaticModules[i].create();
 		MG_ASSERT(module);
-		MG_ASSERT(module->type == MG_VALUE_MODULE);
+		MG_ASSERT(module->type == MG_TYPE_MODULE);
 
 		module->data.module.isStatic = MG_TRUE;
 		MG_ASSERT(mgMapGet(instance->staticModules, _mgStaticModules[i].name) == NULL);
@@ -144,7 +144,7 @@ void mgCreateStackFrameEx(MGStackFrame *frame, MGValue *module, MGValue *locals)
 {
 	MG_ASSERT(frame);
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(locals);
 
 	memset(frame, 0, sizeof(MGStackFrame));
@@ -295,7 +295,7 @@ static inline void _mgRunModule(MGInstance *instance, MGValue *module)
 {
 	MG_ASSERT(instance);
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance == instance);
 	MG_ASSERT(module->data.module.parser.root);
 

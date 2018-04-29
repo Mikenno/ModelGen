@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
 	MGValue *base = mgMapGet(instance.staticModules, "base");
 	MG_ASSERT(base);
-	MG_ASSERT(base->type == MG_VALUE_MODULE);
+	MG_ASSERT(base->type == MG_TYPE_MODULE);
 
 	int i = 1;
 	const char *arg;

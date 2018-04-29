@@ -50,7 +50,7 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node);
 inline MGValue* mgDeepCopyValue(const MGValue *value)
 {
 	MG_ASSERT(value);
-	MG_ASSERT(value->type != MG_VALUE_MODULE);
+	MG_ASSERT(value->type != MG_TYPE_MODULE);
 
 	MGValue *copy = (MGValue*) malloc(sizeof(MGValue));
 	MG_ASSERT(copy);
@@ -60,12 +60,12 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 
 	switch (copy->type)
 	{
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		if (value->data.str.usage != MG_STRING_USAGE_STATIC)
 			copy->data.str.s = mgStringDuplicate(value->data.str.s);
 		break;
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
 		if (mgListLength(value))
 		{
 			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
@@ -75,7 +75,7 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
 		break;
-	case MG_VALUE_MAP:
+	case MG_TYPE_MAP:
 		if (_mgMapSize(value->data.m))
 		{
 			MGMapIterator iterator;
@@ -90,8 +90,8 @@ inline MGValue* mgDeepCopyValue(const MGValue *value)
 		else
 			_mgCreateMap(&copy->data.m, 0);
 		break;
-	case MG_VALUE_PROCEDURE:
-	case MG_VALUE_FUNCTION:
+	case MG_TYPE_PROCEDURE:
+	case MG_TYPE_FUNCTION:
 		copy->data.func.module = mgReferenceValue(value->data.func.module);
 		copy->data.func.node = mgReferenceNode(value->data.func.node);
 		if (value->data.func.locals)
@@ -119,7 +119,7 @@ MGValue* mgReferenceValue(const MGValue *value)
 void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(module->data.module.instance->callStackTop);
 	MG_ASSERT(module->data.module.instance->callStackTop->locals);
@@ -132,7 +132,7 @@ void _mgSetLocalValue(MGValue *module, const char *name, MGValue *value)
 void _mgSetValue(MGValue *module, const char *name, MGValue *value)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(module->data.module.instance->callStackTop);
 	MG_ASSERT(module->data.module.instance->callStackTop->locals);
@@ -148,7 +148,7 @@ void _mgSetValue(MGValue *module, const char *name, MGValue *value)
 const MGValue* _mgGetValue(MGValue *module, const char *name)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(module->data.module.instance->callStackTop);
 	MG_ASSERT(module->data.module.instance->callStackTop->locals);
@@ -172,12 +172,12 @@ const MGValue* _mgGetValue(MGValue *module, const char *name)
 static inline size_t _mgResolveArrayIndex(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
 	MG_ASSERT(collection);
-	MG_ASSERT((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST));
+	MG_ASSERT((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST));
 	MG_ASSERT(index);
 
-	if (index->type != MG_VALUE_INTEGER)
+	if (index->type != MG_TYPE_INTEGER)
 		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[collection->type], _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[index->type]);
+		        mgGetTypeName(collection->type), mgGetTypeName(MG_TYPE_INTEGER), mgGetTypeName(index->type));
 
 	size_t i = (size_t) _mgListIndexRelativeToAbsolute(collection->data.a, mgIntegerGet(index));
 
@@ -186,13 +186,13 @@ static inline size_t _mgResolveArrayIndex(MGValue *module, MGNode *node, MGValue
 		if (mgIntegerGet(index) >= 0)
 		{
 			MG_FAIL("Error: \"%s\" index out of range (0 <= %d < %zu)",
-			        _MG_VALUE_TYPE_NAMES[collection->type],
+			        mgGetTypeName(collection->type),
 			        mgIntegerGet(index), mgListLength(collection));
 		}
 		else
 		{
 			MG_FAIL("Error: \"%s\" index out of range (%zu <= %d < 0)",
-			        _MG_VALUE_TYPE_NAMES[collection->type],
+			        mgGetTypeName(collection->type),
 			        -mgListLength(collection), mgIntegerGet(index));
 		}
 	}
@@ -223,9 +223,9 @@ static inline void _mgResolveArraySet(MGValue *module, MGNode *node, MGValue *co
 static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *key)
 {
 	MG_ASSERT(collection);
-	MG_ASSERT(collection->type == MG_VALUE_MAP);
+	MG_ASSERT(collection->type == MG_TYPE_MAP);
 	MG_ASSERT(key);
-	MG_ASSERT(key->type == MG_VALUE_STRING);
+	MG_ASSERT(key->type == MG_TYPE_STRING);
 	MG_ASSERT(key->data.str.s);
 
 	MGValue *value = mgMapGet(collection, key->data.str.s);
@@ -240,9 +240,9 @@ static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *
 static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *value)
 {
 	MG_ASSERT(collection);
-	MG_ASSERT(collection->type == MG_VALUE_MAP);
+	MG_ASSERT(collection->type == MG_TYPE_MAP);
 	MG_ASSERT(key);
-	MG_ASSERT(key->type == MG_VALUE_STRING);
+	MG_ASSERT(key->type == MG_TYPE_STRING);
 	MG_ASSERT(key->data.str.s);
 
 	mgMapSet(collection, key->data.str.s, value);
@@ -251,14 +251,14 @@ static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *
 
 static inline MGValue* _mgResolveSubscriptGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
-	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
+	if ((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST))
 		return _mgResolveArrayGet(module, node, collection, index);
-	else if (collection->type == MG_VALUE_MAP)
+	else if (collection->type == MG_TYPE_MAP)
 		return _mgResolveMapGet(module, node, collection, index);
-	else if (collection->type == MG_VALUE_MODULE)
+	else if (collection->type == MG_TYPE_MODULE)
 		return _mgResolveMapGet(module, node, collection->data.module.globals, index);
 	else
-		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
+		MG_FAIL("Error: \"%s\" is not subscriptable", mgGetTypeName(collection->type));
 
 	return NULL;
 }
@@ -266,21 +266,21 @@ static inline MGValue* _mgResolveSubscriptGet(MGValue *module, MGNode *node, MGV
 
 static inline void _mgResolveSubscriptSet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
 {
-	if ((collection->type == MG_VALUE_TUPLE) || (collection->type == MG_VALUE_LIST))
+	if ((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST))
 		_mgResolveArraySet(module, node, collection, index, value);
-	else if (collection->type == MG_VALUE_MAP)
+	else if (collection->type == MG_TYPE_MAP)
 		_mgResolveMapSet(collection, index, value);
-	else if (collection->type == MG_VALUE_MODULE)
+	else if (collection->type == MG_TYPE_MODULE)
 		_mgResolveMapSet(collection->data.module.globals, index, value);
 	else
-		MG_FAIL("Error: \"%s\" is not subscriptable", _MG_VALUE_TYPE_NAMES[collection->type]);
+		MG_FAIL("Error: \"%s\" is not subscriptable", mgGetTypeName(collection->type));
 }
 
 
 static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values, MGbool local)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(names);
 	MG_ASSERT((names->type == MG_NODE_NAME) || (names->type == MG_NODE_SUBSCRIPT) || (names->type == MG_NODE_ATTRIBUTE) || (names->type == MG_NODE_TUPLE));
 	MG_ASSERT(values);
@@ -315,25 +315,25 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(names->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
+		MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(names->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_VALUE_MAP)
+		if (object->type == MG_TYPE_MAP)
 			mgMapSet(object, attributeNode->token->value.s, mgReferenceValue(values));
-		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+		else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
 			mgMapSet(object->data.func.locals, attributeNode->token->value.s, mgReferenceValue(values));
-		else if (object->type == MG_VALUE_MODULE)
+		else if (object->type == MG_TYPE_MODULE)
 			mgMapSet(object->data.module.globals, attributeNode->token->value.s, mgReferenceValue(values));
 
 		mgDestroyValue(object);
 	}
 	else if (names->type == MG_NODE_TUPLE)
 	{
-		if ((values->type != MG_VALUE_TUPLE) && (values->type != MG_VALUE_LIST))
-			_MG_FAIL(module, names, "Error: \"%s\" is not iterable", _MG_VALUE_TYPE_NAMES[values->type]);
+		if ((values->type != MG_TYPE_TUPLE) && (values->type != MG_TYPE_LIST))
+			_MG_FAIL(module, names, "Error: \"%s\" is not iterable", mgGetTypeName(values->type));
 
 		if (_mgListLength(names->children) != mgListLength(values))
 			_MG_FAIL(module, names, "Error: Mismatched lengths for parallel assignment (%zu != %zu)", _mgListLength(names->children), mgListLength(values));
@@ -347,7 +347,7 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(module->data.module.instance->callStackTop);
 
@@ -419,7 +419,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 
 	MGStackFrame frame;
 
-	if (((func->type == MG_VALUE_PROCEDURE) || (func->type == MG_VALUE_FUNCTION)) && func->data.func.locals)
+	if (((func->type == MG_TYPE_PROCEDURE) || (func->type == MG_TYPE_FUNCTION)) && func->data.func.locals)
 		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(func->data.func.locals));
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
@@ -458,9 +458,9 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 	MGValue *tuple = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(tuple);
 
-	if (tuple->type != MG_VALUE_TUPLE)
+	if (tuple->type != MG_TYPE_TUPLE)
 		MG_FAIL("Error: Expected \"%s\", received \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[MG_VALUE_TUPLE], _MG_VALUE_TYPE_NAMES[tuple->type]);
+		        mgGetTypeName(MG_TYPE_TUPLE), mgGetTypeName(tuple->type));
 	else if (mgTupleLength(tuple) != vertexSize)
 		MG_FAIL("Error: Expected tuple with a length of %u, received a tuple with a length of %zu",
 		        vertexSize, mgTupleLength(tuple));
@@ -472,14 +472,14 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 
 	for (unsigned int i = 0; i < vertexSize; ++i)
 	{
-		if (mgTupleGet(tuple, i)->type == MG_VALUE_INTEGER)
+		if (mgTupleGet(tuple, i)->type == MG_TYPE_INTEGER)
 			vertices[vertexCount][i] = (float) mgTupleGet(tuple, i)->data.i;
-		else if (mgTupleGet(tuple, i)->type == MG_VALUE_FLOAT)
+		else if (mgTupleGet(tuple, i)->type == MG_TYPE_FLOAT)
 			vertices[vertexCount][i] = mgTupleGet(tuple, i)->data.f;
 		else
 			MG_FAIL("Error: Expected \"%s\" or \"%s\", received \"%s\"",
-			        _MG_VALUE_TYPE_NAMES[MG_VALUE_INTEGER], _MG_VALUE_TYPE_NAMES[MG_VALUE_FLOAT],
-			        _MG_VALUE_TYPE_NAMES[tuple->type]);
+			        mgGetTypeName(MG_TYPE_INTEGER), mgGetTypeName(MG_TYPE_FLOAT),
+			        mgGetTypeName(tuple->type));
 	}
 
 	++_mgListLength(instance->vertices);
@@ -551,13 +551,13 @@ static void _mgDelete(MGValue *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || (object->type == MG_VALUE_MODULE));
+		MG_ASSERT((object->type == MG_TYPE_MAP) || (object->type == MG_TYPE_MODULE));
 
 		const MGNode *attributeNode = _mgListGet(node->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_VALUE_MAP)
+		if (object->type == MG_TYPE_MAP)
 		{
 #if MG_DEBUG
 			// Check if the name is defined
@@ -566,7 +566,7 @@ static void _mgDelete(MGValue *module, MGNode *node)
 
 			mgMapRemove(object, attributeNode->token->value.s);
 		}
-		else if (object->type == MG_VALUE_MODULE)
+		else if (object->type == MG_TYPE_MODULE)
 		{
 #if MG_DEBUG
 			// Check if the name is defined
@@ -604,7 +604,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 
 	MGValue *iterable = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(iterable);
-	MG_ASSERT((iterable->type == MG_VALUE_TUPLE) || (iterable->type == MG_VALUE_LIST));
+	MG_ASSERT((iterable->type == MG_TYPE_TUPLE) || (iterable->type == MG_TYPE_LIST));
 
 	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
@@ -663,7 +663,7 @@ static MGValue* _mgVisitWhile(MGValue *module, MGNode *node)
 	{
 		MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
 		MG_ASSERT(condition);
-		MG_ASSERT(condition->type == MG_VALUE_INTEGER);
+		MG_ASSERT(condition->type == MG_TYPE_INTEGER);
 
 		if (!condition->data.i)
 		{
@@ -740,22 +740,22 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 
 	switch (condition->type)
 	{
-	case MG_VALUE_NULL:
+	case MG_TYPE_NULL:
 		break;
-	case MG_VALUE_INTEGER:
+	case MG_TYPE_INTEGER:
 		_condition = condition->data.i != 0;
 		break;
-	case MG_VALUE_FLOAT:
+	case MG_TYPE_FLOAT:
 		_condition = !_MG_FEQUAL(condition->data.f, 0.0f);
 		break;
-	case MG_VALUE_STRING:
+	case MG_TYPE_STRING:
 		_condition = mgStringLength(condition) != 0;
 		break;
-	case MG_VALUE_TUPLE:
-	case MG_VALUE_LIST:
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
 		_condition = mgListLength(condition) > 0;
 		break;
-	case MG_VALUE_MAP:
+	case MG_TYPE_MAP:
 		_condition = mgMapSize(condition) > 0;
 		break;
 	default:
@@ -784,7 +784,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
-	MGValue *func = mgCreateValue((node->type == MG_NODE_PROCEDURE) ? MG_VALUE_PROCEDURE : MG_VALUE_FUNCTION);
+	MGValue *func = mgCreateValueEx((node->type == MG_NODE_PROCEDURE) ? MG_TYPE_PROCEDURE : MG_TYPE_FUNCTION);
 
 	func->data.func.module = mgReferenceValue(module);
 	func->data.func.node = mgReferenceNode(node);
@@ -825,17 +825,17 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 
 		MGValue *object = _mgVisitNode(module, _mgListGet(nameNode->children, 0));
 		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
+		MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
 
 		MGNode *attributeNode = _mgListGet(nameNode->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_VALUE_MAP)
+		if (object->type == MG_TYPE_MAP)
 			mgMapSet(object, attributeNode->token->value.s, mgReferenceValue(func));
-		else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+		else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
 			mgMapSet(object->data.func.locals, attributeNode->token->value.s, mgReferenceValue(func));
-		else if (object->type == MG_VALUE_MODULE)
+		else if (object->type == MG_TYPE_MODULE)
 			mgMapSet(object->data.module.globals, attributeNode->token->value.s, mgReferenceValue(func));
 
 		mgDestroyValue(object);
@@ -872,7 +872,7 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 
 	MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(object);
-	MG_ASSERT((object->type == MG_VALUE_MAP) || ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals) || (object->type == MG_VALUE_MODULE));
+	MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
 
 	const MGNode *attribute = _mgListGet(node->children, 1);
 	MG_ASSERT(attribute);
@@ -881,16 +881,16 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 
 	MGValue *value = NULL;
 
-	if (object->type == MG_VALUE_MAP)
+	if (object->type == MG_TYPE_MAP)
 		value = mgMapGet(object, attribute->token->value.s);
-	else if ((object->type == MG_VALUE_FUNCTION) && object->data.func.locals)
+	else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
 		value = mgMapGet(object->data.func.locals, attribute->token->value.s);
-	else if (object->type == MG_VALUE_MODULE)
+	else if (object->type == MG_TYPE_MODULE)
 		value = mgMapGet(object->data.module.globals, attribute->token->value.s);
 
 	if (value == NULL)
 		MG_FAIL("Error: \"%s\" has no attribute \"%s\"",
-		        _MG_VALUE_TYPE_NAMES[object->type], attribute->token->value.s);
+		        mgGetTypeName(object->type), attribute->token->value.s);
 
 	return mgReferenceValue(value);
 }
@@ -977,7 +977,7 @@ static MGValue* _mgVisitTuple(MGValue *module, MGNode *node)
 	MG_ASSERT((node->type == MG_NODE_TUPLE) || (node->type == MG_NODE_LIST));
 
 	MGValue *value = mgCreateValueTuple(_mgListLength(node->children));
-	value->type = (node->type == MG_NODE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
+	value->type = (node->type == MG_NODE_TUPLE) ? MG_TYPE_TUPLE : MG_TYPE_LIST;
 
 	for (size_t i = 0; i < _mgListLength(node->children); ++i)
 		mgTupleAdd(value, _mgVisitNode(module, _mgListGet(node->children, i)));
@@ -994,17 +994,17 @@ static MGValue* _mgVisitRange(MGValue *module, MGNode *node)
 
 	start = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(start);
-	MG_ASSERT(start->type == MG_VALUE_INTEGER);
+	MG_ASSERT(start->type == MG_TYPE_INTEGER);
 
 	stop = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(stop);
-	MG_ASSERT(stop->type == MG_VALUE_INTEGER);
+	MG_ASSERT(stop->type == MG_TYPE_INTEGER);
 
 	if (_mgListLength(node->children) == 3)
 	{
 		step = _mgVisitNode(module, _mgListGet(node->children, 2));
 		MG_ASSERT(step);
-		MG_ASSERT(step->type == MG_VALUE_INTEGER);
+		MG_ASSERT(step->type == MG_TYPE_INTEGER);
 	}
 
 	return _mg_rangei(start->data.i, stop->data.i, (_mgListLength(node->children) == 3) ? step->data.i : 0);
@@ -1024,7 +1024,7 @@ static MGValue* _mgVisitMap(MGValue *module, MGNode *node)
 		MGValue *key = _mgVisitNode(module, _mgListGet(node->children, i));
 
 		MG_ASSERT(key);
-		MG_ASSERT(key->type == MG_VALUE_STRING);
+		MG_ASSERT(key->type == MG_TYPE_STRING);
 		MG_ASSERT(key->data.str.s);
 		MG_ASSERT(value);
 
@@ -1075,16 +1075,16 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_ADD:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i + rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i + rhs->data.f);
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 				MG_ASSERT(rhs->data.str.s);
 				size_t len = (size_t) snprintf(NULL, 0, "%d", lhs->data.i);
 				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
@@ -1097,16 +1097,16 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueFloat(lhs->data.f + rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f + rhs->data.f);
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 				MG_ASSERT(rhs->data.str.s);
 				size_t len = (size_t) snprintf(NULL, 0, "%f", lhs->data.f);
 				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
@@ -1119,27 +1119,27 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			}
 			break;
-		case MG_VALUE_STRING:
+		case MG_TYPE_STRING:
 			MG_ASSERT(lhs->data.str.s);
 			char *s = NULL;
 			size_t len = 0;
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				len = (size_t) snprintf(NULL, 0, "%d", rhs->data.i);
 				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
 				strcpy(s, lhs->data.str.s);
 				snprintf(s + lhs->data.str.length, len + 1, "%d", rhs->data.i);
 				s[lhs->data.str.length + len] = '\0';
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				len = (size_t) snprintf(NULL, 0, "%f", rhs->data.f);
 				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
 				strcpy(s, lhs->data.str.s);
 				snprintf(s + lhs->data.str.length, len + 1, "%f", rhs->data.f);
 				s[lhs->data.str.length + len] = '\0';
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 				MG_ASSERT(rhs->data.str.s);
 				s = (char*) malloc((lhs->data.str.length + rhs->data.str.length + 1) * sizeof(char));
 				MG_ASSERT(s);
@@ -1152,12 +1152,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			if (s)
 				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
 			break;
-		case MG_VALUE_TUPLE:
-		case MG_VALUE_LIST:
+		case MG_TYPE_TUPLE:
+		case MG_TYPE_LIST:
 			if (lhs->type == rhs->type)
 			{
 				value = mgCreateValueTuple(mgListLength(lhs) + mgListLength(rhs));
-				value->type = (lhs->type == MG_VALUE_TUPLE) ? MG_VALUE_TUPLE : MG_VALUE_LIST;
+				value->type = (lhs->type == MG_TYPE_TUPLE) ? MG_TYPE_TUPLE : MG_TYPE_LIST;
 
 				for (size_t i = 0; i < mgListLength(lhs); ++i)
 					mgTupleAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i)));
@@ -1173,26 +1173,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_SUB:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i - rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i - rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueFloat(lhs->data.f - rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f - rhs->data.f);
 				break;
 			default:
@@ -1206,16 +1206,16 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_MUL:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i * rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i * rhs->data.f);
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 			{
 				if ((rhs->data.str.length > 0) && (lhs->data.i > 0))
 					value = mgCreateValueStringEx(mgStringRepeatDuplicate(rhs->data.str.s, rhs->data.str.length, (size_t) lhs->data.i), MG_STRING_USAGE_KEEP);
@@ -1223,11 +1223,11 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
 				break;
 			}
-			case MG_VALUE_TUPLE:
-			case MG_VALUE_LIST:
+			case MG_TYPE_TUPLE:
+			case MG_TYPE_LIST:
 			{
 				const size_t len = ((mgListLength(rhs) > 0) && (lhs->data.i > 0)) ? (mgListLength(rhs) * lhs->data.i) : 0;
-				value = (rhs->type == MG_VALUE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
+				value = (rhs->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
 
 				for (size_t i = 0; i < len; ++i)
 					mgListAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i % mgListLength(rhs))));
@@ -1238,21 +1238,21 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueFloat(lhs->data.f * rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f * rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_STRING:
-			if (rhs->type == MG_VALUE_INTEGER)
+		case MG_TYPE_STRING:
+			if (rhs->type == MG_TYPE_INTEGER)
 			{
 				if ((lhs->data.str.length > 0) && (rhs->data.i > 0))
 					value = mgCreateValueStringEx(mgStringRepeatDuplicate(lhs->data.str.s, lhs->data.str.length, (size_t) rhs->data.i), MG_STRING_USAGE_KEEP);
@@ -1260,12 +1260,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
 			}
 			break;
-		case MG_VALUE_TUPLE:
-		case MG_VALUE_LIST:
-			if (rhs->type == MG_VALUE_INTEGER)
+		case MG_TYPE_TUPLE:
+		case MG_TYPE_LIST:
+			if (rhs->type == MG_TYPE_INTEGER)
 			{
 				const size_t len = ((mgListLength(lhs) > 0) && (rhs->data.i > 0)) ? (mgListLength(lhs) * rhs->data.i) : 0;
-				value = (lhs->type == MG_VALUE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
+				value = (lhs->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
 
 				for (size_t i = 0; i < len; ++i)
 					mgListAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i % mgListLength(lhs))));
@@ -1278,28 +1278,28 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_DIV:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				if (rhs->data.i == 0)
 					MG_FAIL("Error: Division by zero");
 				value = mgCreateValueFloat(lhs->data.i / (float) rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.i / rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueFloat(lhs->data.f / rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(lhs->data.f / rhs->data.f);
 				break;
 			default:
@@ -1313,28 +1313,28 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_INT_DIV:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				if (rhs->data.i == 0)
 					MG_FAIL("Error: Division by zero");
 				value = mgCreateValueInteger(lhs->data.i / rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger((int) (lhs->data.i / rhs->data.f));
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.i));
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.f));
 				break;
 			default:
@@ -1348,26 +1348,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_MOD:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i % rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(fmodf((float) lhs->data.i, rhs->data.f));
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueFloat(fmodf(lhs->data.f, (float) rhs->data.i));
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueFloat(fmodf(lhs->data.f, rhs->data.f));
 				break;
 			default:
@@ -1379,7 +1379,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 		}
 		break;
 	case MG_NODE_BIN_OP_COALESCE:
-		if (lhs->type != MG_VALUE_NULL)
+		if (lhs->type != MG_TYPE_NULL)
 			value = mgReferenceValue(lhs);
 		else
 		{
@@ -1389,42 +1389,42 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 		}
 		break;
 	case MG_NODE_BIN_OP_EQ:
-		if ((lhs->type == MG_VALUE_NULL) || (rhs->type == MG_VALUE_NULL))
+		if ((lhs->type == MG_TYPE_NULL) || (rhs->type == MG_TYPE_NULL))
 			value = mgCreateValueInteger(lhs->type == rhs->type);
 		else
 			switch (lhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(lhs->data.i == rhs->data.i);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(lhs->data.i == rhs->data.f);
 					break;
 				default:
 					break;
 				}
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(_MG_FEQUAL(lhs->data.f, rhs->data.f));
 					break;
 				default:
 					break;
 				}
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 				MG_ASSERT(lhs->data.str.s);
 				switch (rhs->type)
 				{
-				case MG_VALUE_STRING:
+				case MG_TYPE_STRING:
 					MG_ASSERT(rhs->data.str.s);
 					value = mgCreateValueInteger(!strcmp(lhs->data.str.s, rhs->data.str.s));
 					break;
@@ -1437,41 +1437,41 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			}
 		break;
 	case MG_NODE_BIN_OP_NOT_EQ:
-		if ((lhs->type == MG_VALUE_NULL) || (rhs->type == MG_VALUE_NULL))
+		if ((lhs->type == MG_TYPE_NULL) || (rhs->type == MG_TYPE_NULL))
 			value = mgCreateValueInteger(lhs->type != rhs->type);
 		else
 			switch (lhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(lhs->data.i != rhs->data.i);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(lhs->data.i != rhs->data.f);
 					break;
 				default:
 					break;
 				}
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(lhs->data.f != rhs->data.i);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(lhs->data.f != rhs->data.f);
 					break;
 				default:
 					break;
 				}
 				break;
-			case MG_VALUE_STRING:
+			case MG_TYPE_STRING:
 				switch (rhs->type)
 				{
-				case MG_VALUE_STRING:
+				case MG_TYPE_STRING:
 					MG_ASSERT(lhs->data.str.s);
 					MG_ASSERT(rhs->data.str.s);
 					value = mgCreateValueInteger(strcmp(lhs->data.str.s, rhs->data.str.s));
@@ -1487,26 +1487,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_LESS:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i < rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.i < rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.f < rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.f < rhs->data.f);
 				break;
 			default:
@@ -1520,26 +1520,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_LESS_EQ:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i <= rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.i <= rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.f <= rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.f <= rhs->data.f);
 				break;
 			default:
@@ -1553,26 +1553,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_GREATER:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i > rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.i > rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.f > rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.f > rhs->data.f);
 				break;
 			default:
@@ -1586,26 +1586,26 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_GREATER_EQ:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.i >= rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.i >= rhs->data.f);
 				break;
 			default:
 				break;
 			}
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			switch (rhs->type)
 			{
-			case MG_VALUE_INTEGER:
+			case MG_TYPE_INTEGER:
 				value = mgCreateValueInteger(lhs->data.f >= rhs->data.i);
 				break;
-			case MG_VALUE_FLOAT:
+			case MG_TYPE_FLOAT:
 				value = mgCreateValueInteger(lhs->data.f >= rhs->data.f);
 				break;
 			default:
@@ -1619,7 +1619,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_AND:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			if (lhs->data.i)
 			{
 				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
@@ -1627,10 +1627,10 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(rhs->data.i != 0);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
 					break;
 				default:
@@ -1640,7 +1640,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			else
 				value = mgCreateValueInteger(0);
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			if (!_MG_FEQUAL(lhs->data.f, 0.0f))
 			{
 				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
@@ -1648,10 +1648,10 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(rhs->data.i != 0);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
 					break;
 				default:
@@ -1668,7 +1668,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_OR:
 		switch (lhs->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			if (!lhs->data.i)
 			{
 				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
@@ -1676,10 +1676,10 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(rhs->data.i != 0);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
 					break;
 				default:
@@ -1689,7 +1689,7 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			else
 				value = mgCreateValueInteger(1);
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			if (_MG_FEQUAL(lhs->data.f, 0.0f))
 			{
 				rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
@@ -1697,10 +1697,10 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 
 				switch (rhs->type)
 				{
-				case MG_VALUE_INTEGER:
+				case MG_TYPE_INTEGER:
 					value = mgCreateValueInteger(rhs->data.i != 0);
 					break;
-				case MG_VALUE_FLOAT:
+				case MG_TYPE_FLOAT:
 					value = mgCreateValueInteger(!_MG_FEQUAL(rhs->data.f, 0.0f));
 					break;
 				default:
@@ -1722,10 +1722,10 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	{
 		if (rhs)
 			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
-			        _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[lhs->type], _MG_VALUE_TYPE_NAMES[rhs->type]);
+			        _MG_NODE_NAMES[node->type], mgGetTypeName(lhs->type), mgGetTypeName(rhs->type));
 		else
 			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\"",
-			        _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[lhs->type]);
+			        _MG_NODE_NAMES[node->type], mgGetTypeName(lhs->type));
 	}
 
 	MG_ASSERT(value);
@@ -1754,10 +1754,10 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 	case MG_NODE_UNARY_OP_POS:
 		switch (operand->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			value = mgCreateValueInteger(+operand->data.i);
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			value = mgCreateValueFloat(+operand->data.f);
 			break;
 		default:
@@ -1767,10 +1767,10 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 	case MG_NODE_UNARY_OP_NEG:
 		switch (operand->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			value = mgCreateValueInteger(-operand->data.i);
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			value = mgCreateValueFloat(-operand->data.f);
 			break;
 		default:
@@ -1780,10 +1780,10 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 	case MG_NODE_UNARY_OP_NOT:
 		switch (operand->type)
 		{
-		case MG_VALUE_INTEGER:
+		case MG_TYPE_INTEGER:
 			value = mgCreateValueInteger(!operand->data.i);
 			break;
-		case MG_VALUE_FLOAT:
+		case MG_TYPE_FLOAT:
 			value = mgCreateValueInteger(!operand->data.f);
 			break;
 		default:
@@ -1795,7 +1795,7 @@ static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
 	}
 
 	if (value == NULL)
-		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", _MG_NODE_NAMES[node->type], _MG_VALUE_TYPE_NAMES[operand->type]);
+		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", _MG_NODE_NAMES[node->type], mgGetTypeName(operand->type));
 
 	mgDestroyValue(operand);
 
@@ -1812,7 +1812,7 @@ static inline void _mgResolveImportAs(MGValue *module, MGToken *name, MGToken *a
 
 	MGValue *importedModule = mgImportModule(module->data.module.instance, name->value.s);
 	MG_ASSERT(importedModule);
-	MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
+	MG_ASSERT(importedModule->type == MG_TYPE_MODULE);
 
 	_mgSetValue(module, alias->value.s, importedModule);
 }
@@ -1821,7 +1821,7 @@ static inline void _mgResolveImportAs(MGValue *module, MGToken *name, MGToken *a
 static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(node);
 	MG_ASSERT((node->type == MG_NODE_IMPORT) || (node->type == MG_NODE_IMPORT_FROM));
 	MG_ASSERT(_mgListLength(node->children) > 0);
@@ -1852,7 +1852,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 
 		MGValue *importedModule = mgImportModule(module->data.module.instance, nameNode->token->value.s);
 		MG_ASSERT(importedModule);
-		MG_ASSERT(importedModule->type == MG_VALUE_MODULE);
+		MG_ASSERT(importedModule->type == MG_TYPE_MODULE);
 
 		if (_mgListLength(node->children) > 1)
 		{
@@ -1913,14 +1913,14 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 	MG_ASSERT((_mgListLength(node->children) == 1) || (_mgListLength(node->children) == 2));
 
 	MGValue *expression = _mgVisitNode(module, _mgListGet(node->children, 0));
-	MG_ASSERT(expression->type == MG_VALUE_INTEGER);
+	MG_ASSERT(expression->type == MG_TYPE_INTEGER);
 
 	if (!expression->data.i)
 	{
 		if (_mgListLength(node->children) == 2)
 		{
 			MGValue *message = _mgVisitNode(module, _mgListGet(node->children, 1));
-			MG_ASSERT(message->type == MG_VALUE_STRING);
+			MG_ASSERT(message->type == MG_TYPE_STRING);
 
 			MG_FAIL("Error: %s", message->data.str.s);
 
@@ -2028,7 +2028,7 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 inline MGValue* mgInterpret(MGValue *module)
 {
 	MG_ASSERT(module);
-	MG_ASSERT(module->type == MG_VALUE_MODULE);
+	MG_ASSERT(module->type == MG_TYPE_MODULE);
 	MG_ASSERT(module->data.module.instance);
 	MG_ASSERT(module->data.module.parser.root);
 
