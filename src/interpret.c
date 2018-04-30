@@ -1568,63 +1568,15 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node)
+static inline MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node, MGUnaryOpType operation)
 {
 	MG_ASSERT(_mgListLength(node->children) == 1);
-	MG_ASSERT(node->type != MG_NODE_INVALID);
 
 	MGValue *operand = _mgVisitNode(module, _mgListGet(node->children, 0));
 	MG_ASSERT(operand);
 
-	MGValue *value = NULL;
-
-	switch (node->type)
-	{
-	case MG_NODE_UNARY_OP_POS:
-		switch (operand->type)
-		{
-		case MG_TYPE_INTEGER:
-			value = mgCreateValueInteger(+operand->data.i);
-			break;
-		case MG_TYPE_FLOAT:
-			value = mgCreateValueFloat(+operand->data.f);
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_UNARY_OP_NEG:
-		switch (operand->type)
-		{
-		case MG_TYPE_INTEGER:
-			value = mgCreateValueInteger(-operand->data.i);
-			break;
-		case MG_TYPE_FLOAT:
-			value = mgCreateValueFloat(-operand->data.f);
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_UNARY_OP_NOT:
-		switch (operand->type)
-		{
-		case MG_TYPE_INTEGER:
-			value = mgCreateValueInteger(!operand->data.i);
-			break;
-		case MG_TYPE_FLOAT:
-			value = mgCreateValueInteger(!operand->data.f);
-			break;
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-
-	if (value == NULL)
-		MG_FAIL("Error: Unsupported unary operator \"%s\" for type \"%s\"", _MG_NODE_NAMES[node->type], mgGetTypeName(operand->type));
+	MGValue *value = mgValueUnaryOp(operand, operation);
+	MG_ASSERT(value);
 
 	mgDestroyValue(operand);
 
@@ -1807,9 +1759,11 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_OR:
 		return _mgVisitBinOp(module, node);
 	case MG_NODE_UNARY_OP_POS:
+		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_POSITIVE);
 	case MG_NODE_UNARY_OP_NEG:
+		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_NEGATIVE);
 	case MG_NODE_UNARY_OP_NOT:
-		return _mgVisitUnaryOp(module, node);
+		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_INVERSE);
 	case MG_NODE_ASSIGN:
 		return _mgVisitAssignment(module, node);
 	case MG_NODE_CALL:

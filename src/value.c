@@ -1,5 +1,13 @@
 
 #include "value.h"
+#include "error.h"
+
+
+const char* const _MG_UNARY_OP_NAMES[] = {
+#define _MG_OP(op, name) name,
+	_MG_UNARY_OP_TYPES
+#undef _MG_OP
+};
 
 
 MGValue* mgCreateValueEx(MGType type)
@@ -72,4 +80,35 @@ MGbool mgValueTruthValue(const MGValue *value)
 		return type->truth(value);
 
 	return MG_FALSE;
+}
+
+
+MGValue* mgValueUnaryOp(const MGValue *value, MGUnaryOpType operation)
+{
+	MG_ASSERT(value);
+
+	const MGTypeData *type = mgGetType(value->type);
+	MGTypeUnaryOp unary = NULL;
+
+	switch (operation)
+	{
+	case MG_UNARY_OP_POSITIVE:
+		unary = type->pos;
+		break;
+	case MG_UNARY_OP_NEGATIVE:
+		unary = type->neg;
+		break;
+	case MG_UNARY_OP_INVERSE:
+		unary = type->inv;
+		break;
+	default:
+		break;
+	}
+
+	MGValue *result = NULL;
+
+	if (!unary || !(result = unary(value)))
+		mgFatalError("Error: Unsupported unary operator %s for type %s", _MG_UNARY_OP_NAMES[operation], mgGetTypeName(value->type));
+
+	return result;
 }

@@ -118,82 +118,149 @@ MGbool mgAnyTruthValue(const MGValue *value)
 }
 
 
+MGValue* mgAnyPositive(const MGValue *operand)
+{
+	switch (operand->type)
+	{
+	case MG_TYPE_INTEGER:
+		return mgCreateValueInteger(+operand->data.i);
+	case MG_TYPE_FLOAT:
+		return mgCreateValueFloat(+operand->data.f);
+	default:
+		return NULL;
+	}
+}
+
+
+MGValue* mgAnyNegative(const MGValue *operand)
+{
+	switch (operand->type)
+	{
+	case MG_TYPE_INTEGER:
+		return mgCreateValueInteger(-operand->data.i);
+	case MG_TYPE_FLOAT:
+		return mgCreateValueFloat(-operand->data.f);
+	default:
+		return NULL;
+	}
+}
+
+
+MGValue* mgAnyInverse(const MGValue *operand)
+{
+	return mgCreateValueInteger(!mgAnyTruthValue(operand));
+}
+
+
 const MGTypeData _mgTypes[] = {
 	{
 		"null",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"int",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		mgAnyPositive,
+		mgAnyNegative,
+		mgAnyInverse
 	},
 	{
 		"float",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		mgAnyPositive,
+		mgAnyNegative,
+		mgAnyInverse
 	},
 	{
 		"string",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"tuple",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"list",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"map",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"cfunc",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"func",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"proc",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	},
 	{
 		"module",
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
-		mgAnyTruthValue
+		mgAnyTruthValue,
+		NULL,
+		NULL,
+		mgAnyInverse
 	}
 };

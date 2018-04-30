@@ -28,12 +28,17 @@ typedef void (*MGTypeDestroy)(MGValue *value);
 
 typedef MGbool (*MGTypeTruthValue)(const MGValue *value);
 
+typedef MGValue* (*MGTypeUnaryOp)(const MGValue *operand);
+
 typedef struct MGTypeData {
 	const char *name;
 	MGTypeCreate create;
 	MGTypeCopy copy;
 	MGTypeDestroy destroy;
 	MGTypeTruthValue truth;
+	MGTypeUnaryOp pos;
+	MGTypeUnaryOp neg;
+	MGTypeUnaryOp inv;
 } MGTypeData;
 
 extern const MGTypeData _mgTypes[];
