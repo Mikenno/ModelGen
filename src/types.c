@@ -34,9 +34,9 @@ void mgAnyCopy(MGValue *copy, const MGValue *value)
 		if (_mgMapSize(value->data.m))
 		{
 			MGMapIterator iterator;
-			mgCreateMapIterator(&iterator, (MGValue*) value);
+			mgCreateMapIterator(&iterator, value);
 
-			MGValue *k, *v;
+			const MGValue *k, *v;
 			while (mgMapNext(&iterator, &k, &v))
 				mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
 
@@ -183,7 +183,7 @@ char* mgAnyToString(const MGValue *value)
 		MGMapIterator iterator;
 		mgCreateMapIterator(&iterator, value);
 
-		MGValue *k, *v;
+		const MGValue *k, *v;
 		while (mgMapNext(&iterator, &k, &v))
 		{
 			const MGValue *values[2] = { k, v };

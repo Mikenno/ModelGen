@@ -1674,7 +1674,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 			MGMapIterator iterator;
 			mgCreateMapIterator(&iterator, importedModule->data.module.globals);
 
-			MGValue *k, *v;
+			const MGValue *k, *v;
 			while (mgMapNext(&iterator, &k, &v))
 				_mgSetValue(module, k->data.str.s, mgReferenceValue(v));
 

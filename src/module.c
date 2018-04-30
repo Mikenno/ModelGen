@@ -375,7 +375,7 @@ void mgDestroyMapIterator(MGMapIterator *iterator)
 }
 
 
-MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value)
+MGbool mgMapNext(MGMapIterator *iterator, const MGValue **key, const MGValue **value)
 {
 	MG_ASSERT(iterator);
 	MG_ASSERT(iterator->map);
@@ -412,9 +412,9 @@ void mgMapMerge(MGValue *destination, const MGValue *source, MGbool replace)
 	MG_ASSERT(source->type == MG_TYPE_MAP);
 
 	MGMapIterator iterator;
-	mgCreateMapIterator(&iterator, (MGValue*) source);
+	mgCreateMapIterator(&iterator, source);
 
-	MGValue *k, *v;
+	const MGValue *k, *v;
 
 	if (replace)
 		while (mgMapNext(&iterator, &k, &v))
