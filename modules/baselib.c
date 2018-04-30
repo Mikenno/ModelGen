@@ -421,6 +421,20 @@ static MGValue* mg_float(MGInstance *instance, size_t argc, const MGValue* const
 }
 
 
+static MGValue* mg_string(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 0);
+
+	char *s = mgValueToString(argv[0]);
+
+	if (s)
+		return mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
+	else
+		return mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
+}
+
+
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
@@ -532,6 +546,7 @@ MGValue* mgCreateBaseLib(void)
 	mgModuleSetCFunction(module, "bool", mg_bool);
 	mgModuleSetCFunction(module, "int", mg_int);
 	mgModuleSetCFunction(module, "float", mg_float);
+	mgModuleSetCFunction(module, "string", mg_string);
 
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 

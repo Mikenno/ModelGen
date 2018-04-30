@@ -28,6 +28,8 @@ typedef void (*MGTypeDestroy)(MGValue *value);
 
 typedef MGbool (*MGTypeTruthValue)(const MGValue *value);
 
+typedef char* (*MGTypeToString)(const MGValue *value);
+
 typedef MGValue* (*MGTypeUnaryOp)(const MGValue *operand);
 
 typedef struct MGTypeData {
@@ -36,6 +38,7 @@ typedef struct MGTypeData {
 	MGTypeCopy copy;
 	MGTypeDestroy destroy;
 	MGTypeTruthValue truth;
+	MGTypeToString str;
 	MGTypeUnaryOp pos;
 	MGTypeUnaryOp neg;
 	MGTypeUnaryOp inv;

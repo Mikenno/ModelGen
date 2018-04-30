@@ -24,10 +24,14 @@ int mgStringEndsWith(const char *string, const char *suffix);
 char* mgStringReplaceCharacter(char *str, char find, char replace);
 
 char* mgStringDuplicate(const char *str);
+char* mgStringDuplicateEx(const char *str, size_t length);
 char* mgStringDuplicateFixed(const char *str, size_t count);
 
 char* mgStringRepeat(char *destination, const char *source, size_t length, size_t times);
 char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times);
+
+char *mgIntToString(int i);
+char *mgFloatToString(float f);
 
 const char* mgBasename(const char *filename);
 

@@ -56,6 +56,14 @@ char* mgStringDuplicate(const char *str)
 }
 
 
+char* mgStringDuplicateEx(const char *str, size_t length)
+{
+	char *s = (char*) malloc((length + 1) * sizeof(char));
+	strcpy(s, str);
+	return s;
+}
+
+
 char* mgStringDuplicateFixed(const char *str, size_t count)
 {
 	char *s = (char*) malloc((count + 1) * sizeof(char));
@@ -79,6 +87,34 @@ char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times)
 	char *s = (char*) malloc((length * times + 1) * sizeof(char));
 
 	return mgStringRepeat(s, str, length, times);
+}
+
+
+char *mgIntToString(int i)
+{
+	size_t len = (size_t) snprintf(NULL, 0, "%d", i);
+	char *s = (char*) malloc((len + 1) * sizeof(char));
+	snprintf(s, len + 1, "%d", i);
+	s[len] = '\0';
+	return s;
+}
+
+
+char *mgFloatToString(float f)
+{
+	size_t len = (size_t) snprintf(NULL, 0, "%f", f);
+	char *s = (char*) malloc((len + 1) * sizeof(char));
+	snprintf(s, len + 1, "%f", f);
+	s[len] = '\0';
+
+	char *end = s + len - 1;
+	while ((*end == '0') && (*end--) != '.');
+	*(end + 1) = '\0';
+
+	if (*end == '.')
+		*end = '\0';
+
+	return s;
 }
 
 

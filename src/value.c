@@ -83,6 +83,18 @@ MGbool mgValueTruthValue(const MGValue *value)
 }
 
 
+char* mgValueToString(const MGValue *value)
+{
+	MG_ASSERT(value);
+
+	const MGTypeData *type = mgGetType(value->type);
+	if (type && type->str)
+		return type->str(value);
+
+	return NULL;
+}
+
+
 MGValue* mgValueUnaryOp(const MGValue *value, MGUnaryOpType operation)
 {
 	MG_ASSERT(value);

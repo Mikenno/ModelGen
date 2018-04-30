@@ -96,7 +96,7 @@ void mgListClear(MGValue *list);
 
 #define mgMapSize(map) _mgMapSize((map)->data.m)
 
-void mgCreateMapIterator(MGMapIterator *iterator, MGValue *map);
+void mgCreateMapIterator(MGMapIterator *iterator, const MGValue *map);
 void mgDestroyMapIterator(MGMapIterator *iterator);
 
 MGbool mgMapNext(MGMapIterator *iterator, MGValue **key, MGValue **value);

@@ -352,7 +352,7 @@ inline void mgListClear(MGValue *list)
 }
 
 
-void mgCreateMapIterator(MGMapIterator *iterator, MGValue *map)
+void mgCreateMapIterator(MGMapIterator *iterator, const MGValue *map)
 {
 	MG_ASSERT(iterator);
 	MG_ASSERT(map);

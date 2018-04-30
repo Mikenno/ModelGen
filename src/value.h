@@ -27,6 +27,8 @@ MGValue* mgReferenceValue(const MGValue *value);
 
 MGbool mgValueTruthValue(const MGValue *value);
 
+char* mgValueToString(const MGValue *value);
+
 MGValue* mgValueUnaryOp(const MGValue *value, MGUnaryOpType operation);
 #define mgValuePositive(value) mgValueUnaryOp(value, MG_UNARY_OP_POSITIVE)
 #define mgValueNegative(value) mgValueUnaryOp(value, MG_UNARY_OP_NEGATIVE)

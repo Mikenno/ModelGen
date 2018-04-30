@@ -118,6 +118,121 @@ MGbool mgAnyTruthValue(const MGValue *value)
 }
 
 
+char* mgAnyToString(const MGValue *value)
+{
+	char *s, *end, *s2;
+	size_t len, len2;
+
+	switch (value->type)
+	{
+	case MG_TYPE_NULL:
+		return mgStringDuplicateEx("null", 4);
+	case MG_TYPE_INTEGER:
+		return mgIntToString(value->data.i);
+	case MG_TYPE_FLOAT:
+		return mgFloatToString(value->data.f);
+	case MG_TYPE_STRING:
+		return mgStringDuplicateEx(value->data.str.s, value->data.str.length);
+	case MG_TYPE_TUPLE:
+	case MG_TYPE_LIST:
+		len = 2;
+		s = (char*) malloc((len + 1) * sizeof(char));
+		end = s;
+
+		*end++ = (char) ((value->type == MG_TYPE_TUPLE) ? '(' : '[');
+
+		for (size_t i = 0; i < _mgListLength(value->data.a); ++i)
+		{
+			s2 = mgAnyToString(_mgListGet(value->data.a, i));
+			MG_ASSERT(s2);
+
+			len2 = strlen(s2);
+			len += len2 + ((i > 0) ? 2 : 0);
+			len += ((_mgListGet(value->data.a, i)->type == MG_TYPE_STRING) ? 2 : 0);
+
+			end = end - (size_t) s;
+			s = realloc(s, (len + 1) * sizeof(char));
+			end = s + (size_t) end;
+
+			if (i > 0)
+				*end++ = ',', *end++ = ' ';
+
+			if (_mgListGet(value->data.a, i)->type == MG_TYPE_STRING)
+				*end++ = '"';
+
+			strcpy(end, s2);
+			end += len2;
+
+			if (_mgListGet(value->data.a, i)->type == MG_TYPE_STRING)
+				*end++ = '"';
+
+			free(s2);
+		}
+
+		*end++ = (char) ((value->type == MG_TYPE_TUPLE) ? ')' : ']');
+		*end = '\0';
+
+		return s;
+	case MG_TYPE_MAP:
+		len = 2;
+		s = (char*) malloc((len + 1) * sizeof(char));
+		end = s;
+
+		*end++ = '{';
+
+		MGMapIterator iterator;
+		mgCreateMapIterator(&iterator, value);
+
+		MGValue *k, *v;
+		while (mgMapNext(&iterator, &k, &v))
+		{
+			const MGValue *values[2] = { k, v };
+
+			for (int i = 0; i < 2; ++i)
+			{
+				const MGValue *value2 = values[i];
+
+				s2 = mgAnyToString(value2);
+				MG_ASSERT(s2);
+				len2 = strlen(s2);
+				len += len2 + (((i == 0) && ((end - s) > 1)) ? 2 : 0);
+				len += 2 + ((value2->type == MG_TYPE_STRING) ? 2 : 0);
+
+				end = end - (size_t) s;
+				s = realloc(s, (len + 1) * sizeof(char));
+				end = s + (size_t) end;
+
+				if ((i == 0) && ((end - s) > 1))
+					*end++ = ',', *end++ = ' ';
+
+				if (value2->type == MG_TYPE_STRING)
+					*end++ = '"';
+
+				strcpy(end, s2);
+				end += len2;
+
+				if (value2->type == MG_TYPE_STRING)
+					*end++ = '"';
+
+				if (i == 0)
+					*end++ = ':', *end++ = ' ';
+
+				free(s2);
+			}
+		}
+
+		mgDestroyMapIterator(&iterator);
+
+		*end++ = '}';
+		*end = '\0';
+
+		return s;
+	default:
+		return NULL;
+	}
+}
+
+
 MGValue* mgAnyPositive(const MGValue *operand)
 {
 	switch (operand->type)
@@ -159,6 +274,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -169,6 +285,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		mgAnyPositive,
 		mgAnyNegative,
 		mgAnyInverse
@@ -179,6 +296,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		mgAnyPositive,
 		mgAnyNegative,
 		mgAnyInverse
@@ -189,6 +307,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -199,6 +318,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -209,6 +329,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -219,6 +340,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -229,6 +351,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -239,6 +362,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -249,6 +373,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
@@ -259,6 +384,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyCopy,
 		mgAnyDestroy,
 		mgAnyTruthValue,
+		mgAnyToString,
 		NULL,
 		NULL,
 		mgAnyInverse
