@@ -101,111 +101,43 @@ const MGValue* _mgGetValue(MGValue *module, const char *name)
 }
 
 
-static inline size_t _mgResolveArrayIndex(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
-{
-	MG_ASSERT(collection);
-	MG_ASSERT((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST));
-	MG_ASSERT(index);
-
-	if (index->type != MG_TYPE_INTEGER)
-		MG_FAIL("Error: \"%s\" index must be \"%s\" and not \"%s\"",
-		        mgGetTypeName(collection->type), mgGetTypeName(MG_TYPE_INTEGER), mgGetTypeName(index->type));
-
-	size_t i = (size_t) _mgListIndexRelativeToAbsolute(collection->data.a, mgIntegerGet(index));
-
-	if ((i < 0) || (i >= mgListLength(collection)))
-	{
-		if (mgIntegerGet(index) >= 0)
-		{
-			MG_FAIL("Error: \"%s\" index out of range (0 <= %d < %zu)",
-			        mgGetTypeName(collection->type),
-			        mgIntegerGet(index), mgListLength(collection));
-		}
-		else
-		{
-			MG_FAIL("Error: \"%s\" index out of range (%zu <= %d < 0)",
-			        mgGetTypeName(collection->type),
-			        -mgListLength(collection), mgIntegerGet(index));
-		}
-	}
-
-	return i;
-}
-
-
-static inline MGValue* _mgResolveArrayGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
-{
-	return mgReferenceValue(_mgListGet(collection->data.a, _mgResolveArrayIndex(module, node, collection, index)));
-}
-
-
-static inline void _mgResolveArraySet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
-{
-	const size_t i = _mgResolveArrayIndex(module, node, collection, index);
-
-	mgDestroyValue(_mgListGet(collection->data.a, i));
-
-	if (value)
-		_mgListSet(collection->data.a, i, mgReferenceValue(value));
-	else
-		_mgListRemove(collection->data.a, i);
-}
-
-
-static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *key)
-{
-	MG_ASSERT(collection);
-	MG_ASSERT(collection->type == MG_TYPE_MAP);
-	MG_ASSERT(key);
-	MG_ASSERT(key->type == MG_TYPE_STRING);
-	MG_ASSERT(key->data.str.s);
-
-	MGValue *value = mgMapGet(collection, key->data.str.s);
-
-	if (value == NULL)
-		return MG_NULL_VALUE;
-
-	return mgReferenceValue(value);
-}
-
-
-static inline void _mgResolveMapSet(MGValue *collection, MGValue *key, MGValue *value)
-{
-	MG_ASSERT(collection);
-	MG_ASSERT(collection->type == MG_TYPE_MAP);
-	MG_ASSERT(key);
-	MG_ASSERT(key->type == MG_TYPE_STRING);
-	MG_ASSERT(key->data.str.s);
-
-	mgMapSet(collection, key->data.str.s, value);
-}
-
-
 static inline MGValue* _mgResolveSubscriptGet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index)
 {
-	if ((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST))
-		return _mgResolveArrayGet(module, node, collection, index);
-	else if (collection->type == MG_TYPE_MAP)
-		return _mgResolveMapGet(module, node, collection, index);
-	else if (collection->type == MG_TYPE_MODULE)
-		return _mgResolveMapGet(module, node, collection->data.module.globals, index);
-	else
-		MG_FAIL("Error: \"%s\" is not subscriptable", mgGetTypeName(collection->type));
+	MGValue *value;
 
-	return NULL;
+	if (!(value = mgValueSubscriptGet(collection, index)))
+		MG_FAIL("Error: %s is not subscriptable with %s",
+		        mgGetTypeName(collection->type), mgGetTypeName(index->type));
+
+	return value;
 }
 
 
 static inline void _mgResolveSubscriptSet(MGValue *module, MGNode *node, MGValue *collection, MGValue *index, MGValue *value)
 {
-	if ((collection->type == MG_TYPE_TUPLE) || (collection->type == MG_TYPE_LIST))
-		_mgResolveArraySet(module, node, collection, index, value);
-	else if (collection->type == MG_TYPE_MAP)
-		_mgResolveMapSet(collection, index, value);
-	else if (collection->type == MG_TYPE_MODULE)
-		_mgResolveMapSet(collection->data.module.globals, index, value);
-	else
-		MG_FAIL("Error: \"%s\" is not subscriptable", mgGetTypeName(collection->type));
+	if (!mgValueSubscriptSet(collection, index, value))
+		MG_FAIL("Error: %s is not subscriptable with %s",
+		        mgGetTypeName(collection->type), mgGetTypeName(index->type));
+}
+
+
+static inline MGValue* _mgResolveAttributeGet(MGValue *module, MGNode *node, MGValue *collection, const char *key)
+{
+	MGValue *value;
+
+	if (!(value = mgValueAttributeGet(collection, key)))
+		MG_FAIL("Error: %s has no attribute %s",
+		        mgGetTypeName(collection->type), key);
+
+	return value;
+}
+
+
+static inline void _mgResolveAttributeSet(MGValue *module, MGNode *node, MGValue *collection, const char *key, MGValue *value)
+{
+	if (!mgValueAttributeSet(collection, key, value))
+		MG_FAIL("Error: %s has no attribute %s",
+		        mgGetTypeName(collection->type), key);
 }
 
 
@@ -245,22 +177,17 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 	{
 		MG_ASSERT(_mgListLength(names->children) == 2);
 
-		MGValue *object = _mgVisitNode(module, _mgListGet(names->children, 0));
-		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(names->children, 0));
+		MG_ASSERT(collection);
 
 		MGNode *attributeNode = _mgListGet(names->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_TYPE_MAP)
-			mgMapSet(object, attributeNode->token->value.s, mgReferenceValue(values));
-		else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
-			mgMapSet(object->data.func.locals, attributeNode->token->value.s, mgReferenceValue(values));
-		else if (object->type == MG_TYPE_MODULE)
-			mgMapSet(object->data.module.globals, attributeNode->token->value.s, mgReferenceValue(values));
+		if (!mgValueAttributeSet(collection, attributeNode->token->value.s, mgReferenceValue(values)))
+			mgDestroyValue(values);
 
-		mgDestroyValue(object);
+		mgDestroyValue(collection);
 	}
 	else if (names->type == MG_NODE_TUPLE)
 	{
@@ -481,34 +408,21 @@ static void _mgDelete(MGValue *module, MGNode *node)
 	{
 		MG_ASSERT(_mgListLength(node->children) == 2);
 
-		MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
-		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_TYPE_MAP) || (object->type == MG_TYPE_MODULE));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
+		MG_ASSERT(collection);
 
 		const MGNode *attributeNode = _mgListGet(node->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_TYPE_MAP)
-		{
 #if MG_DEBUG
-			// Check if the name is defined
-			mgMapGet(object, attributeNode->token->value.s);
+		// Check if the name is defined
+		mgDestroyValue(_mgResolveAttributeGet(module, node, collection, attributeNode->token->value.s));
 #endif
 
-			mgMapRemove(object, attributeNode->token->value.s);
-		}
-		else if (object->type == MG_TYPE_MODULE)
-		{
-#if MG_DEBUG
-			// Check if the name is defined
-			mgMapGet(object->data.module.globals, attributeNode->token->value.s);
-#endif
+		_mgResolveAttributeSet(module, node, collection, attributeNode->token->value.s, NULL);
 
-			mgMapRemove(object->data.module.globals, attributeNode->token->value.s);
-		}
-
-		mgDestroyValue(object);
+		mgDestroyValue(collection);
 	}
 	else
 		MG_FAIL("Error: Cannot delete \"%s\"", _MG_NODE_NAMES[node->type]);
@@ -730,22 +644,17 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	{
 		MG_ASSERT(_mgListLength(nameNode->children) == 2);
 
-		MGValue *object = _mgVisitNode(module, _mgListGet(nameNode->children, 0));
-		MG_ASSERT(object);
-		MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
+		MGValue *collection = _mgVisitNode(module, _mgListGet(nameNode->children, 0));
+		MG_ASSERT(collection);
 
 		MGNode *attributeNode = _mgListGet(nameNode->children, 1);
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (object->type == MG_TYPE_MAP)
-			mgMapSet(object, attributeNode->token->value.s, mgReferenceValue(func));
-		else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
-			mgMapSet(object->data.func.locals, attributeNode->token->value.s, mgReferenceValue(func));
-		else if (object->type == MG_TYPE_MODULE)
-			mgMapSet(object->data.module.globals, attributeNode->token->value.s, mgReferenceValue(func));
+		if (!mgValueAttributeSet(collection, attributeNode->token->value.s, mgReferenceValue(func)))
+			mgDestroyValue(func);
 
-		mgDestroyValue(object);
+		mgDestroyValue(collection);
 	}
 
 	return func;
@@ -763,11 +672,10 @@ static MGValue* _mgVisitSubscript(MGValue *module, MGNode *node)
 	MG_ASSERT(index);
 
 	MGValue *value = _mgResolveSubscriptGet(module, node, collection, index);
+	MG_ASSERT(value);
 
 	mgDestroyValue(collection);
 	mgDestroyValue(index);
-
-	MG_ASSERT(value);
 
 	return value;
 }
@@ -777,29 +685,20 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	MGValue *object = _mgVisitNode(module, _mgListGet(node->children, 0));
-	MG_ASSERT(object);
-	MG_ASSERT((object->type == MG_TYPE_MAP) || ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals) || (object->type == MG_TYPE_MODULE));
+	MGValue *collection = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(collection);
 
 	const MGNode *attribute = _mgListGet(node->children, 1);
 	MG_ASSERT(attribute);
 	MG_ASSERT(attribute->type == MG_NODE_NAME);
 	MG_ASSERT(attribute->token);
 
-	MGValue *value = NULL;
+	MGValue *value = _mgResolveAttributeGet(module, node, collection, attribute->token->value.s);
+	MG_ASSERT(value);
 
-	if (object->type == MG_TYPE_MAP)
-		value = mgMapGet(object, attribute->token->value.s);
-	else if ((object->type == MG_TYPE_FUNCTION) && object->data.func.locals)
-		value = mgMapGet(object->data.func.locals, attribute->token->value.s);
-	else if (object->type == MG_TYPE_MODULE)
-		value = mgMapGet(object->data.module.globals, attribute->token->value.s);
+	mgDestroyValue(collection);
 
-	if (value == NULL)
-		MG_FAIL("Error: \"%s\" has no attribute \"%s\"",
-		        mgGetTypeName(object->type), attribute->token->value.s);
-
-	return mgReferenceValue(value);
+	return value;
 }
 
 

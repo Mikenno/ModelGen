@@ -350,3 +350,55 @@ MGValue* mgValueBinaryOp(const MGValue *lhs, const MGValue *rhs, MGBinOpType ope
 
 	return result;
 }
+
+
+MGValue* mgValueSubscriptGet(const MGValue *collection, const MGValue *index)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(index);
+
+	const MGTypeData *type = mgGetType(collection->type);
+	if (type && type->subGet)
+		return type->subGet(collection, index);
+
+	return NULL;
+}
+
+
+MGbool mgValueSubscriptSet(const MGValue *collection, const MGValue *index, MGValue *value)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(index);
+
+	const MGTypeData *type = mgGetType(collection->type);
+	if (type && type->subSet)
+		return type->subSet(collection, index, value);
+
+	return MG_FALSE;
+}
+
+
+MGValue* mgValueAttributeGet(const MGValue *collection, const char *key)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(key);
+
+	const MGTypeData *type = mgGetType(collection->type);
+	if (type && type->attrGet)
+		return type->attrGet(collection, key);
+
+	return NULL;
+}
+
+
+MGbool mgValueAttributeSet(const MGValue *collection, const char *key, MGValue *value)
+{
+	MG_ASSERT(collection);
+	MG_ASSERT(key);
+
+	const MGTypeData *type = mgGetType(collection->type);
+	if (type && type->attrSet)
+		return type->attrSet(collection, key, value);
+
+	return MG_FALSE;
+}

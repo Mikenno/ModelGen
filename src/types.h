@@ -34,6 +34,12 @@ typedef MGValue* (*MGTypeUnaryOp)(const MGValue *operand);
 typedef MGValue* (*MGTypeBinOp)(const MGValue *lhs, const MGValue *rhs);
 typedef MGbool (*MGTypeBinOpCompare)(const MGValue *lhs, const MGValue *rhs);
 
+typedef MGValue* (*MGTypeSubscriptGet)(const MGValue *collection, const MGValue *index);
+typedef MGbool (*MGTypeSubscriptSet)(const MGValue *collection, const MGValue *index, MGValue *value);
+
+typedef MGValue* (*MGTypeAttributeGet)(const MGValue *collection, const char *key);
+typedef MGbool (*MGTypeAttributeSet)(const MGValue *collection, const char *key, MGValue *value);
+
 typedef struct MGTypeData {
 	const char *name;
 	MGTypeCreate create;
@@ -53,6 +59,10 @@ typedef struct MGTypeData {
 	MGTypeBinOpCompare eq;
 	MGTypeBinOpCompare lt;
 	MGTypeBinOpCompare le;
+	MGTypeSubscriptGet subGet;
+	MGTypeSubscriptSet subSet;
+	MGTypeAttributeGet attrGet;
+	MGTypeAttributeSet attrSet;
 } MGTypeData;
 
 extern const MGTypeData _mgTypes[];

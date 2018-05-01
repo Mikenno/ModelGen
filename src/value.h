@@ -78,4 +78,10 @@ MGValue* mgValueBinaryOp(const MGValue *lhs, const MGValue *rhs, MGBinOpType ope
 #define mgValueGreater(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_GREATER)
 #define mgValueGreaterEqual(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_GREATER_EQ)
 
+MGValue* mgValueSubscriptGet(const MGValue *collection, const MGValue *index);
+MGbool mgValueSubscriptSet(const MGValue *collection, const MGValue *index, MGValue *value);
+
+MGValue* mgValueAttributeGet(const MGValue *collection, const char *key);
+MGbool mgValueAttributeSet(const MGValue *collection, const char *key, MGValue *value);
+
 #endif

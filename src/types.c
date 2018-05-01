@@ -606,6 +606,54 @@ MGValue* mgListMul(const MGValue *lhs, const MGValue *rhs)
 }
 
 
+static inline size_t _mgListRelativeIndex(const MGValue *list, const MGValue *index)
+{
+	size_t i = (size_t) _mgListIndexRelativeToAbsolute(list->data.a, mgIntegerGet(index));
+
+	if ((i < 0) || (i >= mgListLength(list)))
+	{
+		if (mgIntegerGet(index) >= 0)
+			mgFatalError("Error: %s index out of range (0 <= %d < %zu)",
+			             mgGetTypeName(list->type), mgIntegerGet(index), mgListLength(list));
+		else
+			mgFatalError("Error: %s index out of range (-%zu <= %d < 0)",
+			             mgGetTypeName(list->type), mgListLength(list), mgIntegerGet(index));
+	}
+
+	return i;
+}
+
+
+MGValue* mgListSubscriptGet(const MGValue *list, const MGValue *index)
+{
+	if (index->type != MG_TYPE_INTEGER)
+		return NULL;
+
+	MGValue *value = _mgListGet(list->data.a, _mgListRelativeIndex(list, index));
+	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
+}
+
+
+MGbool mgListSubscriptSet(const MGValue *list, const MGValue *index, MGValue *value)
+{
+	if (index->type == MG_TYPE_INTEGER)
+	{
+		const size_t i = _mgListRelativeIndex(list, index);
+
+		mgDestroyValue(_mgListGet(list->data.a, i));
+
+		if (value)
+			_mgListSet(list->data.a, i, mgReferenceValue(value));
+		else
+			_mgListRemove(((MGValue*) list)->data.a, i);
+
+		return MG_TRUE;
+	}
+
+	return MG_FALSE;
+}
+
+
 MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs)
 {
 	if ((lhs->type == MG_TYPE_MAP) && (rhs->type == MG_TYPE_MAP))
@@ -619,6 +667,75 @@ MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs)
 	}
 
 	return NULL;
+}
+
+
+MGValue* mgMapSubscriptGet(const MGValue *map, const MGValue *key)
+{
+	if (key->type != MG_TYPE_STRING)
+		return NULL;
+
+	MGValue *value = mgMapGet(map, key->data.str.s);
+	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
+}
+
+
+MGbool mgMapSubscriptSet(const MGValue *map, const MGValue *key, MGValue *value)
+{
+	if (key->type != MG_TYPE_STRING)
+		return MG_FALSE;
+
+	mgMapSet((MGValue*) map, key->data.str.s, value);
+
+	return MG_TRUE;
+}
+
+
+MGValue* mgMapAttributeGet(const MGValue *map, const char *key)
+{
+	MGValue *value = mgMapGet(map, key);
+	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
+}
+
+
+MGbool mgMapAttributeSet(const MGValue *map, const char *key, MGValue *value)
+{
+	mgMapSet((MGValue*) map, key, value);
+
+	return MG_TRUE;
+}
+
+
+MGValue* mgFunctionAttributeGet(const MGValue *function, const char *key)
+{
+	const MGValue *value = function->data.func.locals ? mgMapGet(function->data.func.locals, key) : NULL;
+	return value ? mgReferenceValue(value) : NULL;
+}
+
+
+MGbool mgFunctionAttributeSet(const MGValue *function, const char *key, MGValue *value)
+{
+	if (!function->data.func.locals)
+		return MG_FALSE;
+
+	mgMapSet(function->data.func.locals, key, value);
+
+	return MG_TRUE;
+}
+
+
+MGValue* mgModuleAttributeGet(const MGValue *module, const char *key)
+{
+	const MGValue *value = mgMapGet(module->data.module.globals, key);
+	return value ? mgReferenceValue(value) : NULL;
+}
+
+
+MGbool mgModuleAttributeSet(const MGValue *module, const char *key, MGValue *value)
+{
+	mgMapSet(module->data.module.globals, key, value);
+
+	return MG_TRUE;
 }
 
 
@@ -641,7 +758,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL
 	},
 	{
 		"int",
@@ -661,7 +782,11 @@ const MGTypeData _mgTypes[] = {
 		mgIntMod,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL
 	},
 	{
 		"float",
@@ -681,7 +806,11 @@ const MGTypeData _mgTypes[] = {
 		mgFloatMod,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL
 	},
 	{
 		"string",
@@ -701,7 +830,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL
 	},
 	{
 		"tuple",
@@ -721,7 +854,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		mgListSubscriptGet,
+		mgListSubscriptSet,
+		NULL,
+		NULL
 	},
 	{
 		"list",
@@ -741,7 +878,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		mgListSubscriptGet,
+		mgListSubscriptSet,
+		NULL,
+		NULL
 	},
 	{
 		"map",
@@ -761,7 +902,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		mgAnyLess,
-		mgAnyLessEqual
+		mgAnyLessEqual,
+		mgMapSubscriptGet,
+		mgMapSubscriptSet,
+		mgMapAttributeGet,
+		mgMapAttributeSet
 	},
 	{
 		"cfunc",
@@ -780,6 +925,10 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		NULL,
 		mgAnyEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
 		NULL,
 		NULL
 	},
@@ -801,7 +950,11 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		NULL,
-		NULL
+		NULL,
+		NULL,
+		NULL,
+		mgFunctionAttributeGet,
+		mgFunctionAttributeSet
 	},
 	{
 		"proc",
@@ -820,6 +973,10 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		NULL,
 		mgAnyEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
 		NULL,
 		NULL
 	},
@@ -841,6 +998,10 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyEqual,
 		NULL,
-		NULL
+		NULL,
+		NULL,
+		NULL,
+		mgModuleAttributeGet,
+		mgModuleAttributeSet
 	}
 };
