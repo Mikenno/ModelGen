@@ -5,6 +5,7 @@
 #include "value.h"
 #include "module.h"
 #include "types.h"
+#include "error.h"
 #include "utilities.h"
 
 
@@ -101,17 +102,17 @@ MGbool mgAnyTruthValue(const MGValue *value)
 	case MG_TYPE_NULL:
 		return MG_FALSE;
 	case MG_TYPE_INTEGER:
-		return (MGbool) (value->data.i != 0);
+		return value->data.i != 0;
 	case MG_TYPE_FLOAT:
-		return (MGbool) !_MG_FEQUAL(value->data.f, 0.0f);
+		return !_MG_FEQUAL(value->data.f, 0.0f);
 	case MG_TYPE_STRING:
-		return (MGbool) (mgStringLength(value) != 0);
+		return mgStringLength(value) != 0;
 	case MG_TYPE_TUPLE:
-		return (MGbool) (mgTupleLength(value) > 0);
+		return mgTupleLength(value) > 0;
 	case MG_TYPE_LIST:
-		return (MGbool) (mgListLength(value) > 0);
+		return mgListLength(value) > 0;
 	case MG_TYPE_MAP:
-		return (MGbool) (mgMapSize(value) > 0);
+		return mgMapSize(value) > 0;
 	default:
 		return MG_TRUE;
 	}
@@ -267,6 +268,360 @@ MGValue* mgAnyInverse(const MGValue *operand)
 }
 
 
+MGbool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
+{
+	if (lhs == rhs)
+		return MG_TRUE;
+	else if ((lhs->type == MG_TYPE_NULL) || (rhs->type == MG_TYPE_NULL))
+		return lhs->type == rhs->type;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.i == rhs->data.i;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.f == rhs->data.i;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return lhs->data.i == rhs->data.f;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return _MG_FEQUAL(lhs->data.f, rhs->data.f);
+	else if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_STRING))
+		return (lhs->data.str.s == rhs->data.str.s) || ((lhs->data.str.length == rhs->data.str.length) && !strcmp(lhs->data.str.s, rhs->data.str.s));
+	else if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (lhs->type == rhs->type))
+	{
+		if (mgListLength(lhs) != mgListLength(rhs))
+			return MG_FALSE;
+
+		for (size_t i = 0; i < mgListLength(lhs); ++i)
+			if (!mgAnyEqual(_mgListGet(lhs->data.a, i), _mgListGet(rhs->data.a, i)))
+				return MG_FALSE;
+
+		return MG_TRUE;
+	}
+	else if ((lhs->type == MG_TYPE_MAP) && (rhs->type == MG_TYPE_MAP))
+	{
+		if (mgMapSize(lhs) != mgMapSize(rhs))
+			return MG_FALSE;
+
+		MGbool result = MG_TRUE;
+
+		MGMapIterator iterator;
+		mgCreateMapIterator(&iterator, lhs);
+
+		const MGValue *k, *v, *v2;
+		while (mgMapNext(&iterator, &k, &v))
+		{
+			v2 = mgMapGet(rhs, k->data.str.s);
+
+			if (!v2 || !mgAnyEqual(v, v2))
+			{
+				result = MG_FALSE;
+				break;
+			}
+		}
+
+		mgDestroyMapIterator(&iterator);
+
+		return result;
+	}
+
+	return -1;
+}
+
+
+MGbool mgAnyLess(const MGValue *lhs, const MGValue *rhs)
+{
+	if (lhs == rhs)
+		return MG_FALSE;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.i < rhs->data.i;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.f < rhs->data.i;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return lhs->data.i < rhs->data.f;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return lhs->data.f < rhs->data.f;
+	return -1;
+}
+
+
+MGbool mgAnyLessEqual(const MGValue *lhs, const MGValue *rhs)
+{
+	if (lhs == rhs)
+		return MG_TRUE;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.i <= rhs->data.i;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return lhs->data.f <= rhs->data.i;
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return lhs->data.i <= rhs->data.f;
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return lhs->data.f <= rhs->data.f;
+	return -1;
+}
+
+
+MGValue* mgIntAdd(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueInteger(lhs->data.i + rhs->data.i);
+	return NULL;
+}
+
+
+MGValue* mgIntSub(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueInteger(lhs->data.i - rhs->data.i);
+	return NULL;
+}
+
+
+MGValue* mgIntMul(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueInteger(lhs->data.i * rhs->data.i);
+	return NULL;
+}
+
+
+MGValue* mgIntDiv(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type != MG_TYPE_INTEGER) || (rhs->type != MG_TYPE_INTEGER))
+		return NULL;
+	return mgCreateValueFloat(lhs->data.i / (float) rhs->data.i);
+}
+
+
+MGValue* mgIntIntDiv(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type != MG_TYPE_INTEGER) || (rhs->type != MG_TYPE_INTEGER))
+		return NULL;
+	if (rhs->data.i == 0)
+		mgFatalError("Error: Division by zero");
+	return mgCreateValueInteger(lhs->data.i / rhs->data.i);
+}
+
+
+MGValue* mgIntMod(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueInteger(lhs->data.i % rhs->data.i);
+	return NULL;
+}
+
+
+MGValue* mgFloatAdd(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueFloat(lhs->data.f + rhs->data.i);
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.i + rhs->data.f);
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.f + rhs->data.f);
+	return NULL;
+}
+
+
+MGValue* mgFloatSub(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueFloat(lhs->data.f - rhs->data.i);
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.i - rhs->data.f);
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.f - rhs->data.f);
+	return NULL;
+}
+
+
+MGValue* mgFloatMul(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueFloat(lhs->data.f * rhs->data.i);
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.i * rhs->data.f);
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.f * rhs->data.f);
+	return NULL;
+}
+
+
+MGValue* mgFloatDiv(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueFloat(lhs->data.f / rhs->data.i);
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.i / rhs->data.f);
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(lhs->data.f / rhs->data.f);
+	return NULL;
+}
+
+
+MGValue* mgFloatIntDiv(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueInteger((int) (lhs->data.f / rhs->data.i));
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueInteger((int) (lhs->data.i / rhs->data.f));
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueInteger((int) (lhs->data.f / rhs->data.f));
+	return NULL;
+}
+
+
+MGValue* mgFloatMod(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_INTEGER))
+		return mgCreateValueFloat(fmodf(lhs->data.f, (float) rhs->data.i));
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(fmodf((float) lhs->data.i, rhs->data.f));
+	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
+		return mgCreateValueFloat(fmodf(lhs->data.f, rhs->data.f));
+	return NULL;
+}
+
+
+MGValue* mgStringAdd(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_STRING))
+	{
+		size_t len = lhs->data.str.length + rhs->data.str.length;
+		char *s = (char*) malloc((len + 1) * sizeof(char));
+		MG_ASSERT(s);
+		strcpy(s, lhs->data.str.s);
+		strcpy(s + lhs->data.str.length, rhs->data.str.s);
+		s[len] = '\0';
+		return mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
+	}
+	else if (lhs->type == MG_TYPE_STRING)
+	{
+		char *s2 = mgValueToString(rhs);
+		MG_ASSERT(s2);
+
+		size_t len = lhs->data.str.length + strlen(s2);
+		char *s = (char*) malloc((len + 1) * sizeof(char));
+		MG_ASSERT(s);
+
+		strcpy(s, lhs->data.str.s);
+		strcpy(s + lhs->data.str.length, s2);
+		s[len] = '\0';
+
+		free(s2);
+
+		return mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
+	}
+	else if (rhs->type == MG_TYPE_STRING)
+	{
+		char *s2 = mgValueToString(lhs);
+		MG_ASSERT(s2);
+
+		size_t len = rhs->data.str.length + strlen(s2);
+		char *s = (char*) malloc((rhs->data.str.length + strlen(s2) + 1) * sizeof(char));
+		MG_ASSERT(s);
+
+		strcpy(s, s2);
+		strcpy(s + (len - rhs->data.str.length), rhs->data.str.s);
+		s[len] = '\0';
+
+		free(s2);
+
+		return mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
+	}
+
+	return NULL;
+}
+
+
+MGValue* mgStringMul(const MGValue *lhs, const MGValue *rhs)
+{
+	const char *str;
+	size_t len;
+	int times;
+
+	if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_INTEGER))
+	{
+		str = lhs->data.str.s;
+		len = lhs->data.str.length;
+		times = rhs->data.i;
+	}
+	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_STRING))
+	{
+		str = rhs->data.str.s;
+		len = rhs->data.str.length;
+		times = lhs->data.i;
+	}
+	else
+		return NULL;
+
+	if ((len > 0) && (times > 0))
+		return mgCreateValueStringEx(mgStringRepeatDuplicate(str, len, (size_t) times), MG_STRING_USAGE_KEEP);
+	return mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
+}
+
+
+MGValue* mgTypeListAdd(const MGValue *lhs, const MGValue *rhs)
+{
+	if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (lhs->type == rhs->type))
+	{
+		MGValue *list = mgCreateValueList(mgListLength(lhs) + mgListLength(rhs));
+		list->type = (lhs->type == MG_TYPE_TUPLE) ? MG_TYPE_TUPLE : MG_TYPE_LIST;
+
+		for (size_t i = 0; i < mgListLength(lhs); ++i)
+			mgListAdd(list, mgReferenceValue(_mgListGet(lhs->data.a, i)));
+
+		for (size_t i = 0; i < mgListLength(rhs); ++i)
+			mgListAdd(list, mgReferenceValue(_mgListGet(rhs->data.a, i)));
+
+		return list;
+	}
+
+	return NULL;
+}
+
+
+MGValue* mgListMul(const MGValue *lhs, const MGValue *rhs)
+{
+	const MGValue *list;
+	int times;
+
+	if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (rhs->type == MG_TYPE_INTEGER))
+	{
+		list = lhs;
+		times = rhs->data.i;
+	}
+	else if ((lhs->type == MG_TYPE_INTEGER) || ((rhs->type == MG_TYPE_TUPLE) || (rhs->type == MG_TYPE_LIST)))
+	{
+		list = rhs;
+		times = lhs->data.i;
+	}
+	else
+		return NULL;
+
+	const size_t len = ((mgListLength(list) > 0) && (times > 0)) ? (mgListLength(list) * times) : 0;
+	MGValue *repeated = (list->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
+
+	for (size_t i = 0; i < len; ++i)
+		mgListAdd(repeated, mgReferenceValue(_mgListGet(list->data.a, i % mgListLength(list))));
+
+	return repeated;
+}
+
+
+MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs)
+{
+	if ((lhs->type == MG_TYPE_MAP) && (rhs->type == MG_TYPE_MAP))
+	{
+		MGValue *map = mgCreateValueMap(mgMapSize(lhs) + mgMapSize(rhs));
+
+		mgMapMerge(map, lhs, MG_TRUE);
+		mgMapMerge(map, rhs, MG_TRUE);
+
+		return map;
+	}
+
+	return NULL;
+}
+
+
 const MGTypeData _mgTypes[] = {
 	{
 		"null",
@@ -277,7 +632,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"int",
@@ -288,7 +652,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		mgAnyPositive,
 		mgAnyNegative,
-		mgAnyInverse
+		mgAnyInverse,
+		mgIntAdd,
+		mgIntSub,
+		mgIntMul,
+		mgIntDiv,
+		mgIntIntDiv,
+		mgIntMod,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"float",
@@ -299,7 +672,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		mgAnyPositive,
 		mgAnyNegative,
-		mgAnyInverse
+		mgAnyInverse,
+		mgFloatAdd,
+		mgFloatSub,
+		mgFloatMul,
+		mgFloatDiv,
+		mgFloatIntDiv,
+		mgFloatMod,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"string",
@@ -310,7 +692,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		mgStringAdd,
+		NULL,
+		mgStringMul,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"tuple",
@@ -321,7 +712,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		mgTypeListAdd,
+		NULL,
+		mgListMul,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"list",
@@ -332,7 +732,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		mgTypeListAdd,
+		NULL,
+		mgListMul,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"map",
@@ -343,7 +752,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		mgMapAdd,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		mgAnyLess,
+		mgAnyLessEqual
 	},
 	{
 		"cfunc",
@@ -354,7 +772,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		NULL,
+		NULL
 	},
 	{
 		"func",
@@ -365,7 +792,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		NULL,
+		NULL
 	},
 	{
 		"proc",
@@ -376,7 +812,16 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		NULL,
+		NULL
 	},
 	{
 		"module",
@@ -387,6 +832,15 @@ const MGTypeData _mgTypes[] = {
 		mgAnyToString,
 		NULL,
 		NULL,
-		mgAnyInverse
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		NULL,
+		NULL
 	}
 };

@@ -15,7 +15,7 @@ typedef enum MGType {
 	MG_TYPE_MODULE
 } MGType;
 
-typedef unsigned char MGbool;
+typedef char MGbool;
 
 typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
@@ -31,6 +31,8 @@ typedef MGbool (*MGTypeTruthValue)(const MGValue *value);
 typedef char* (*MGTypeToString)(const MGValue *value);
 
 typedef MGValue* (*MGTypeUnaryOp)(const MGValue *operand);
+typedef MGValue* (*MGTypeBinOp)(const MGValue *lhs, const MGValue *rhs);
+typedef MGbool (*MGTypeBinOpCompare)(const MGValue *lhs, const MGValue *rhs);
 
 typedef struct MGTypeData {
 	const char *name;
@@ -42,6 +44,15 @@ typedef struct MGTypeData {
 	MGTypeUnaryOp pos;
 	MGTypeUnaryOp neg;
 	MGTypeUnaryOp inv;
+	MGTypeBinOp add;
+	MGTypeBinOp sub;
+	MGTypeBinOp mul;
+	MGTypeBinOp div;
+	MGTypeBinOp intdiv;
+	MGTypeBinOp mod;
+	MGTypeBinOpCompare eq;
+	MGTypeBinOpCompare lt;
+	MGTypeBinOpCompare le;
 } MGTypeData;
 
 extern const MGTypeData _mgTypes[];

@@ -18,6 +18,30 @@ typedef enum MGUnaryOpType {
 
 extern const char* const _MG_UNARY_OP_NAMES[];
 
+#define _MG_BIN_OP_TYPES \
+	_MG_OP(ADD, "+") \
+	_MG_OP(SUB, "-") \
+	_MG_OP(MUL, "*") \
+	_MG_OP(DIV, "/") \
+	_MG_OP(INT_DIV, "//") \
+	_MG_OP(MOD, "%") \
+	_MG_OP(EQ, "==") \
+	_MG_OP(NOT_EQ, "!=") \
+	_MG_OP(LESS, "<") \
+	_MG_OP(LESS_EQ, "<=") \
+	_MG_OP(GREATER, ">") \
+	_MG_OP(GREATER_EQ, ">=")
+
+#define _MG_LONGEST_BIN_OP_NAME_LENGTH 2
+
+typedef enum MGBinOpType {
+#define _MG_OP(op, name) MG_BIN_OP_##op,
+	_MG_BIN_OP_TYPES
+#undef _MG_OP
+} MGBinOpType;
+
+extern const char* const _MG_BIN_OP_NAMES[];
+
 #define mgCreateValue(type) mgCreateValueEx(type, NULL)
 MGValue* mgCreateValueEx(MGType type);
 void mgDestroyValue(MGValue *value);
@@ -33,5 +57,21 @@ MGValue* mgValueUnaryOp(const MGValue *value, MGUnaryOpType operation);
 #define mgValuePositive(value) mgValueUnaryOp(value, MG_UNARY_OP_POSITIVE)
 #define mgValueNegative(value) mgValueUnaryOp(value, MG_UNARY_OP_NEGATIVE)
 #define mgValueInverse(value) mgValueUnaryOp(value, MG_UNARY_OP_INVERSE)
+
+MGbool mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation);
+
+MGValue* mgValueBinaryOp(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation);
+#define mgValueAdd(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_ADD)
+#define mgValueSub(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_SUB)
+#define mgValueMul(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_MUL)
+#define mgValueDiv(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_DIV)
+#define mgValueIntDiv(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_INT_DIV)
+#define mgValueMod(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_MOD)
+#define mgValueEqual(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_EQ)
+#define mgValueNotEqual(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_NOT_EQ)
+#define mgValueLess(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_LESS)
+#define mgValueLessEqual(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_LESS_EQ)
+#define mgValueGreater(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_GREATER)
+#define mgValueGreaterEqual(lhs, rhs) mgValueBinaryOp(lhs, rhs, MG_BIN_OP_GREATER_EQ)
 
 #endif

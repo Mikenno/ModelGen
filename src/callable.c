@@ -165,7 +165,7 @@ void mgCheckArgumentTypes(MGInstance *instance, size_t argc, const MGValue* cons
 
 		va_copy(args2, args);
 
-		MGbool match = (MGbool) (types == 0);
+		MGbool match = types == 0;
 
 		for (int j = 0; j < types; ++j)
 			if (argv[i]->type == va_arg(args, MGType))

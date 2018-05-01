@@ -960,569 +960,37 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 }
 
 
-static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
+static inline MGValue* mgVisitBinOp(MGValue *module, MGNode *node, MGBinOpType operation)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
 	MG_ASSERT(node->type != MG_NODE_INVALID);
 
 	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MGValue *rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 	MG_ASSERT(lhs);
-	MGValue *rhs = NULL;
+	MG_ASSERT(rhs);
 
-	if ((node->type != MG_NODE_BIN_OP_AND) && (node->type != MG_NODE_BIN_OP_OR) && (node->type != MG_NODE_BIN_OP_COALESCE))
-	{
-		rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-		MG_ASSERT(rhs);
-	}
+	MGValue *value = mgValueBinaryOp(lhs, rhs, operation);
+
+	mgDestroyValue(lhs);
+	mgDestroyValue(rhs);
+
+	return value;
+}
+
+
+static MGValue* _mgVisitBinOpLogical(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) == 2);
+
+	MGValue *lhs = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MGValue *rhs = NULL;
+	MG_ASSERT(lhs);
 
 	MGValue *value = NULL;
 
 	switch (node->type)
 	{
-	case MG_NODE_BIN_OP_ADD:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i + rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.i + rhs->data.f);
-				break;
-			case MG_TYPE_STRING:
-				MG_ASSERT(rhs->data.str.s);
-				size_t len = (size_t) snprintf(NULL, 0, "%d", lhs->data.i);
-				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
-				snprintf(s, len + 1, "%d", lhs->data.i);
-				strcpy(s + len, rhs->data.str.s);
-				s[len + rhs->data.str.length] = '\0';
-				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueFloat(lhs->data.f + rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.f + rhs->data.f);
-				break;
-			case MG_TYPE_STRING:
-				MG_ASSERT(rhs->data.str.s);
-				size_t len = (size_t) snprintf(NULL, 0, "%f", lhs->data.f);
-				char *s = (char*) malloc((len + rhs->data.str.length + 1) * sizeof(char));
-				snprintf(s, len + 1, "%f", lhs->data.f);
-				strcpy(s + len, rhs->data.str.s);
-				s[len + rhs->data.str.length] = '\0';
-				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_STRING:
-			MG_ASSERT(lhs->data.str.s);
-			char *s = NULL;
-			size_t len = 0;
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				len = (size_t) snprintf(NULL, 0, "%d", rhs->data.i);
-				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
-				strcpy(s, lhs->data.str.s);
-				snprintf(s + lhs->data.str.length, len + 1, "%d", rhs->data.i);
-				s[lhs->data.str.length + len] = '\0';
-				break;
-			case MG_TYPE_FLOAT:
-				len = (size_t) snprintf(NULL, 0, "%f", rhs->data.f);
-				s = (char*) malloc((lhs->data.str.length + len + 1) * sizeof(char));
-				strcpy(s, lhs->data.str.s);
-				snprintf(s + lhs->data.str.length, len + 1, "%f", rhs->data.f);
-				s[lhs->data.str.length + len] = '\0';
-				break;
-			case MG_TYPE_STRING:
-				MG_ASSERT(rhs->data.str.s);
-				s = (char*) malloc((lhs->data.str.length + rhs->data.str.length + 1) * sizeof(char));
-				MG_ASSERT(s);
-				strcpy(s, lhs->data.str.s);
-				strcpy(s + lhs->data.str.length, rhs->data.str.s);
-				s[lhs->data.str.length + rhs->data.str.length] = '\0';
-			default:
-				break;
-			}
-			if (s)
-				value = mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP);
-			break;
-		case MG_TYPE_TUPLE:
-		case MG_TYPE_LIST:
-			if (lhs->type == rhs->type)
-			{
-				value = mgCreateValueTuple(mgListLength(lhs) + mgListLength(rhs));
-				value->type = (lhs->type == MG_TYPE_TUPLE) ? MG_TYPE_TUPLE : MG_TYPE_LIST;
-
-				for (size_t i = 0; i < mgListLength(lhs); ++i)
-					mgTupleAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i)));
-
-				for (size_t i = 0; i < mgListLength(rhs); ++i)
-					mgTupleAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i)));
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_SUB:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i - rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.i - rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueFloat(lhs->data.f - rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.f - rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_MUL:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i * rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.i * rhs->data.f);
-				break;
-			case MG_TYPE_STRING:
-			{
-				if ((rhs->data.str.length > 0) && (lhs->data.i > 0))
-					value = mgCreateValueStringEx(mgStringRepeatDuplicate(rhs->data.str.s, rhs->data.str.length, (size_t) lhs->data.i), MG_STRING_USAGE_KEEP);
-				else
-					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
-				break;
-			}
-			case MG_TYPE_TUPLE:
-			case MG_TYPE_LIST:
-			{
-				const size_t len = ((mgListLength(rhs) > 0) && (lhs->data.i > 0)) ? (mgListLength(rhs) * lhs->data.i) : 0;
-				value = (rhs->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
-
-				for (size_t i = 0; i < len; ++i)
-					mgListAdd(value, mgReferenceValue(_mgListGet(rhs->data.a, i % mgListLength(rhs))));
-
-				break;
-			}
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueFloat(lhs->data.f * rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.f * rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_STRING:
-			if (rhs->type == MG_TYPE_INTEGER)
-			{
-				if ((lhs->data.str.length > 0) && (rhs->data.i > 0))
-					value = mgCreateValueStringEx(mgStringRepeatDuplicate(lhs->data.str.s, lhs->data.str.length, (size_t) rhs->data.i), MG_STRING_USAGE_KEEP);
-				else
-					value = mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
-			}
-			break;
-		case MG_TYPE_TUPLE:
-		case MG_TYPE_LIST:
-			if (rhs->type == MG_TYPE_INTEGER)
-			{
-				const size_t len = ((mgListLength(lhs) > 0) && (rhs->data.i > 0)) ? (mgListLength(lhs) * rhs->data.i) : 0;
-				value = (lhs->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
-
-				for (size_t i = 0; i < len; ++i)
-					mgListAdd(value, mgReferenceValue(_mgListGet(lhs->data.a, i % mgListLength(lhs))));
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_DIV:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				if (rhs->data.i == 0)
-					MG_FAIL("Error: Division by zero");
-				value = mgCreateValueFloat(lhs->data.i / (float) rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.i / rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueFloat(lhs->data.f / rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(lhs->data.f / rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_INT_DIV:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				if (rhs->data.i == 0)
-					MG_FAIL("Error: Division by zero");
-				value = mgCreateValueInteger(lhs->data.i / rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger((int) (lhs->data.i / rhs->data.f));
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.i));
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger((int) (lhs->data.f / rhs->data.f));
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_MOD:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i % rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(fmodf((float) lhs->data.i, rhs->data.f));
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueFloat(fmodf(lhs->data.f, (float) rhs->data.i));
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueFloat(fmodf(lhs->data.f, rhs->data.f));
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_COALESCE:
-		if (lhs->type != MG_TYPE_NULL)
-			value = mgReferenceValue(lhs);
-		else
-		{
-			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
-			MG_ASSERT(rhs);
-			value = mgReferenceValue(rhs);
-		}
-		break;
-	case MG_NODE_BIN_OP_EQ:
-		if ((lhs->type == MG_TYPE_NULL) || (rhs->type == MG_TYPE_NULL))
-			value = mgCreateValueInteger(lhs->type == rhs->type);
-		else
-			switch (lhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(lhs->data.i == rhs->data.i);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(lhs->data.i == rhs->data.f);
-					break;
-				default:
-					break;
-				}
-				break;
-			case MG_TYPE_FLOAT:
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(lhs->data.f == rhs->data.i);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(_MG_FEQUAL(lhs->data.f, rhs->data.f));
-					break;
-				default:
-					break;
-				}
-				break;
-			case MG_TYPE_STRING:
-				MG_ASSERT(lhs->data.str.s);
-				switch (rhs->type)
-				{
-				case MG_TYPE_STRING:
-					MG_ASSERT(rhs->data.str.s);
-					value = mgCreateValueInteger(!strcmp(lhs->data.str.s, rhs->data.str.s));
-					break;
-				default:
-					break;
-				}
-				break;
-			default:
-				break;
-			}
-		break;
-	case MG_NODE_BIN_OP_NOT_EQ:
-		if ((lhs->type == MG_TYPE_NULL) || (rhs->type == MG_TYPE_NULL))
-			value = mgCreateValueInteger(lhs->type != rhs->type);
-		else
-			switch (lhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(lhs->data.i != rhs->data.i);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(lhs->data.i != rhs->data.f);
-					break;
-				default:
-					break;
-				}
-				break;
-			case MG_TYPE_FLOAT:
-				switch (rhs->type)
-				{
-				case MG_TYPE_INTEGER:
-					value = mgCreateValueInteger(lhs->data.f != rhs->data.i);
-					break;
-				case MG_TYPE_FLOAT:
-					value = mgCreateValueInteger(lhs->data.f != rhs->data.f);
-					break;
-				default:
-					break;
-				}
-				break;
-			case MG_TYPE_STRING:
-				switch (rhs->type)
-				{
-				case MG_TYPE_STRING:
-					MG_ASSERT(lhs->data.str.s);
-					MG_ASSERT(rhs->data.str.s);
-					value = mgCreateValueInteger(strcmp(lhs->data.str.s, rhs->data.str.s));
-					break;
-				default:
-					break;
-				}
-				break;
-			default:
-				break;
-			}
-		break;
-	case MG_NODE_BIN_OP_LESS:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i < rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i < rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f < rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f < rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_LESS_EQ:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i <= rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i <= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f <= rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f <= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_GREATER:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i > rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i > rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f > rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f > rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
-	case MG_NODE_BIN_OP_GREATER_EQ:
-		switch (lhs->type)
-		{
-		case MG_TYPE_INTEGER:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.i >= rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.i >= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		case MG_TYPE_FLOAT:
-			switch (rhs->type)
-			{
-			case MG_TYPE_INTEGER:
-				value = mgCreateValueInteger(lhs->data.f >= rhs->data.i);
-				break;
-			case MG_TYPE_FLOAT:
-				value = mgCreateValueInteger(lhs->data.f >= rhs->data.f);
-				break;
-			default:
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-		break;
 	case MG_NODE_BIN_OP_AND:
 		if (!mgValueTruthValue(lhs))
 			value = mgCreateValueInteger(MG_FALSE);
@@ -1543,6 +1011,16 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 			value = mgCreateValueInteger(mgValueTruthValue(rhs));
 		}
 		break;
+	case MG_NODE_BIN_OP_COALESCE:
+		if (lhs->type != MG_TYPE_NULL)
+			value = mgReferenceValue(lhs);
+		else
+		{
+			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+			MG_ASSERT(rhs);
+			value = mgReferenceValue(rhs);
+		}
+		break;
 	default:
 		break;
 	}
@@ -1550,14 +1028,12 @@ static MGValue* _mgVisitBinOp(MGValue *module, MGNode *node)
 	if (value == NULL)
 	{
 		if (rhs)
-			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\" and right-hand type \"%s\"",
+			MG_FAIL("Error: Unsupported binary operator %s for left-hand type %s and right-hand type %s",
 			        _MG_NODE_NAMES[node->type], mgGetTypeName(lhs->type), mgGetTypeName(rhs->type));
 		else
-			MG_FAIL("Error: Unsupported binary operator \"%s\" for left-hand type \"%s\"",
+			MG_FAIL("Error: Unsupported binary operator %s for left-hand type %s",
 			        _MG_NODE_NAMES[node->type], mgGetTypeName(lhs->type));
 	}
-
-	MG_ASSERT(value);
 
 	mgDestroyValue(lhs);
 
@@ -1743,21 +1219,33 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_MAP:
 		return _mgVisitMap(module, node);
 	case MG_NODE_BIN_OP_ADD:
+		return mgVisitBinOp(module, node, MG_BIN_OP_ADD);
 	case MG_NODE_BIN_OP_SUB:
+		return mgVisitBinOp(module, node, MG_BIN_OP_SUB);
 	case MG_NODE_BIN_OP_MUL:
+		return mgVisitBinOp(module, node, MG_BIN_OP_MUL);
 	case MG_NODE_BIN_OP_DIV:
+		return mgVisitBinOp(module, node, MG_BIN_OP_DIV);
 	case MG_NODE_BIN_OP_INT_DIV:
+		return mgVisitBinOp(module, node, MG_BIN_OP_INT_DIV);
 	case MG_NODE_BIN_OP_MOD:
-	case MG_NODE_BIN_OP_COALESCE:
+		return mgVisitBinOp(module, node, MG_BIN_OP_MOD);
 	case MG_NODE_BIN_OP_EQ:
+		return mgVisitBinOp(module, node, MG_BIN_OP_EQ);
 	case MG_NODE_BIN_OP_NOT_EQ:
+		return mgVisitBinOp(module, node, MG_BIN_OP_NOT_EQ);
 	case MG_NODE_BIN_OP_LESS:
-	case MG_NODE_BIN_OP_GREATER:
+		return mgVisitBinOp(module, node, MG_BIN_OP_LESS);
 	case MG_NODE_BIN_OP_LESS_EQ:
+		return mgVisitBinOp(module, node, MG_BIN_OP_LESS_EQ);
+	case MG_NODE_BIN_OP_GREATER:
+		return mgVisitBinOp(module, node, MG_BIN_OP_GREATER);
 	case MG_NODE_BIN_OP_GREATER_EQ:
+		return mgVisitBinOp(module, node, MG_BIN_OP_GREATER_EQ);
 	case MG_NODE_BIN_OP_AND:
 	case MG_NODE_BIN_OP_OR:
-		return _mgVisitBinOp(module, node);
+	case MG_NODE_BIN_OP_COALESCE:
+		return _mgVisitBinOpLogical(module, node);
 	case MG_NODE_UNARY_OP_POS:
 		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_POSITIVE);
 	case MG_NODE_UNARY_OP_NEG:

@@ -19,8 +19,8 @@
 
 #define MG_VERSION "0.1.0"
 
-#define MG_FALSE 0
-#define MG_TRUE 1
+#define MG_FALSE (MGbool) 0
+#define MG_TRUE (MGbool) 1
 
 typedef struct MGToken {
 	MGTokenType type;

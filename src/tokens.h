@@ -44,7 +44,6 @@
 	_MG_T(DIV, "/") \
 	_MG_T(INT_DIV, "//") \
 	_MG_T(MOD, "%") \
-	_MG_T(COALESCE, "??") \
 	_MG_T(ARROW, "->") \
 	_MG_T(ASSIGN, "=") \
 	_MG_T(ADD_ASSIGN, "+=") \
@@ -62,7 +61,8 @@
 	_MG_T(GREATER_EQUAL, ">=") \
 	_MG_T(NOT, "not") \
 	_MG_T(AND, "and") \
-	_MG_T(OR, "or")
+	_MG_T(OR, "or") \
+	_MG_T(COALESCE, "??")
 
 
 #define _MG_LONGEST_TOKEN_NAME_LENGTH 11

@@ -731,7 +731,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			MG_ASSERT(parameter);
 			MG_ASSERT((parameter->type == MG_NODE_NAME) || (parameter->type == MG_NODE_ASSIGN));
 
-			const MGbool parameterHasDefaultArgument = (MGbool) (parameter->type == MG_NODE_ASSIGN);
+			const MGbool parameterHasDefaultArgument = parameter->type == MG_NODE_ASSIGN;
 			const MGToken *parameterNameToken = parameterHasDefaultArgument ? _mgListGet(parameter->children, 0)->token : parameter->token;
 			const char *parameterName = parameterNameToken->begin.string;
 			const size_t parameterNameLength = parameterNameToken->end.string - parameterNameToken->begin.string;
@@ -742,7 +742,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 				MG_ASSERT(parameter2);
 				MG_ASSERT((parameter2->type == MG_NODE_NAME) || (parameter2->type == MG_NODE_ASSIGN));
 
-				const MGbool parameter2HasDefaultArgument = (MGbool) (parameter2->type == MG_NODE_ASSIGN);
+				const MGbool parameter2HasDefaultArgument = parameter2->type == MG_NODE_ASSIGN;
 				const MGToken *parameter2NameToken = parameter2HasDefaultArgument ? _mgListGet(parameter2->children, 0)->token : parameter2->token;
 				const char *parameter2Name = parameter2NameToken->begin.string;
 				const size_t parameter2NameLength = parameter2NameToken->end.string - parameter2NameToken->begin.string;

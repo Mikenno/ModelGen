@@ -160,7 +160,7 @@ static void _mgInspectNode(const MGNode *node, char *prefix, char *prefixEnd, MG
 		else
 			strcpy(prefixEnd, _MG_NODE_CHILD_INDENT);
 
-		_mgInspectNode(_mgListGet(node->children, i), prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, (MGbool) (i == (_mgListLength(node->children) - 1)));
+		_mgInspectNode(_mgListGet(node->children, i), prefix, prefixEnd + _MG_NODE_INDENT_LENGTH, i == (_mgListLength(node->children) - 1));
 	}
 }
 

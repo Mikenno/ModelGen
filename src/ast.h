@@ -18,7 +18,6 @@
 	_MG_N(BIN_OP_DIV, "BinOpDiv") \
 	_MG_N(BIN_OP_INT_DIV, "BinOpIntDiv") \
 	_MG_N(BIN_OP_MOD, "BinOpMod") \
-	_MG_N(BIN_OP_COALESCE, "BinOpCoalesce") \
 	_MG_N(BIN_OP_EQ, "BinOpEq") \
 	_MG_N(BIN_OP_NOT_EQ, "BinOpNotEq") \
 	_MG_N(BIN_OP_LESS, "BinOpLess") \
@@ -27,6 +26,7 @@
 	_MG_N(BIN_OP_GREATER_EQ, "BinOpGreaterEq") \
 	_MG_N(BIN_OP_AND, "BinOpAnd") \
 	_MG_N(BIN_OP_OR, "BinOpOr") \
+	_MG_N(BIN_OP_COALESCE, "BinOpCoalesce") \
 	_MG_N(UNARY_OP_POS, "UnaryOpPos") \
 	_MG_N(UNARY_OP_NEG, "UnaryOpNeg") \
 	_MG_N(UNARY_OP_NOT, "UnaryOpNot") \
