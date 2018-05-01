@@ -68,6 +68,11 @@ void mgCreateInstance(MGInstance *instance)
 
 	memset(instance, 0, sizeof(MGInstance));
 
+	if (_mgNullValue == NULL)
+		_mgNullValue = mgCreateValueNull();
+	else
+		mgReferenceValue(_mgNullValue);
+
 	_mgListCreate(char*, instance->path, 1 << 2);
 
 	instance->modules = mgCreateValueMap(1 << 3);
@@ -123,6 +128,14 @@ void mgCreateInstance(MGInstance *instance)
 void mgDestroyInstance(MGInstance *instance)
 {
 	MG_ASSERT(instance);
+
+	if (_mgNullValue->refCount == 1)
+	{
+		mgDestroyValue(_mgNullValue);
+		_mgNullValue = NULL;
+	}
+	else
+		mgDestroyValue(_mgNullValue);
 
 	for (int i = 0; i < _mgListLength(instance->path); ++i)
 		free(_mgListGet(instance->path, i));

@@ -135,7 +135,7 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 		}
 	}
 
-	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+	return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 }
 
 

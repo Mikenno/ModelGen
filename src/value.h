@@ -42,6 +42,10 @@ typedef enum MGBinOpType {
 
 extern const char* const _MG_BIN_OP_NAMES[];
 
+extern MGValue *_mgNullValue;
+#define _MG_NULL_VALUE _mgNullValue
+#define MG_NULL_VALUE mgReferenceValue(_MG_NULL_VALUE)
+
 #define mgCreateValue(type) mgCreateValueEx(type, NULL)
 MGValue* mgCreateValueEx(MGType type);
 void mgDestroyValue(MGValue *value);

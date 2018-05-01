@@ -18,6 +18,9 @@ const char* const _MG_BIN_OP_NAMES[] = {
 };
 
 
+MGValue *_mgNullValue = NULL;
+
+
 MGValue* mgCreateValueEx(MGType type)
 {
 	MGValue *value = (MGValue*) malloc(sizeof(MGValue));

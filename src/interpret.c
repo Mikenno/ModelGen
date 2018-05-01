@@ -163,7 +163,7 @@ static inline MGValue* _mgResolveMapGet(MGValue *module, MGNode *node, MGValue *
 	MGValue *value = mgMapGet(collection, key->data.str.s);
 
 	if (value == NULL)
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 
 	return mgReferenceValue(value);
 }
@@ -290,10 +290,10 @@ static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 		mgDestroyValue(_mgVisitNode(module, _mgListGet(node->children, i)));
 
 		if (frame->state != MG_STACK_FRAME_STATE_ACTIVE)
-			return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+			return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 	}
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -418,7 +418,7 @@ static MGValue* _mgVisitEmit(MGValue *module, MGNode *node)
 
 	mgDestroyValue(tuple);
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -435,7 +435,7 @@ static inline MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
 
-	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+	return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 }
 
 
@@ -521,7 +521,7 @@ static inline MGValue* _mgVisitDelete(MGValue *module, MGNode *node)
 
 	_mgDelete(module, _mgListGet(node->children, 0));
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -557,7 +557,7 @@ static MGValue* _mgVisitFor(MGValue *module, MGNode *node)
 
 			if (frame->state == MG_STACK_FRAME_STATE_RETURN)
 			{
-				value = frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+				value = frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 				goto end;
 			}
 			else if (frame->state == MG_STACK_FRAME_STATE_BREAK)
@@ -581,7 +581,7 @@ end:
 
 	mgDestroyValue(iterable);
 
-	return value ? value : mgCreateValueNull();
+	return value ? value : MG_NULL_VALUE;
 }
 
 
@@ -610,11 +610,11 @@ static MGValue* _mgVisitWhile(MGValue *module, MGNode *node)
 			mgDestroyValue(_mgVisitNode(module, _mgListGet(node->children, j)));
 
 			if (frame->state == MG_STACK_FRAME_STATE_RETURN)
-				return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+				return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 			else if (frame->state == MG_STACK_FRAME_STATE_BREAK)
 			{
 				frame->state = MG_STACK_FRAME_STATE_ACTIVE;
-				return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+				return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 			}
 			else if (frame->state == MG_STACK_FRAME_STATE_CONTINUE)
 			{
@@ -624,7 +624,7 @@ static MGValue* _mgVisitWhile(MGValue *module, MGNode *node)
 		}
 	}
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -642,7 +642,7 @@ static inline MGValue* _mgVisitBreak(MGValue *module, MGNode *node)
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
 
-	return frame->value ? mgReferenceValue(frame->value) : mgCreateValueNull();
+	return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 }
 
 
@@ -657,7 +657,7 @@ static inline MGValue* _mgVisitContinue(MGValue *module, MGNode *node)
 
 	frame->state = MG_STACK_FRAME_STATE_CONTINUE;
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -814,20 +814,6 @@ static inline MGValue* _mgVisitName(MGValue *module, MGNode *node)
 	MG_ASSERT(node->token);
 
 	return mgReferenceValue(_mgGetValue(module, node->token->value.s));
-}
-
-
-#if defined(__GNUC__)
-static inline __attribute__((always_inline)) MGValue* _mgVisitNull(MGValue *module, MGNode *node)
-#elif defined(_MSC_VER)
-static __forceinline MGValue* _mgVisitNull(MGValue *module, MGNode *node)
-#else
-static inline MGValue* _mgVisitNull(MGValue *module, MGNode *node)
-#endif
-{
-	MG_ASSERT(node->type == MG_NODE_NULL);
-
-	return mgCreateValueNull();
 }
 
 
@@ -1158,7 +1144,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 		}
 	}
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -1191,7 +1177,7 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 
 #endif
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -1285,9 +1271,8 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_ASSERT:
 		return _mgVisitAssert(module, node);
 	case MG_NODE_NULL:
-		return _mgVisitNull(module, node);
 	case MG_NODE_NOP:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	default:
 		MG_FAIL("Error: Unknown node \"%s\"", _MG_NODE_NAMES[node->type]);
 	}

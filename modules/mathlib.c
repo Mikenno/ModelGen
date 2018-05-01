@@ -30,7 +30,7 @@ static MGValue* mg_abs(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(fabsf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -47,7 +47,7 @@ static MGValue* mg_deg(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(argv[0]->data.f * _MG_RAD2DEG);
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -64,7 +64,7 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(argv[0]->data.f * _MG_DEG2RAD);
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -81,7 +81,7 @@ static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueInteger((0.0f < argv[0]->data.f) - (argv[0]->data.f < 0.0f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -98,7 +98,7 @@ static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 0.0f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -115,7 +115,7 @@ static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 1.0f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -136,7 +136,7 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		case MG_TYPE_FLOAT:
 			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, (float) argv[0]->data.i), 0.0f));
 		default:
-			return mgCreateValueNull();
+			return MG_NULL_VALUE;
 		}
 	case MG_TYPE_FLOAT:
 		switch (argv[1]->type)
@@ -146,10 +146,10 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		case MG_TYPE_FLOAT:
 			return mgCreateValueInteger(_MG_FEQUAL(fmodf(argv[1]->data.f, argv[0]->data.f), 0.0f));
 		default:
-			return mgCreateValueNull();
+			return MG_NULL_VALUE;
 		}
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -166,7 +166,7 @@ static MGValue* mg_ceil(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(ceilf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -183,7 +183,7 @@ static MGValue* mg_floor(MGInstance *instance, size_t argc, const MGValue* const
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(floorf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -200,7 +200,7 @@ static MGValue* mg_round(MGInstance *instance, size_t argc, const MGValue* const
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(roundf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -252,7 +252,7 @@ static MGValue* mg_sqrt(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(sqrtf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -269,7 +269,7 @@ static MGValue* mg_cos(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(cosf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -286,7 +286,7 @@ static MGValue* mg_sin(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(sinf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -303,7 +303,7 @@ static MGValue* mg_tan(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(tanf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -320,7 +320,7 @@ static MGValue* mg_acos(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(acosf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -337,7 +337,7 @@ static MGValue* mg_asin(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(asinf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -354,7 +354,7 @@ static MGValue* mg_atan(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(atanf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -382,7 +382,7 @@ static MGValue* mg_exp(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(expf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -399,7 +399,7 @@ static MGValue* mg_log(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(logf(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -416,7 +416,7 @@ static MGValue* mg_log2(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_FLOAT:
 		return mgCreateValueFloat(log2f(argv[0]->data.f));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -448,7 +448,7 @@ MGValue* _mg_max(size_t argc, const MGValue* const* argv)
 		mgFatalError("Error: max expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        mgGetTypeName(MG_TYPE_INTEGER), mgGetTypeName(MG_TYPE_FLOAT),
 		        mgGetTypeName(argv[0]->type));
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 
 	for (size_t i = 1; i < argc; ++i)
@@ -509,7 +509,7 @@ MGValue* _mg_min(size_t argc, const MGValue* const* argv)
 		mgFatalError("Error: min expected argument as \"%s\" or \"%s\", received \"%s\"",
 		        mgGetTypeName(MG_TYPE_INTEGER), mgGetTypeName(MG_TYPE_FLOAT),
 		        mgGetTypeName(argv[0]->type));
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 
 	for (size_t i = 1; i < argc; ++i)

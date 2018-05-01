@@ -25,7 +25,7 @@ static MGValue* mg_list_add(MGInstance *instance, size_t argc, const MGValue* co
 	for (size_t i = 1; i < argc; ++i)
 		mgListAdd((MGValue*) argv[0], mgReferenceValue(argv[i]));
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -37,7 +37,7 @@ static MGValue* mg_list_add_from(MGInstance *instance, size_t argc, const MGValu
 	for (size_t i = 0, end = mgListLength(argv[1]); i < end; ++i)
 		mgListAdd((MGValue*) argv[0], mgReferenceValue(_mgListGet(argv[1]->data.a, i)));
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -52,7 +52,7 @@ static MGValue* mg_list_insert(MGInstance *instance, size_t argc, const MGValue*
 
 	mgListInsert((MGValue*) argv[0], index, mgReferenceValue(argv[2]));
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -69,7 +69,7 @@ static MGValue* mg_list_clear(MGInstance *instance, size_t argc, const MGValue* 
 
 	mgListClear((MGValue*) argv[0]);
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 

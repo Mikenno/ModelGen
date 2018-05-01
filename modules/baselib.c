@@ -30,7 +30,7 @@ static MGValue* mg_print(MGInstance *instance, size_t argc, const MGValue* const
 
 	putchar('\n');
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
@@ -364,7 +364,7 @@ MGValue* mg_len(MGInstance *instance, size_t argc, const MGValue* const* argv)
 		return mgCreateValueInteger((int) mgStringLength(argv[0]));
 	default:
 		mgFatalError("Error: \"%s\" has no length", mgGetTypeName(argv[0]->type));
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -397,7 +397,7 @@ static MGValue* mg_int(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_STRING:
 		return mgCreateValueInteger(strtol(argv[0]->data.str.s, NULL, base));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -416,7 +416,7 @@ static MGValue* mg_float(MGInstance *instance, size_t argc, const MGValue* const
 	case MG_TYPE_STRING:
 		return mgCreateValueFloat(strtof(argv[0]->data.str.s, NULL));
 	default:
-		return mgCreateValueNull();
+		return MG_NULL_VALUE;
 	}
 }
 
@@ -460,7 +460,7 @@ static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* c
 		++depth;
 	}
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 

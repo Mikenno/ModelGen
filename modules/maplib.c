@@ -34,7 +34,7 @@ static MGValue* mg_map_clear(MGInstance *instance, size_t argc, const MGValue* c
 
 	mgMapClear((MGValue*) argv[0]);
 
-	return mgCreateValueNull();
+	return MG_NULL_VALUE;
 }
 
 
