@@ -584,6 +584,8 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 
 	MGbool _condition = mgValueTruthValue(condition);
 
+	mgDestroyValue(condition);
+
 	if (_mgListLength(node->children) > 1)
 	{
 		if (_condition)
@@ -845,6 +847,22 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 }
 
 
+static inline MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node, MGUnaryOpType operation)
+{
+	MG_ASSERT(_mgListLength(node->children) == 1);
+
+	MGValue *operand = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(operand);
+
+	MGValue *value = mgValueUnaryOp(operand, operation);
+	MG_ASSERT(value);
+
+	mgDestroyValue(operand);
+
+	return value;
+}
+
+
 static inline MGValue* mgVisitBinOp(MGValue *module, MGNode *node, MGBinOpType operation)
 {
 	MG_ASSERT(_mgListLength(node->children) == 2);
@@ -929,19 +947,28 @@ static MGValue* _mgVisitBinOpLogical(MGValue *module, MGNode *node)
 }
 
 
-static inline MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node, MGUnaryOpType operation)
+static inline MGValue* _mgVisitConditional(MGValue *module, MGNode *node)
 {
-	MG_ASSERT(_mgListLength(node->children) == 1);
+	MG_ASSERT((_mgListLength(node->children) == 2) || (_mgListLength(node->children) == 3));
 
-	MGValue *operand = _mgVisitNode(module, _mgListGet(node->children, 0));
-	MG_ASSERT(operand);
+	MGValue *condition = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(condition);
 
-	MGValue *value = mgValueUnaryOp(operand, operation);
-	MG_ASSERT(value);
+	MGbool _condition = mgValueTruthValue(condition);
 
-	mgDestroyValue(operand);
+	if (_mgListLength(node->children) == 3)
+	{
+		mgDestroyValue(condition);
 
-	return value;
+		return _mgVisitNode(module, _mgListGet(node->children, _condition ? 1 : 2));
+	}
+	else
+	{
+		if (!_condition)
+			mgDestroyValue(condition);
+
+		return _condition ? condition : _mgVisitNode(module, _mgListGet(node->children, 1));
+	}
 }
 
 
@@ -1131,6 +1158,9 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	case MG_NODE_BIN_OP_OR:
 	case MG_NODE_BIN_OP_COALESCE:
 		return _mgVisitBinOpLogical(module, node);
+	case MG_NODE_BIN_OP_CONDITIONAL:
+	case MG_NODE_TERNARY_OP_CONDITIONAL:
+		return _mgVisitConditional(module, node);
 	case MG_NODE_UNARY_OP_POS:
 		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_POSITIVE);
 	case MG_NODE_UNARY_OP_NEG:

@@ -6,7 +6,6 @@
 	_MG_T(EOF, "end-of-file") \
 	_MG_T(NAME, "name") \
 	_MG_T(NULL, "null") \
-	_MG_T(OPTIONAL, "?") \
 	_MG_T(INTEGER, "integer") \
 	_MG_T(FLOAT, "float") \
 	_MG_T(STRING, "string") \
@@ -44,15 +43,6 @@
 	_MG_T(DIV, "/") \
 	_MG_T(INT_DIV, "//") \
 	_MG_T(MOD, "%") \
-	_MG_T(ARROW, "->") \
-	_MG_T(ASSIGN, "=") \
-	_MG_T(ADD_ASSIGN, "+=") \
-	_MG_T(SUB_ASSIGN, "-=") \
-	_MG_T(MUL_ASSIGN, "*=") \
-	_MG_T(DIV_ASSIGN, "/=") \
-	_MG_T(INT_DIV_ASSIGN, "//=") \
-	_MG_T(MOD_ASSIGN, "%=") \
-	_MG_T(COALESCE_ASSIGN, "??") \
 	_MG_T(EQUAL, "==") \
 	_MG_T(NOT_EQUAL, "!=") \
 	_MG_T(LESS, "<") \
@@ -62,7 +52,18 @@
 	_MG_T(NOT, "not") \
 	_MG_T(AND, "and") \
 	_MG_T(OR, "or") \
-	_MG_T(COALESCE, "??")
+	_MG_T(QUESTION, "?") \
+	_MG_T(ELVIS, "?:") \
+	_MG_T(COALESCE, "\?\?") \
+	_MG_T(COALESCE_ASSIGN, "\?\?=") \
+	_MG_T(ARROW, "->") \
+	_MG_T(ASSIGN, "=") \
+	_MG_T(ADD_ASSIGN, "+=") \
+	_MG_T(SUB_ASSIGN, "-=") \
+	_MG_T(MUL_ASSIGN, "*=") \
+	_MG_T(DIV_ASSIGN, "/=") \
+	_MG_T(INT_DIV_ASSIGN, "//=") \
+	_MG_T(MOD_ASSIGN, "%=") \
 
 
 #define _MG_LONGEST_TOKEN_NAME_LENGTH 11

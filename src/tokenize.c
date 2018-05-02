@@ -247,8 +247,12 @@ void mgTokenizeNext(MGToken *token)
 				token->type = MG_TOKEN_COALESCE;
 				return;
 			}
+		case ':':
+			_mgTokenNextCharacter(token);
+			token->type = MG_TOKEN_ELVIS;
+			return;
 		default:
-			token->type = MG_TOKEN_OPTIONAL;
+			token->type = MG_TOKEN_QUESTION;
 			return;
 		}
 	case '=':
