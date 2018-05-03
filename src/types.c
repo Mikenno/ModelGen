@@ -19,6 +19,12 @@ extern MGValue* mgListSubscriptGet(const MGValue *list, const MGValue *index);
 extern MGbool mgListSubscriptSet(const MGValue *list, const MGValue *index, MGValue *value);
 extern MGValue* mgListAttributeGet(const MGValue *list, const char *key);
 
+extern MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs);
+extern MGValue* mgMapSubscriptGet(const MGValue *map, const MGValue *key);
+extern MGbool mgMapSubscriptSet(const MGValue *map, const MGValue *key, MGValue *value);
+extern MGValue* mgMapAttributeGet(const MGValue *map, const char *key);
+extern MGbool mgMapAttributeSet(const MGValue *map, const char *key, MGValue *value);
+
 
 void mgAnyCopy(MGValue *copy, const MGValue *value)
 {
@@ -603,58 +609,6 @@ MGValue* mgStringMul(const MGValue *lhs, const MGValue *rhs)
 	if ((len > 0) && (times > 0))
 		return mgCreateValueStringEx(mgStringRepeatDuplicate(str, len, (size_t) times), MG_STRING_USAGE_KEEP);
 	return mgCreateValueStringEx("", MG_STRING_USAGE_STATIC);
-}
-
-
-MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs)
-{
-	if ((lhs->type == MG_TYPE_MAP) && (rhs->type == MG_TYPE_MAP))
-	{
-		MGValue *map = mgCreateValueMap(mgMapSize(lhs) + mgMapSize(rhs));
-
-		mgMapMerge(map, lhs, MG_TRUE);
-		mgMapMerge(map, rhs, MG_TRUE);
-
-		return map;
-	}
-
-	return NULL;
-}
-
-
-MGValue* mgMapSubscriptGet(const MGValue *map, const MGValue *key)
-{
-	if (key->type != MG_TYPE_STRING)
-		return NULL;
-
-	MGValue *value = mgMapGet(map, key->data.str.s);
-	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
-}
-
-
-MGbool mgMapSubscriptSet(const MGValue *map, const MGValue *key, MGValue *value)
-{
-	if (key->type != MG_TYPE_STRING)
-		return MG_FALSE;
-
-	mgMapSet((MGValue*) map, key->data.str.s, value);
-
-	return MG_TRUE;
-}
-
-
-MGValue* mgMapAttributeGet(const MGValue *map, const char *key)
-{
-	MGValue *value = mgMapGet(map, key);
-	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
-}
-
-
-MGbool mgMapAttributeSet(const MGValue *map, const char *key, MGValue *value)
-{
-	mgMapSet((MGValue*) map, key, value);
-
-	return MG_TRUE;
 }
 
 

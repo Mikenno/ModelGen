@@ -14,7 +14,6 @@
 
 extern MGValue* mgCreateBaseLib(void);
 extern MGValue* mgCreateMathLib(void);
-extern MGValue* mgCreateMapLib(void);
 
 
 struct {
@@ -23,7 +22,6 @@ struct {
 } _mgStaticModules[] = {
 	{ "base", mgCreateBaseLib },
 	{ "math", mgCreateMathLib },
-	{ "map", mgCreateMapLib },
 	{ NULL, NULL }
 };
 
