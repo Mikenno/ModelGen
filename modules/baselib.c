@@ -215,7 +215,7 @@ static MGValue* mg_map(MGInstance *instance, size_t argc, const MGValue* const* 
 {
 	mgCheckArgumentCount(instance, argc, 2, 9);
 	mgCheckArgumentTypes(instance, argc, argv,
-	                     2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION,
+	                     3, MG_TYPE_CFUNCTION, MG_TYPE_BOUND_CFUNCTION, MG_TYPE_FUNCTION,
 	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
 	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
 	                     2, MG_TYPE_TUPLE, MG_TYPE_LIST,
@@ -250,7 +250,7 @@ static MGValue* mg_map(MGInstance *instance, size_t argc, const MGValue* const* 
 static MGValue* mg_filter(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 3, MG_TYPE_CFUNCTION, MG_TYPE_BOUND_CFUNCTION, MG_TYPE_FUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	const MGValue *callable = argv[0];
 	const MGValue *list = argv[1];
@@ -280,7 +280,7 @@ static MGValue* mg_filter(MGInstance *instance, size_t argc, const MGValue* cons
 static MGValue* mg_reduce(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
+	mgCheckArgumentTypes(instance, argc, argv, 3, MG_TYPE_CFUNCTION, MG_TYPE_BOUND_CFUNCTION, MG_TYPE_FUNCTION, 2, MG_TYPE_TUPLE, MG_TYPE_LIST);
 
 	const MGValue *callable = argv[0];
 	const MGValue *list = argv[1];

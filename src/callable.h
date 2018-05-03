@@ -4,7 +4,7 @@
 #include "modelgen.h"
 #include "value.h"
 
-#define mgIsCallable(value) ((value->type == MG_TYPE_CFUNCTION) || (value->type == MG_TYPE_PROCEDURE) || (value->type == MG_TYPE_FUNCTION))
+#define mgIsCallable(value) ((value->type == MG_TYPE_CFUNCTION) || (value->type == MG_TYPE_BOUND_CFUNCTION) || (value->type == MG_TYPE_PROCEDURE) || (value->type == MG_TYPE_FUNCTION))
 
 #define mgGetCalleeName(instance) (instance->callStackTop->callerName ? (const char*) instance->callStackTop->callerName : "<anonymous>")
 #define mgGetCallerName(instance) (instance->callStackTop->last->callerName ? (const char*) instance->callStackTop->last->callerName : "<anonymous>")

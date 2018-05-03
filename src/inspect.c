@@ -262,6 +262,9 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 
 	switch (value->type)
 	{
+	case MG_TYPE_NULL:
+		fputs("null", stdout);
+		break;
 	case MG_TYPE_INTEGER:
 		printf("%d", value->data.i);
 		break;
@@ -309,6 +312,9 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 	case MG_TYPE_CFUNCTION:
 		printf("%p", value->data.cfunc);
 		break;
+	case MG_TYPE_BOUND_CFUNCTION:
+		printf("%p bound to %p", value->data.bcfunc.cfunc, value->data.bcfunc.bound);
+		break;
 	case MG_TYPE_PROCEDURE:
 	case MG_TYPE_FUNCTION:
 		printf("%p", value->data.func.node);
@@ -322,9 +328,6 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		break;
 	case MG_TYPE_MODULE:
 		_mgInspectValue(value->data.module.globals, depth, metadata);
-		break;
-	case MG_TYPE_NULL:
-		fputs("<null>", stdout);
 		break;
 	default:
 		if ((s = mgValueToString(value)))

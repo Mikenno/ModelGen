@@ -288,7 +288,7 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 
 	MGStackFrame frame;
 
-	if (((func->type == MG_TYPE_PROCEDURE) || (func->type == MG_TYPE_FUNCTION)) && func->data.func.locals)
+	if (((func->type == MG_TYPE_FUNCTION) || (func->type == MG_TYPE_PROCEDURE)) && func->data.func.locals)
 		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(func->data.func.locals));
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
@@ -617,7 +617,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
-	MGValue *func = mgCreateValueEx((node->type == MG_NODE_PROCEDURE) ? MG_TYPE_PROCEDURE : MG_TYPE_FUNCTION);
+	MGValue *func = mgCreateValueEx((node->type == MG_NODE_FUNCTION) ? MG_TYPE_FUNCTION : MG_TYPE_PROCEDURE);
 
 	func->data.func.module = mgReferenceValue(module);
 	func->data.func.node = mgReferenceNode(node);
@@ -628,7 +628,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	{
 		for (MGNode *parent = node->parent; parent; parent = parent->parent)
 		{
-			if ((parent->type == MG_NODE_PROCEDURE) || (parent->type == MG_NODE_FUNCTION))
+			if ((parent->type == MG_NODE_FUNCTION) || (parent->type == MG_NODE_PROCEDURE))
 			{
 				isClosure = MG_TRUE;
 				break;
@@ -1258,8 +1258,8 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitContinue(module, node);
 	case MG_NODE_IF:
 		return _mgVisitIf(module, node);
-	case MG_NODE_PROCEDURE:
 	case MG_NODE_FUNCTION:
+	case MG_NODE_PROCEDURE:
 		return _mgVisitFunction(module, node);
 	case MG_NODE_EMIT:
 		return _mgVisitEmit(module, node);

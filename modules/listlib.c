@@ -142,7 +142,7 @@ static MGValue* mg_list_reverse(MGInstance *instance, size_t argc, const MGValue
 static MGValue* mg_list_sort(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 2, 2);
-	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 2, MG_TYPE_FUNCTION, MG_TYPE_CFUNCTION);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_LIST, 3, MG_TYPE_CFUNCTION, MG_TYPE_BOUND_CFUNCTION, MG_TYPE_FUNCTION);
 
 	const MGValue *list = argv[0];
 	const intmax_t length = (intmax_t) mgListLength(list);

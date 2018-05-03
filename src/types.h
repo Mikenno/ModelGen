@@ -10,6 +10,7 @@ typedef enum MGType {
 	MG_TYPE_LIST,
 	MG_TYPE_MAP,
 	MG_TYPE_CFUNCTION,
+	MG_TYPE_BOUND_CFUNCTION,
 	MG_TYPE_FUNCTION,
 	MG_TYPE_PROCEDURE,
 	MG_TYPE_MODULE
@@ -22,6 +23,7 @@ typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
 
 typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, const MGValue* const* argv);
+typedef MGValue* (*MGBoundCFunction)(MGInstance *instance, const MGValue *value, size_t argc, const MGValue* const* argv);
 
 typedef void (*MGTypeCreate)(MGValue *value);
 typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value);

@@ -2,9 +2,10 @@
 #include <stdio.h>
 
 #include "modelgen.h"
+#include "types.h"
 #include "value.h"
 #include "module.h"
-#include "types.h"
+#include "callable.h"
 #include "error.h"
 #include "utilities.h"
 
@@ -46,6 +47,9 @@ void mgAnyCopy(MGValue *copy, const MGValue *value)
 		else
 			_mgCreateMap(&copy->data.m, 0);
 		break;
+	case MG_TYPE_BOUND_CFUNCTION:
+		copy->data.bcfunc.bound = mgReferenceValue(value->data.bcfunc.bound);
+		break;
 	case MG_TYPE_PROCEDURE:
 	case MG_TYPE_FUNCTION:
 		copy->data.func.module = mgReferenceValue(value->data.func.module);
@@ -81,6 +85,9 @@ void mgAnyDestroy(MGValue *value)
 		mgDestroyParser(&value->data.module.parser);
 		free(value->data.module.filename);
 		mgDestroyValue(value->data.module.globals);
+		break;
+	case MG_TYPE_BOUND_CFUNCTION:
+		mgDestroyValue(value->data.bcfunc.bound);
 		break;
 	case MG_TYPE_PROCEDURE:
 	case MG_TYPE_FUNCTION:
@@ -123,6 +130,7 @@ char* mgAnyToString(const MGValue *value)
 {
 	char *s, *end, *s2;
 	size_t len, len2;
+	void *p;
 
 	switch (value->type)
 	{
@@ -228,6 +236,33 @@ char* mgAnyToString(const MGValue *value)
 		*end = '\0';
 
 		return s;
+	case MG_TYPE_CFUNCTION:
+	case MG_TYPE_FUNCTION:
+	case MG_TYPE_PROCEDURE:
+		p = NULL;
+		switch (value->type)
+		{
+		case MG_TYPE_CFUNCTION:
+			p = value->data.cfunc;
+			break;
+		case MG_TYPE_FUNCTION:
+		case MG_TYPE_PROCEDURE:
+			p = value->data.func.node;
+			break;
+		default:
+			break;
+		}
+		len = (size_t) snprintf(NULL, 0, "%p", p);
+		s = (char*) malloc((len + 1) * sizeof(char));
+		snprintf(s, len + 1, "%p", p);
+		s[len] = '\0';
+		return s;
+	case MG_TYPE_BOUND_CFUNCTION:
+		len = (size_t) snprintf(NULL, 0, "%p bound to %p", value->data.bcfunc.cfunc, value->data.bcfunc.bound);
+		s = (char*) malloc((len + 1) * sizeof(char));
+		snprintf(s, len + 1, "%p bound to %p", value->data.bcfunc.cfunc, value->data.bcfunc.bound);
+		s[len] = '\0';
+		return s;
 	default:
 		return NULL;
 	}
@@ -321,6 +356,12 @@ MGtribool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 
 		return result;
 	}
+	else if ((lhs->type == MG_TYPE_CFUNCTION) || (rhs->type == MG_TYPE_CFUNCTION))
+		return lhs->data.cfunc == rhs->data.cfunc;
+	else if ((lhs->type == MG_TYPE_BOUND_CFUNCTION) || (rhs->type == MG_TYPE_BOUND_CFUNCTION))
+		return (lhs->data.bcfunc.cfunc == rhs->data.bcfunc.cfunc) && (lhs->data.bcfunc.bound == rhs->data.bcfunc.bound);
+	else if (((lhs->type == MG_TYPE_FUNCTION) || (lhs->type == MG_TYPE_PROCEDURE)) && (lhs->type == rhs->type))
+		return lhs->data.func.node == rhs->data.func.node;
 
 	return MG_INDETERMINATE;
 }
@@ -706,6 +747,15 @@ MGbool mgMapAttributeSet(const MGValue *map, const char *key, MGValue *value)
 }
 
 
+MGValue* mgBoundCFunctionAttributeGet(const MGValue *func, const char *key)
+{
+	if (!strcmp("bound", key))
+		return mgReferenceValue(func->data.bcfunc.bound);
+
+	return NULL;
+}
+
+
 MGValue* mgFunctionAttributeGet(const MGValue *function, const char *key)
 {
 	const MGValue *value = function->data.func.locals ? mgMapGet(function->data.func.locals, key) : NULL;
@@ -930,6 +980,30 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		NULL,
 		NULL,
+		NULL
+	},
+	{
+		"boundcfunc",
+		NULL,
+		mgAnyCopy,
+		mgAnyDestroy,
+		mgAnyTruthValue,
+		mgAnyToString,
+		NULL,
+		NULL,
+		mgAnyInverse,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgAnyEqual,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		mgBoundCFunctionAttributeGet,
 		NULL
 	},
 	{

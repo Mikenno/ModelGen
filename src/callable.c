@@ -5,6 +5,7 @@
 #include "module.h"
 #include "error.h"
 #include "utilities.h"
+#include "modelgen.h"
 
 
 extern MGValue* _mgVisitNode(MGValue *module, MGNode *node);
@@ -33,7 +34,7 @@ MGValue* mgCall(MGInstance *instance, const MGValue *callable, size_t argc, cons
 
 	MGStackFrame frame;
 
-	if ((callable->type != MG_TYPE_CFUNCTION) && callable->data.func.locals)
+	if (((callable->type == MG_TYPE_FUNCTION) || (callable->type == MG_TYPE_PROCEDURE)) && callable->data.func.locals)
 		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(callable->data.func.locals));
 	else
 		mgCreateStackFrame(&frame, mgReferenceValue(module));
@@ -63,6 +64,8 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 
 	if (callable->type == MG_TYPE_CFUNCTION)
 		frame->value = callable->data.cfunc(module->data.module.instance, argc, argv);
+	else if (callable->type == MG_TYPE_BOUND_CFUNCTION)
+		frame->value = callable->data.bcfunc.cfunc(module->data.module.instance, callable->data.bcfunc.bound, argc, argv);
 	else
 	{
 		MG_ASSERT(callable->data.func.module);

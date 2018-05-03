@@ -88,6 +88,10 @@ typedef struct MGValue {
 			MGStringUsage usage;
 		} str;
 		MGCFunction cfunc;
+		struct {
+			MGBoundCFunction cfunc;
+			MGValue *bound;
+		} bcfunc;
 		MGValueList a;
 		MGValueMap m;
 		struct {

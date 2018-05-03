@@ -216,6 +216,18 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 }
 
 
+inline MGValue* mgCreateValueBoundCFunction(MGBoundCFunction cfunc, MGValue *value)
+{
+	MG_ASSERT(cfunc);
+	MG_ASSERT(value);
+
+	MGValue *bound = mgCreateValueEx(MG_TYPE_BOUND_CFUNCTION);
+	bound->data.bcfunc.cfunc = cfunc;
+	bound->data.bcfunc.bound = value;
+	return bound;
+}
+
+
 inline MGValue* mgCreateValueMap(size_t capacity)
 {
 	MGValue *value = mgCreateValueEx(MG_TYPE_MAP);
