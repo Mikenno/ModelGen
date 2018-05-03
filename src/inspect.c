@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "inspect.h"
+#include "value.h"
 #include "module.h"
 #include "utilities.h"
 #include "modelgen.h"
@@ -257,6 +258,8 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		return;
 	}
 
+	char *s;
+
 	switch (value->type)
 	{
 	case MG_TYPE_INTEGER:
@@ -324,6 +327,11 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		fputs("<null>", stdout);
 		break;
 	default:
+		if ((s = mgValueToString(value)))
+		{
+			fputs(s, stdout);
+			free(s);
+		}
 		break;
 	}
 }
