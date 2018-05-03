@@ -13,6 +13,13 @@
 extern MGNode* mgReferenceNode(const MGNode *node);
 
 
+extern MGValue* mgTypeListAdd(const MGValue *lhs, const MGValue *rhs);
+extern MGValue* mgListMul(const MGValue *lhs, const MGValue *rhs);
+extern MGValue* mgListSubscriptGet(const MGValue *list, const MGValue *index);
+extern MGbool mgListSubscriptSet(const MGValue *list, const MGValue *index, MGValue *value);
+extern MGValue* mgListAttributeGet(const MGValue *list, const char *key);
+
+
 void mgAnyCopy(MGValue *copy, const MGValue *value)
 {
 	switch (copy->type)
@@ -599,102 +606,6 @@ MGValue* mgStringMul(const MGValue *lhs, const MGValue *rhs)
 }
 
 
-MGValue* mgTypeListAdd(const MGValue *lhs, const MGValue *rhs)
-{
-	if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (lhs->type == rhs->type))
-	{
-		MGValue *list = mgCreateValueList(mgListLength(lhs) + mgListLength(rhs));
-		list->type = (lhs->type == MG_TYPE_TUPLE) ? MG_TYPE_TUPLE : MG_TYPE_LIST;
-
-		for (size_t i = 0; i < mgListLength(lhs); ++i)
-			mgListAdd(list, mgReferenceValue(_mgListGet(lhs->data.a, i)));
-
-		for (size_t i = 0; i < mgListLength(rhs); ++i)
-			mgListAdd(list, mgReferenceValue(_mgListGet(rhs->data.a, i)));
-
-		return list;
-	}
-
-	return NULL;
-}
-
-
-MGValue* mgListMul(const MGValue *lhs, const MGValue *rhs)
-{
-	const MGValue *list;
-	int times;
-
-	if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (rhs->type == MG_TYPE_INTEGER))
-	{
-		list = lhs;
-		times = rhs->data.i;
-	}
-	else if ((lhs->type == MG_TYPE_INTEGER) || ((rhs->type == MG_TYPE_TUPLE) || (rhs->type == MG_TYPE_LIST)))
-	{
-		list = rhs;
-		times = lhs->data.i;
-	}
-	else
-		return NULL;
-
-	const size_t len = ((mgListLength(list) > 0) && (times > 0)) ? (mgListLength(list) * times) : 0;
-	MGValue *repeated = (list->type == MG_TYPE_TUPLE) ? mgCreateValueTuple(len) : mgCreateValueList(len);
-
-	for (size_t i = 0; i < len; ++i)
-		mgListAdd(repeated, mgReferenceValue(_mgListGet(list->data.a, i % mgListLength(list))));
-
-	return repeated;
-}
-
-
-static inline size_t _mgListRelativeIndex(const MGValue *list, const MGValue *index)
-{
-	size_t i = (size_t) _mgListIndexRelativeToAbsolute(list->data.a, mgIntegerGet(index));
-
-	if ((i < 0) || (i >= mgListLength(list)))
-	{
-		if (mgIntegerGet(index) >= 0)
-			mgFatalError("Error: %s index out of range (0 <= %d < %zu)",
-			             mgGetTypeName(list->type), mgIntegerGet(index), mgListLength(list));
-		else
-			mgFatalError("Error: %s index out of range (-%zu <= %d < 0)",
-			             mgGetTypeName(list->type), mgListLength(list), mgIntegerGet(index));
-	}
-
-	return i;
-}
-
-
-MGValue* mgListSubscriptGet(const MGValue *list, const MGValue *index)
-{
-	if (index->type != MG_TYPE_INTEGER)
-		return NULL;
-
-	MGValue *value = _mgListGet(list->data.a, _mgListRelativeIndex(list, index));
-	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
-}
-
-
-MGbool mgListSubscriptSet(const MGValue *list, const MGValue *index, MGValue *value)
-{
-	if (index->type == MG_TYPE_INTEGER)
-	{
-		const size_t i = _mgListRelativeIndex(list, index);
-
-		mgDestroyValue(_mgListGet(list->data.a, i));
-
-		if (value)
-			_mgListSet(list->data.a, i, mgReferenceValue(value));
-		else
-			_mgListRemove(((MGValue*) list)->data.a, i);
-
-		return MG_TRUE;
-	}
-
-	return MG_FALSE;
-}
-
-
 MGValue* mgMapAdd(const MGValue *lhs, const MGValue *rhs)
 {
 	if ((lhs->type == MG_TYPE_MAP) && (rhs->type == MG_TYPE_MAP))
@@ -931,7 +842,7 @@ const MGTypeData _mgTypes[] = {
 		mgAnyLessEqual,
 		mgListSubscriptGet,
 		mgListSubscriptSet,
-		NULL,
+		mgListAttributeGet,
 		NULL
 	},
 	{

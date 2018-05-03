@@ -7,7 +7,7 @@ DEBUG_CFLAGS = $(CFLAGS) -DDEBUG -g -O0 -Wno-unused-variable -Wno-unused-but-set
 RELEASE_CFLAGS = $(CFLAGS) -O3
 LDFLAGS = -lm
 
-SRC = $(wildcard src/*.c modules/*.c)
+SRC = $(wildcard src/*.c src/*/*.c modules/*.c)
 OBJ = $(SRC:.c=.o)
 BIN = bin/modelgen
 
