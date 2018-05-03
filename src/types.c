@@ -268,7 +268,7 @@ MGValue* mgAnyInverse(const MGValue *operand)
 }
 
 
-MGbool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
+MGtribool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 {
 	if (lhs == rhs)
 		return MG_TRUE;
@@ -300,7 +300,7 @@ MGbool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 		if (mgMapSize(lhs) != mgMapSize(rhs))
 			return MG_FALSE;
 
-		MGbool result = MG_TRUE;
+		MGtribool result = MG_TRUE;
 
 		MGMapIterator iterator;
 		mgCreateMapIterator(&iterator, lhs);
@@ -322,11 +322,11 @@ MGbool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 		return result;
 	}
 
-	return -1;
+	return MG_INDETERMINATE;
 }
 
 
-MGbool mgAnyLess(const MGValue *lhs, const MGValue *rhs)
+MGtribool mgAnyLess(const MGValue *lhs, const MGValue *rhs)
 {
 	if (lhs == rhs)
 		return MG_FALSE;
@@ -338,11 +338,11 @@ MGbool mgAnyLess(const MGValue *lhs, const MGValue *rhs)
 		return lhs->data.i < rhs->data.f;
 	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
 		return lhs->data.f < rhs->data.f;
-	return -1;
+	return MG_INDETERMINATE;
 }
 
 
-MGbool mgAnyLessEqual(const MGValue *lhs, const MGValue *rhs)
+MGtribool mgAnyLessEqual(const MGValue *lhs, const MGValue *rhs)
 {
 	if (lhs == rhs)
 		return MG_TRUE;
@@ -354,7 +354,7 @@ MGbool mgAnyLessEqual(const MGValue *lhs, const MGValue *rhs)
 		return lhs->data.i <= rhs->data.f;
 	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
 		return lhs->data.f <= rhs->data.f;
-	return -1;
+	return MG_INDETERMINATE;
 }
 
 

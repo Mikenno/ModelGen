@@ -16,6 +16,7 @@ typedef enum MGType {
 } MGType;
 
 typedef char MGbool;
+typedef MGbool MGtribool;
 
 typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
@@ -32,7 +33,7 @@ typedef char* (*MGTypeToString)(const MGValue *value);
 
 typedef MGValue* (*MGTypeUnaryOp)(const MGValue *operand);
 typedef MGValue* (*MGTypeBinOp)(const MGValue *lhs, const MGValue *rhs);
-typedef MGbool (*MGTypeBinOpCompare)(const MGValue *lhs, const MGValue *rhs);
+typedef MGtribool (*MGTypeBinOpCompare)(const MGValue *lhs, const MGValue *rhs);
 
 typedef MGValue* (*MGTypeSubscriptGet)(const MGValue *collection, const MGValue *index);
 typedef MGbool (*MGTypeSubscriptSet)(const MGValue *collection, const MGValue *index, MGValue *value);

@@ -19,6 +19,7 @@
 
 #define MG_VERSION "0.1.0"
 
+#define MG_INDETERMINATE (MGbool) -1
 #define MG_FALSE (MGbool) 0
 #define MG_TRUE (MGbool) 1
 

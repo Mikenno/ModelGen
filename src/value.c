@@ -137,37 +137,37 @@ MGValue* mgValueUnaryOp(const MGValue *value, MGUnaryOpType operation)
 }
 
 
-static inline MGbool _mgValueCompareUnknownAnd(const MGValue *lhs, const MGValue *rhs, const MGTypeBinOpCompare include, const MGTypeBinOpCompare exclude)
+static inline MGtribool _mgValueCompareUnknownAnd(const MGValue *lhs, const MGValue *rhs, const MGTypeBinOpCompare include, const MGTypeBinOpCompare exclude)
 {
 	MGbool result = exclude(lhs, rhs);
-	if (result == -1)
-		return -1;
+	if (result == MG_INDETERMINATE)
+		return MG_INDETERMINATE;
 	else if (result == MG_TRUE)
 		return MG_FALSE;
 
 	result = include(lhs, rhs);
-	if (result == -1)
-		return -1;
+	if (result == MG_INDETERMINATE)
+		return MG_INDETERMINATE;
 	return result;
 }
 
 
-static inline MGbool _mgValueCompareUnknownOr(const MGValue *lhs, const MGValue *rhs, const MGTypeBinOpCompare a, const MGTypeBinOpCompare b)
+static inline MGtribool _mgValueCompareUnknownOr(const MGValue *lhs, const MGValue *rhs, const MGTypeBinOpCompare a, const MGTypeBinOpCompare b)
 {
 	MGbool result = a(lhs, rhs);
-	if (result == -1)
-		return -1;
+	if (result == MG_INDETERMINATE)
+		return MG_INDETERMINATE;
 	else if (result == MG_TRUE)
 		return MG_TRUE;
 
 	result = b(lhs, rhs);
-	if (result == -1)
-		return -1;
+	if (result == MG_INDETERMINATE)
+		return MG_INDETERMINATE;
 	return result;
 }
 
 
-static inline MGbool _mgValueCompareUnknown(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation)
+static inline MGtribool _mgValueCompareUnknown(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation)
 {
 	const MGTypeData *lhsType = mgGetType(lhs->type);
 	const MGTypeData *rhsType = mgGetType(rhs->type);
@@ -197,16 +197,16 @@ static inline MGbool _mgValueCompareUnknown(const MGValue *lhs, const MGValue *r
 		break;
 	}
 
-	return -1;
+	return MG_INDETERMINATE;
 }
 
 
-static inline MGbool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation)
+static inline MGtribool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation)
 {
 	const MGTypeData *lhsType = mgGetType(lhs->type);
 	const MGTypeData *rhsType = mgGetType(rhs->type);
 
-	MGbool result = -1;
+	MGtribool result = MG_INDETERMINATE;
 
 	switch (operation)
 	{
@@ -216,12 +216,12 @@ static inline MGbool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGB
 		{
 			if (lhsType->eq)
 				result = lhsType->eq(lhs, rhs);
-			if ((result == -1) && rhsType->eq)
+			if ((result == MG_INDETERMINATE) && rhsType->eq)
 				result = rhsType->eq(lhs, rhs);
 		}
 		else
 			result = _mgValueCompareUnknown(lhs, rhs, operation);
-		if ((result != -1) && (operation == MG_BIN_OP_NOT_EQ))
+		if ((result != MG_INDETERMINATE) && (operation == MG_BIN_OP_NOT_EQ))
 			result = !result;
 		break;
 	case MG_BIN_OP_LESS:
@@ -230,12 +230,12 @@ static inline MGbool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGB
 		{
 			if (lhsType->lt)
 				result = lhsType->lt(lhs, rhs);
-			if ((result == -1) && rhsType->lt)
+			if ((result == MG_INDETERMINATE) && rhsType->lt)
 				result = rhsType->lt(lhs, rhs);
 		}
 		else
 			result = _mgValueCompareUnknown(lhs, rhs, operation);
-		if ((result != -1) && (operation == MG_BIN_OP_GREATER_EQ))
+		if ((result != MG_INDETERMINATE) && (operation == MG_BIN_OP_GREATER_EQ))
 			result = !result;
 		break;
 	case MG_BIN_OP_LESS_EQ:
@@ -244,12 +244,12 @@ static inline MGbool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGB
 		{
 			if (lhsType->le)
 				result = lhsType->le(lhs, rhs);
-			if ((result == -1) && rhsType->le)
+			if ((result == MG_INDETERMINATE) && rhsType->le)
 				result = rhsType->le(lhs, rhs);
 		}
 		else
 			result = _mgValueCompareUnknown(lhs, rhs, operation);
-		if ((result != -1) && (operation == MG_BIN_OP_GREATER))
+		if ((result != MG_INDETERMINATE) && (operation == MG_BIN_OP_GREATER))
 			result = !result;
 		break;
 	default:
@@ -262,9 +262,9 @@ static inline MGbool _mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGB
 
 MGbool mgValueCompare(const MGValue *lhs, const MGValue *rhs, MGBinOpType operation)
 {
-	MGbool result = _mgValueCompare(lhs, rhs, operation);
+	MGtribool result = _mgValueCompare(lhs, rhs, operation);
 
-	return (result != -1) ? result : MG_FALSE;
+	return (result != MG_INDETERMINATE) ? result : MG_FALSE;
 }
 
 
@@ -337,7 +337,7 @@ MGValue* mgValueBinaryOp(const MGValue *lhs, const MGValue *rhs, MGBinOpType ope
 	case MG_BIN_OP_GREATER:
 	case MG_BIN_OP_GREATER_EQ:
 		_result = _mgValueCompare(lhs, rhs, operation);
-		if (_result != -1)
+		if (_result != MG_INDETERMINATE)
 			result = mgCreateValueInteger(_result);
 		break;
 	default:
