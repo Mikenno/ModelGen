@@ -55,7 +55,6 @@
 	_MG_T(QUESTION, "?") \
 	_MG_T(ELVIS, "?:") \
 	_MG_T(COALESCE, "\?\?") \
-	_MG_T(COALESCE_ASSIGN, "\?\?=") \
 	_MG_T(ARROW, "->") \
 	_MG_T(ASSIGN, "=") \
 	_MG_T(ADD_ASSIGN, "+=") \

@@ -45,6 +45,16 @@ static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *
 #define _MG_FAIL(module, node, ...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
 
 
+static const MGBinOpType _MG_AUG_TO_BIN_OP_TYPES[] = {
+	MG_BIN_OP_ADD,
+	MG_BIN_OP_SUB,
+	MG_BIN_OP_MUL,
+	MG_BIN_OP_DIV,
+	MG_BIN_OP_INT_DIV,
+	MG_BIN_OP_MOD,
+};
+
+
 MGValue* _mgVisitNode(MGValue *module, MGNode *node);
 
 
@@ -192,7 +202,7 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 	else if (names->type == MG_NODE_TUPLE)
 	{
 		if ((values->type != MG_TYPE_TUPLE) && (values->type != MG_TYPE_LIST))
-			_MG_FAIL(module, names, "Error: \"%s\" is not iterable", mgGetTypeName(values->type));
+			_MG_FAIL(module, names, "Error: %s is not iterable", mgGetTypeName(values->type));
 
 		if (_mgListLength(names->children) != mgListLength(values))
 			_MG_FAIL(module, names, "Error: Mismatched lengths for parallel assignment (%zu != %zu)", _mgListLength(names->children), mgListLength(values));
@@ -847,6 +857,66 @@ static inline MGValue* _mgVisitAssignment(MGValue *module, MGNode *node)
 }
 
 
+static inline MGValue* _mgVisitAugmentedAssignment(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) == 2);
+
+	MGValue *rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
+	MG_ASSERT(rhs);
+
+	MGNode *lhsNode = _mgListGet(node->children, 0);
+
+	MGValue *lhs = NULL;
+	MGValue *lhsCollection = NULL, *lhsIndex = NULL;
+	const MGNode *lhsAttributeNode = NULL;
+
+	switch (lhsNode->type)
+	{
+	case MG_NODE_NAME:
+		lhs = _mgVisitName(module, lhsNode);
+		break;
+	case MG_NODE_SUBSCRIPT:
+		lhsIndex = _mgVisitNode(module, _mgListGet(lhsNode->children, 1));
+		lhsCollection = _mgVisitNode(module, _mgListGet(lhsNode->children, 0));
+		lhs = _mgResolveSubscriptGet(module, lhsNode, lhsCollection, lhsIndex);
+		break;
+	case MG_NODE_ATTRIBUTE:
+		lhsAttributeNode = _mgListGet(lhsNode->children, 1);
+		lhsCollection = _mgVisitNode(module, _mgListGet(lhsNode->children, 0));
+		lhs = _mgResolveAttributeGet(module, lhsNode, lhsCollection, lhsAttributeNode->token->value.s);
+		break;
+	default:
+		MG_FAIL("Error: Unsupported augmented assignment with \"%s\"", _MG_NODE_NAMES[lhsNode->type]);
+	}
+
+	MGValue *value = mgValueBinaryOp(lhs, rhs, _MG_AUG_TO_BIN_OP_TYPES[node->type - MG_NODE_ASSIGN_ADD]);
+
+	switch (lhsNode->type)
+	{
+	case MG_NODE_NAME:
+		_mgSetValue(module, lhsNode->token->value.s, mgReferenceValue(value));
+		break;
+	case MG_NODE_SUBSCRIPT:
+		_mgResolveSubscriptSet(module, lhsNode, lhsCollection, lhsIndex, mgReferenceValue(value));
+		mgDestroyValue(lhsCollection);
+		mgDestroyValue(lhsIndex);
+		break;
+	case MG_NODE_ATTRIBUTE:
+		if (!mgValueAttributeSet(lhsCollection, lhsAttributeNode->token->value.s, mgReferenceValue(value)))
+			mgDestroyValue(value);
+		mgDestroyValue(lhsCollection);
+		break;
+	default:
+		break;
+	}
+
+	mgDestroyValue(lhs);
+	mgDestroyValue(rhs);
+
+	return value;
+}
+
+
 static inline MGValue* _mgVisitUnaryOp(MGValue *module, MGNode *node, MGUnaryOpType operation)
 {
 	MG_ASSERT(_mgListLength(node->children) == 1);
@@ -1169,6 +1239,13 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitUnaryOp(module, node, MG_UNARY_OP_INVERSE);
 	case MG_NODE_ASSIGN:
 		return _mgVisitAssignment(module, node);
+	case MG_NODE_ASSIGN_ADD:
+	case MG_NODE_ASSIGN_SUB:
+	case MG_NODE_ASSIGN_MUL:
+	case MG_NODE_ASSIGN_DIV:
+	case MG_NODE_ASSIGN_INT_DIV:
+	case MG_NODE_ASSIGN_MOD:
+		return _mgVisitAugmentedAssignment(module, node);
 	case MG_NODE_CALL:
 		return _mgVisitCall(module, node);
 	case MG_NODE_FOR:

@@ -20,15 +20,15 @@
 
 
 #define _MG_OPERATOR_PRECEDENCE_LEVELS 8
-#define _MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL 8
+#define _MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL 7
 
 #define _MG_OPERATOR_PRECEDENCE_LEVEL_AFTER_RANGE 1
 
-static const int _MG_OPERATOR_PRECEDENCE_TYPE_COUNT[_MG_OPERATOR_PRECEDENCE_LEVELS] = { 8, 1, 1, 2, 4, 2, 4, 1 };
+static const int _MG_OPERATOR_PRECEDENCE_TYPE_COUNT[_MG_OPERATOR_PRECEDENCE_LEVELS] = { 7, 1, 1, 2, 4, 2, 4, 1 };
 
 static const MGTokenType _MG_OPERATOR_PRECEDENCE_TYPES[_MG_OPERATOR_PRECEDENCE_LEVELS][_MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL] = {
 	/* Highest Precedence */
-	{ MG_TOKEN_ASSIGN, MG_TOKEN_ADD_ASSIGN, MG_TOKEN_SUB_ASSIGN, MG_TOKEN_MUL_ASSIGN, MG_TOKEN_DIV_ASSIGN, MG_TOKEN_INT_DIV_ASSIGN, MG_TOKEN_MOD_ASSIGN, MG_TOKEN_COALESCE_ASSIGN },
+	{ MG_TOKEN_ASSIGN, MG_TOKEN_ADD_ASSIGN, MG_TOKEN_SUB_ASSIGN, MG_TOKEN_MUL_ASSIGN, MG_TOKEN_DIV_ASSIGN, MG_TOKEN_INT_DIV_ASSIGN, MG_TOKEN_MOD_ASSIGN },
 	/* Range */
 	{ MG_TOKEN_OR },
 	{ MG_TOKEN_AND },
@@ -58,19 +58,7 @@ static const MGNodeType _MG_ASSIGN_NODE_TYPES[] = {
 	MG_NODE_ASSIGN_MUL,
 	MG_NODE_ASSIGN_DIV,
 	MG_NODE_ASSIGN_INT_DIV,
-	MG_NODE_ASSIGN_MOD,
-	MG_NODE_ASSIGN_COALESCE
-};
-
-static const MGNodeType _MG_AUG_TO_BIN_OP_TYPES[] = {
-	MG_NODE_INVALID,
-	MG_NODE_BIN_OP_ADD,
-	MG_NODE_BIN_OP_SUB,
-	MG_NODE_BIN_OP_MUL,
-	MG_NODE_BIN_OP_DIV,
-	MG_NODE_BIN_OP_INT_DIV,
-	MG_NODE_BIN_OP_MOD,
-	MG_NODE_BIN_OP_COALESCE
+	MG_NODE_ASSIGN_MOD
 };
 
 
@@ -530,11 +518,11 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 	{
 		node = mgCreateNode(token, MG_NODE_FOR);
 
-		MGNode *name = _mgParseExpression(parser, token + 1, MG_TRUE);
-		MG_ASSERT(name);
-		_mgAddChild(node, name);
+		MGNode *target = _mgParseExpression(parser, token + 1, MG_TRUE);
+		MG_ASSERT(target);
+		_mgAddChild(node, target);
 
-		token = name->tokenEnd + 1;
+		token = target->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINE(token);
 
 		MG_ASSERT(token->type == MG_TOKEN_IN);
@@ -1084,21 +1072,17 @@ static MGNode* _mgParseAssignment(MGParser *parser, MGToken *token, int level, M
 
 	MG_ASSERT(_mgListLength(node->children) == 2);
 
-	const MGNode *names = _mgListGet(node->children, 0);
+	const MGNode *target = _mgListGet(node->children, 0);
 
-	if ((names->type != MG_NODE_NAME) && (names->type != MG_NODE_SUBSCRIPT) && (names->type != MG_NODE_ATTRIBUTE) && (names->type != MG_NODE_TUPLE))
-		mgParserFatalErrorEx(names->token, "Cannot assign to \"%s\"", _MG_NODE_NAMES[names->type]);
-
-	if (node->type != MG_NODE_ASSIGN)
+	if (node->type == MG_NODE_ASSIGN)
 	{
-		MGNode *augmented = mgCreateNode(token, MG_NODE_ASSIGN);
-
-		_mgAddChild(augmented, _mgDeepCopyNode(_mgListGet(node->children, 0)));
-		_mgAddChild(augmented, node);
-
-		node->type = _MG_AUG_TO_BIN_OP_TYPES[type];
-
-		node = augmented;
+		if ((target->type != MG_NODE_NAME) && (target->type != MG_NODE_SUBSCRIPT) && (target->type != MG_NODE_ATTRIBUTE) && (target->type != MG_NODE_TUPLE))
+			mgParserFatalError("Illegal assignment to \"%s\"", _MG_NODE_NAMES[target->type]);
+	}
+	else
+	{
+		if ((target->type != MG_NODE_NAME) && (target->type != MG_NODE_SUBSCRIPT) && (target->type != MG_NODE_ATTRIBUTE))
+			mgParserFatalError("Illegal augmented assignment to \"%s\"", _MG_NODE_NAMES[target->type]);
 	}
 
 	return node;

@@ -49,7 +49,6 @@
 	_MG_N(ASSIGN_DIV, "AssignDiv") \
 	_MG_N(ASSIGN_INT_DIV, "AssignIntDiv") \
 	_MG_N(ASSIGN_MOD, "AssignMod") \
-	_MG_N(ASSIGN_COALESCE, "AssignCoalesce") \
 	_MG_N(SUBSCRIPT, "Subscript") \
 	_MG_N(ATTRIBUTE, "Attribute") \
 	_MG_N(PROCEDURE, "Procedure") \

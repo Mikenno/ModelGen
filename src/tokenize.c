@@ -238,15 +238,8 @@ void mgTokenizeNext(MGToken *token)
 		switch (*token->end.string) {
 		case '?':
 			_mgTokenNextCharacter(token);
-			switch (*token->end.string) {
-			case '=':
-				token->type = MG_TOKEN_COALESCE_ASSIGN;
-				_mgTokenNextCharacter(token);
-				return;
-			default:
-				token->type = MG_TOKEN_COALESCE;
-				return;
-			}
+			token->type = MG_TOKEN_COALESCE;
+			return;
 		case ':':
 			_mgTokenNextCharacter(token);
 			token->type = MG_TOKEN_ELVIS;
