@@ -6,8 +6,10 @@
 #include "error.h"
 
 
+// map.pop(key): any
+// map.clear()
 // map.has(key): bool
-// map.clear(map)
+// map.contains(value): bool
 // map.keys(): list<string>
 // map.values(): list<any>
 // map.pairs(): list<tuple<string, any>>
@@ -50,6 +52,42 @@ MGbool mgMapSubscriptSet(const MGValue *map, const MGValue *key, MGValue *value)
 }
 
 
+static MGValue* mg_map_pop(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_STRING);
+
+	const MGValue *key = argv[0];
+	MGValue *item = mgMapGet(map, key->data.str.s);
+
+	if (item == NULL)
+		return MG_NULL_VALUE;
+
+	item = mgReferenceValue(item);
+	mgMapSet((MGValue*) map, key->data.str.s, NULL);
+
+	return item;
+}
+
+
+static MGValue* mg_map_clear(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 0, 0);
+
+	mgMapClear((MGValue*) map);
+
+	return MG_NULL_VALUE;
+}
+
+
+static MGValue* mg_map_shallow_copy(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 0, 0);
+
+	return mgMapShallowCopy(map);
+}
+
+
 static MGValue* mg_map_has(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
@@ -65,13 +103,15 @@ static MGValue* mg_map_has(MGInstance *instance, const MGValue *map, size_t argc
 }
 
 
-static MGValue* mg_map_clear(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
+static MGValue* mg_map_contains(MGInstance *instance, const MGValue *map, size_t argc, const MGValue* const* argv)
 {
-	mgCheckArgumentCount(instance, argc, 0, 0);
+	mgCheckArgumentCount(instance, argc, 1, 1);
 
-	mgMapClear((MGValue*) map);
+	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
+		if (mgValueCompare(argv[0], _mgListGet(map->data.m, i).value, MG_BIN_OP_EQ))
+			return mgCreateValueInteger(MG_TRUE);
 
-	return MG_NULL_VALUE;
+	return mgCreateValueInteger(MG_FALSE);
 }
 
 
@@ -118,10 +158,16 @@ MGValue* mgMapAttributeGet(const MGValue *map, const char *key)
 {
 	if (!strcmp("size", key))
 		return mgCreateValueInteger((int) mgMapSize(map));
-	if (!strcmp("has", key))
-		return mgCreateValueBoundCFunction(mg_map_has, mgReferenceValue(map));
+	else if (!strcmp("pop", key))
+		return mgCreateValueBoundCFunction(mg_map_pop, mgReferenceValue(map));
 	else if (!strcmp("clear", key))
 		return mgCreateValueBoundCFunction(mg_map_clear, mgReferenceValue(map));
+	else if (!strcmp("copy", key))
+		return mgCreateValueBoundCFunction(mg_map_shallow_copy, mgReferenceValue(map));
+	else if (!strcmp("has", key))
+		return mgCreateValueBoundCFunction(mg_map_has, mgReferenceValue(map));
+	else if (!strcmp("contains", key))
+		return mgCreateValueBoundCFunction(mg_map_contains, mgReferenceValue(map));
 	else if (!strcmp("keys", key))
 		return mgCreateValueBoundCFunction(mg_map_keys, mgReferenceValue(map));
 	else if (!strcmp("values", key))

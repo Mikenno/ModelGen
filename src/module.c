@@ -455,7 +455,7 @@ void mgMapMerge(MGValue *destination, const MGValue *source, MGbool replace)
 }
 
 
-MGValue* mgMapCopy(const MGValue *map)
+MGValue* mgMapShallowCopy(const MGValue *map)
 {
 	MG_ASSERT(map);
 	MG_ASSERT(map->type == MG_TYPE_MAP);

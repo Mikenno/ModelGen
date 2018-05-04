@@ -105,7 +105,7 @@ void mgDestroyMapIterator(MGMapIterator *iterator);
 
 MGbool mgMapNext(MGMapIterator *iterator, const MGValue **key, const MGValue **value);
 void mgMapMerge(MGValue *destination, const MGValue *source, MGbool override);
+MGValue* mgMapShallowCopy(const MGValue *map);
 #define mgMapDeepCopy(map) mgDeepCopyValue(map)
-MGValue* mgMapCopy(const MGValue *map);
 
 #endif
