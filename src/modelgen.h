@@ -130,6 +130,7 @@ typedef struct MGInstance {
 	MGValue *modules;
 	MGValue *staticModules;
 	MGValue *base;
+	MGValue *uniforms;
 	_MGList(MGVertex) vertices;
 	struct {
 		unsigned int position : 3;

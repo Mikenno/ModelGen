@@ -74,6 +74,8 @@ void mgCreateInstance(MGInstance *instance)
 	instance->modules = mgCreateValueMap(1 << 3);
 	instance->staticModules = mgCreateValueMap(1 << 3);
 
+	instance->uniforms = mgCreateValueMap(0);
+
 	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
 
 #ifdef _WIN32
@@ -139,6 +141,8 @@ void mgDestroyInstance(MGInstance *instance)
 
 	mgDestroyValue(instance->modules);
 	mgDestroyValue(instance->staticModules);
+
+	mgDestroyValue(instance->uniforms);
 
 	_mgListDestroy(instance->vertices);
 }
@@ -222,6 +226,8 @@ static inline MGValue* _mgModuleLoadFile(MGInstance *instance, const char *filen
 	{
 		module = mgCreateValueModule();
 
+		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
+
 		module->data.module.instance = instance;
 		module->data.module.filename = mgStringDuplicate(filename);
 
@@ -253,6 +259,8 @@ static inline MGValue* _mgModuleLoadFileHandle(MGInstance *instance, FILE *file,
 	{
 		module = mgCreateValueModule();
 
+		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
+
 		module->data.module.instance = instance;
 
 		if (mgParseFileHandle(&module->data.module.parser, file))
@@ -282,6 +290,8 @@ static inline MGValue* _mgModuleLoadString(MGInstance *instance, const char *str
 	if (module == NULL)
 	{
 		module = mgCreateValueModule();
+
+		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
 
 		module->data.module.instance = instance;
 

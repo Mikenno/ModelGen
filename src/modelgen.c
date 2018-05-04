@@ -64,9 +64,10 @@ int main(int argc, char *argv[])
 	instance.vertexSize.position = 3;
 	instance.vertexSize.normal = 3;
 
-	MGValue *base = mgMapGet(instance.staticModules, "base");
-	MG_ASSERT(base);
-	MG_ASSERT(base->type == MG_TYPE_MODULE);
+	const MGValue *uniforms = instance.uniforms;
+
+	MG_ASSERT(uniforms);
+	MG_ASSERT(uniforms->type == MG_TYPE_MAP);
 
 	int i = 1;
 	const char *arg;
@@ -166,7 +167,7 @@ int main(int argc, char *argv[])
 
 			const char *value = argv[++i];
 
-			mgModuleSet(base, name, mgCreateValueString(value));
+			mgMapSet((MGValue*) uniforms, name, mgCreateValueString(value));
 		}
 		else if (!strcmp("--", arg))
 		{
