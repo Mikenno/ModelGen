@@ -364,6 +364,21 @@ inline void mgListClear(MGValue *list)
 }
 
 
+MGValue* mgListShallowCopy(const MGValue *list)
+{
+	MG_ASSERT(list);
+	MG_ASSERT((list->type == MG_TYPE_TUPLE) || (list->type == MG_TYPE_LIST));
+
+	const size_t length = mgListLength(list);
+	MGValue *copy = mgCreateValueList(length);
+
+	for (size_t i = 0; i < length; ++i)
+		mgListAdd(copy, _mgListGet(list->data.a, i));
+
+	return copy;
+}
+
+
 void mgCreateMapIterator(MGMapIterator *iterator, const MGValue *map)
 {
 	MG_ASSERT(iterator);

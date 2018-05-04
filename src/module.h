@@ -82,6 +82,9 @@ void mgListRemoveRange(MGValue *list, intmax_t begin, intmax_t end);
 
 void mgListClear(MGValue *list);
 
+MGValue* mgListShallowCopy(const MGValue *list);
+#define mgListDeepCopy(list) mgDeepCopyValue(list)
+
 #define mgListLength(list) _mgListLength((list)->data.a)
 #define mgListCapacity(list) _mgListCapacity((list)->data.a)
 #define mgListItems(list) _mgListItems((list)->data.a)
