@@ -82,6 +82,25 @@ MGValue* mgReferenceValue(const MGValue *value)
 }
 
 
+MGValue *mgValueConvert(const MGValue *value, MGType type)
+{
+	if (value->type == type)
+		return mgReferenceValue(value);
+
+	MGValue *result = NULL;
+
+	const MGTypeData *_type = mgGetType(value->type);
+	if (_type && _type->convert)
+		result = _type->convert(value, type);
+
+	if (result == NULL)
+		mgFatalError("Error: Unsupported conversion from %s to %s",
+		             mgGetTypeName(value->type), mgGetTypeName(type));
+
+	return result;
+}
+
+
 MGbool mgValueTruthValue(const MGValue *value)
 {
 	MG_ASSERT(value);

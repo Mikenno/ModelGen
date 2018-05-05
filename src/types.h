@@ -29,6 +29,8 @@ typedef void (*MGTypeCreate)(MGValue *value);
 typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value, MGbool shallow);
 typedef void (*MGTypeDestroy)(MGValue *value);
 
+typedef MGValue* (*MGTypeConvert)(const MGValue *value, MGType type);
+
 typedef MGbool (*MGTypeTruthValue)(const MGValue *value);
 
 typedef char* (*MGTypeToString)(const MGValue *value);
@@ -48,6 +50,7 @@ typedef struct MGTypeData {
 	MGTypeCreate create;
 	MGTypeCopy copy;
 	MGTypeDestroy destroy;
+	MGTypeConvert convert;
 	MGTypeTruthValue truth;
 	MGTypeToString str;
 	MGTypeUnaryOp pos;
@@ -74,5 +77,8 @@ extern const MGTypeData _mgTypes[];
 #define mgGetTypeName(type) mgGetType(type)->name
 
 #define _MG_LONGEST_TYPE_NAME_LENGTH 6
+
+MGType mgLookupType(const char *name);
+const MGTypeData* mgLookupTypeData(const char *name);
 
 #endif

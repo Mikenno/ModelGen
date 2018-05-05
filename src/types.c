@@ -133,6 +133,58 @@ void mgAnyDestroy(MGValue *value)
 }
 
 
+MGValue* mgAnyConvert(const MGValue *value, MGType type)
+{
+	if (type == MG_TYPE_STRING)
+	{
+		char *s = mgValueToString(value);
+		return s ? mgCreateValueStringEx(s, MG_STRING_USAGE_KEEP) : NULL;
+	}
+	else if (type == MG_TYPE_INTEGER)
+	{
+		switch (value->type)
+		{
+		case MG_TYPE_INTEGER:
+			return mgCreateValueInteger(value->data.i);
+		case MG_TYPE_FLOAT:
+			return mgCreateValueInteger((int) value->data.f);
+		case MG_TYPE_STRING:
+			return mgCreateValueInteger(strtol(value->data.str.s, NULL, 10));
+		default:
+			return NULL;
+		}
+	}
+	else if (type == MG_TYPE_FLOAT)
+	{
+		switch (value->type)
+		{
+		case MG_TYPE_INTEGER:
+			return mgCreateValueFloat((float) value->data.i);
+		case MG_TYPE_FLOAT:
+			return mgCreateValueFloat(value->data.f);
+		case MG_TYPE_STRING:
+			return mgCreateValueFloat(strtof(value->data.str.s, NULL));
+		default:
+			return NULL;
+		}
+	}
+	else if ((type == MG_TYPE_TUPLE) && (value->type == MG_TYPE_LIST))
+	{
+		MGValue *copy = mgShallowCopyValue(value);
+		copy->type = MG_TYPE_TUPLE;
+		return copy;
+	}
+	else if ((type == MG_TYPE_LIST) && (value->type == MG_TYPE_TUPLE))
+	{
+		MGValue *copy = mgShallowCopyValue(value);
+		copy->type = MG_TYPE_LIST;
+		return copy;
+	}
+
+	return NULL;
+}
+
+
 MGbool mgAnyTruthValue(const MGValue *value)
 {
 	switch (value->type)
@@ -682,6 +734,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -706,6 +759,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		mgAnyPositive,
@@ -730,6 +784,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		mgAnyPositive,
@@ -754,6 +809,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -778,6 +834,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -802,6 +859,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -826,6 +884,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		mgAnyConvert,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -850,6 +909,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -874,6 +934,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -898,6 +959,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -922,6 +984,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -946,6 +1009,7 @@ const MGTypeData _mgTypes[] = {
 		NULL,
 		mgAnyCopy,
 		mgAnyDestroy,
+		NULL,
 		mgAnyTruthValue,
 		mgAnyToString,
 		NULL,
@@ -966,3 +1030,23 @@ const MGTypeData _mgTypes[] = {
 		mgModuleAttributeSet
 	}
 };
+
+
+MGType mgLookupType(const char *name)
+{
+	for (size_t i = 0; i < sizeof(_mgTypes) / sizeof(*_mgTypes); ++i)
+		if (!strcmp(_mgTypes[i].name, name))
+			return MG_TYPE_NULL + i;
+
+	return MG_TYPE_NULL;
+}
+
+
+const MGTypeData* mgLookupTypeData(const char *name)
+{
+	for (size_t i = 0; i < sizeof(_mgTypes) / sizeof(*_mgTypes); ++i)
+		if (!strcmp(_mgTypes[i].name, name))
+			return _mgTypes + i;
+
+	return NULL;
+}

@@ -714,6 +714,28 @@ static MGValue* _mgVisitAttribute(MGValue *module, MGNode *node)
 }
 
 
+static MGValue* _mgVisitAs(MGValue *module, MGNode *node)
+{
+	MG_ASSERT(_mgListLength(node->children) == 2);
+
+	MGValue *value = _mgVisitNode(module, _mgListGet(node->children, 0));
+	MG_ASSERT(value);
+
+	const MGNode *typeNameNode = _mgListGet(node->children, 1);
+	MG_ASSERT(typeNameNode->type == MG_NODE_NAME);
+	MG_ASSERT(typeNameNode->token);
+
+	const char *typeName = typeNameNode->token->value.s;
+
+	MGType type = mgLookupType(typeName);
+	MGValue *converted = mgValueConvert(value, type);
+
+	mgDestroyValue(value);
+
+	return converted;
+}
+
+
 #if defined(__GNUC__)
 static inline __attribute__((always_inline)) MGValue* _mgVisitName(MGValue *module, MGNode *node)
 #elif defined(_MSC_VER)
@@ -1271,6 +1293,8 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 		return _mgVisitSubscript(module, node);
 	case MG_NODE_ATTRIBUTE:
 		return _mgVisitAttribute(module, node);
+	case MG_NODE_AS:
+		return _mgVisitAs(module, node);
 	case MG_NODE_IMPORT:
 	case MG_NODE_IMPORT_FROM:
 		return _mgVisitImport(module, node);
