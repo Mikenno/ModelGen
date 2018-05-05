@@ -319,9 +319,9 @@ static MGValue* mg_all(MGInstance *instance, size_t argc, const MGValue* const* 
 
 	for (size_t i = 0; i < mgListLength(list); ++i)
 		if (!mgValueTruthValue(_mgListGet(list->data.a, i)))
-			return mgCreateValueInteger(MG_FALSE);
+			return mgCreateValueBoolean(MG_FALSE);
 
-	return mgCreateValueInteger(MG_TRUE);
+	return mgCreateValueBoolean(MG_TRUE);
 }
 
 
@@ -334,9 +334,9 @@ static MGValue* mg_any(MGInstance *instance, size_t argc, const MGValue* const* 
 
 	for (size_t i = 0; i < mgListLength(list); ++i)
 		if (mgValueTruthValue(_mgListGet(list->data.a, i)))
-			return mgCreateValueInteger(MG_TRUE);
+			return mgCreateValueBoolean(MG_TRUE);
 
-	return mgCreateValueInteger(MG_FALSE);
+	return mgCreateValueBoolean(MG_FALSE);
 }
 
 

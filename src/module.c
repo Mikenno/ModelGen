@@ -11,7 +11,7 @@
 
 MGValue* mgCreateValueModule(void)
 {
-	MGValue *module = mgCreateValueEx(MG_TYPE_MODULE);
+	MGValue *module = mgCreateValue(MG_TYPE_MODULE);
 	MG_ASSERT(module);
 
 	module->data.module.instance = NULL;
@@ -183,7 +183,7 @@ MGValue* _mgMapGet(const MGValueMap *map, const char *key)
 
 inline MGValue* mgCreateValueInteger(int i)
 {
-	MGValue *value = mgCreateValueEx(MG_TYPE_INTEGER);
+	MGValue *value = mgCreateValue(MG_TYPE_INTEGER);
 	value->data.i = i;
 	return value;
 }
@@ -191,7 +191,7 @@ inline MGValue* mgCreateValueInteger(int i)
 
 inline MGValue* mgCreateValueFloat(float f)
 {
-	MGValue *value = mgCreateValueEx(MG_TYPE_FLOAT);
+	MGValue *value = mgCreateValue(MG_TYPE_FLOAT);
 	value->data.f = f;
 	return value;
 }
@@ -199,7 +199,7 @@ inline MGValue* mgCreateValueFloat(float f)
 
 inline MGValue* mgCreateValueStringEx(const char *s, MGStringUsage usage)
 {
-	MGValue *value = mgCreateValueEx(MG_TYPE_STRING);
+	MGValue *value = mgCreateValue(MG_TYPE_STRING);
 	value->data.str.s = NULL;
 	mgStringSetEx(value, s, usage);
 	return value;
@@ -210,7 +210,7 @@ inline MGValue* mgCreateValueCFunction(MGCFunction cfunc)
 {
 	MG_ASSERT(cfunc);
 
-	MGValue *value = mgCreateValueEx(MG_TYPE_CFUNCTION);
+	MGValue *value = mgCreateValue(MG_TYPE_CFUNCTION);
 	value->data.cfunc = cfunc;
 	return value;
 }
@@ -221,7 +221,7 @@ inline MGValue* mgCreateValueBoundCFunction(MGBoundCFunction cfunc, MGValue *val
 	MG_ASSERT(cfunc);
 	MG_ASSERT(value);
 
-	MGValue *bound = mgCreateValueEx(MG_TYPE_BOUND_CFUNCTION);
+	MGValue *bound = mgCreateValue(MG_TYPE_BOUND_CFUNCTION);
 	bound->data.bcfunc.cfunc = cfunc;
 	bound->data.bcfunc.bound = value;
 	return bound;
@@ -230,7 +230,7 @@ inline MGValue* mgCreateValueBoundCFunction(MGBoundCFunction cfunc, MGValue *val
 
 inline MGValue* mgCreateValueMap(size_t capacity)
 {
-	MGValue *value = mgCreateValueEx(MG_TYPE_MAP);
+	MGValue *value = mgCreateValue(MG_TYPE_MAP);
 	_mgCreateMap(&value->data.m, capacity > 0 ? (size_t) mgNextPowerOfTwo((uint32_t) capacity) : 0);
 	return value;
 }
@@ -278,7 +278,7 @@ MGValue* mgCreateValueTupleEx(size_t n, ...)
 
 MGValue* mgCreateValueList(size_t capacity)
 {
-	MGValue *value = mgCreateValueEx(MG_TYPE_LIST);
+	MGValue *value = mgCreateValue(MG_TYPE_LIST);
 
 	if (capacity > 0)
 		_mgListCreate(MGValue*, value->data.a, (size_t) mgNextPowerOfTwo((uint32_t) capacity));

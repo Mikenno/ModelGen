@@ -175,11 +175,11 @@ static MGValue* mg_list_remove(MGInstance *instance, const MGValue *list, size_t
 			mgDestroyValue(_mgListGet(list->data.a, i));
 			_mgListRemove(((MGValue*) list)->data.a, i);
 
-			return mgCreateValueInteger(MG_TRUE);
+			return mgCreateValueBoolean(MG_TRUE);
 		}
 	}
 
-	return mgCreateValueInteger(MG_FALSE);
+	return mgCreateValueBoolean(MG_FALSE);
 }
 
 
@@ -352,9 +352,9 @@ static MGValue* mg_list_contains(MGInstance *instance, const MGValue *list, size
 
 	for (size_t i = 0; i < length; ++i)
 		if (mgValueCompare(argv[0], _mgListGet(list->data.a, i), MG_BIN_OP_EQ))
-			return mgCreateValueInteger(MG_TRUE);
+			return mgCreateValueBoolean(MG_TRUE);
 
-	return mgCreateValueInteger(MG_FALSE);
+	return mgCreateValueBoolean(MG_FALSE);
 }
 
 

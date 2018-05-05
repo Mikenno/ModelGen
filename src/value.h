@@ -46,8 +46,7 @@ extern MGValue *_mgNullValue;
 #define _MG_NULL_VALUE _mgNullValue
 #define MG_NULL_VALUE mgReferenceValue(_MG_NULL_VALUE)
 
-#define mgCreateValue(type) mgCreateValueEx(type, NULL)
-MGValue* mgCreateValueEx(MGType type);
+MGValue* mgCreateValue(MGType type);
 void mgDestroyValue(MGValue *value);
 
 MGValue* mgDeepCopyValue(const MGValue *value);

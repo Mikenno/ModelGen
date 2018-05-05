@@ -36,7 +36,8 @@ void _mgMapClear(MGValueMap *map);
 void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
 MGValue* _mgMapGet(const MGValueMap *map, const char *key);
 
-#define mgCreateValueNull() mgCreateValueEx(MG_TYPE_NULL)
+#define mgCreateValueNull() mgCreateValue(MG_TYPE_NULL)
+#define mgCreateValueBoolean(b) mgCreateValueInteger(b)
 MGValue* mgCreateValueInteger(int i);
 MGValue* mgCreateValueFloat(float f);
 #define mgCreateValueString(s) mgCreateValueStringEx(s, MG_STRING_USAGE_COPY)

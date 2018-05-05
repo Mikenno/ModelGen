@@ -97,9 +97,9 @@ static MGValue* mg_map_has(MGInstance *instance, const MGValue *map, size_t argc
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
 		if (!strcmp(_mgListGet(map->data.m, i).key, key))
-			return mgCreateValueInteger(MG_TRUE);
+			return mgCreateValueBoolean(MG_TRUE);
 
-	return mgCreateValueInteger(MG_FALSE);
+	return mgCreateValueBoolean(MG_FALSE);
 }
 
 
@@ -109,9 +109,9 @@ static MGValue* mg_map_contains(MGInstance *instance, const MGValue *map, size_t
 
 	for (size_t i = 0; i < _mgListLength(map->data.m); ++i)
 		if (mgValueCompare(argv[0], _mgListGet(map->data.m, i).value, MG_BIN_OP_EQ))
-			return mgCreateValueInteger(MG_TRUE);
+			return mgCreateValueBoolean(MG_TRUE);
 
-	return mgCreateValueInteger(MG_FALSE);
+	return mgCreateValueBoolean(MG_FALSE);
 }
 
 

@@ -604,7 +604,7 @@ static MGValue* _mgVisitIf(MGValue *module, MGNode *node)
 			return _mgVisitNode(module, _mgListGet(node->children, 2));
 	}
 
-	return mgCreateValueInteger(_condition);
+	return mgCreateValueBoolean(_condition);
 }
 
 
@@ -617,7 +617,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 	MGNode *nameNode = _mgListGet(node->children, 0);
 	MG_ASSERT((nameNode->type == MG_NODE_INVALID) || (nameNode->type == MG_NODE_NAME) || (nameNode->type == MG_NODE_ATTRIBUTE));
 
-	MGValue *func = mgCreateValueEx((node->type == MG_NODE_FUNCTION) ? MG_TYPE_FUNCTION : MG_TYPE_PROCEDURE);
+	MGValue *func = mgCreateValue((node->type == MG_NODE_FUNCTION) ? MG_TYPE_FUNCTION : MG_TYPE_PROCEDURE);
 
 	func->data.func.module = mgReferenceValue(module);
 	func->data.func.node = mgReferenceNode(node);
@@ -966,22 +966,22 @@ static MGValue* _mgVisitBinOpLogical(MGValue *module, MGNode *node)
 	{
 	case MG_NODE_BIN_OP_AND:
 		if (!mgValueTruthValue(lhs))
-			value = mgCreateValueInteger(MG_FALSE);
+			value = mgCreateValueBoolean(MG_FALSE);
 		else
 		{
 			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 			MG_ASSERT(rhs);
-			value = mgCreateValueInteger(mgValueTruthValue(rhs));
+			value = mgCreateValueBoolean(mgValueTruthValue(rhs));
 		}
 		break;
 	case MG_NODE_BIN_OP_OR:
 		if (mgValueTruthValue(lhs))
-			value = mgCreateValueInteger(MG_TRUE);
+			value = mgCreateValueBoolean(MG_TRUE);
 		else
 		{
 			rhs = _mgVisitNode(module, _mgListGet(node->children, 1));
 			MG_ASSERT(rhs);
-			value = mgCreateValueInteger(mgValueTruthValue(rhs));
+			value = mgCreateValueBoolean(mgValueTruthValue(rhs));
 		}
 		break;
 	case MG_NODE_BIN_OP_COALESCE:

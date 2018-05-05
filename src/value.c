@@ -21,7 +21,7 @@ const char* const _MG_BIN_OP_NAMES[] = {
 MGValue *_mgNullValue = NULL;
 
 
-MGValue* mgCreateValueEx(MGType type)
+MGValue* mgCreateValue(MGType type)
 {
 	MGValue *value = (MGValue*) malloc(sizeof(MGValue));
 	MG_ASSERT(value);
@@ -338,7 +338,7 @@ MGValue* mgValueBinaryOp(const MGValue *lhs, const MGValue *rhs, MGBinOpType ope
 	case MG_BIN_OP_GREATER_EQ:
 		_result = _mgValueCompare(lhs, rhs, operation);
 		if (_result != MG_INDETERMINATE)
-			result = mgCreateValueInteger(_result);
+			result = mgCreateValueBoolean(_result);
 		break;
 	default:
 		break;
