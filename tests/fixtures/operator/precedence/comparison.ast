@@ -102,3 +102,48 @@ Module
 --- BinOpNotEq
 ---- Integer 3
 ---- Integer 4
+
+- Call
+-- Name print
+-- BinOpAnd
+--- List
+--- List
+-- BinOpAnd
+--- List
+--- List
+---- Integer 1
+---- Integer 2
+-- BinOpAnd
+--- List
+---- Integer 1
+---- Integer 2
+--- List
+-- BinOpAnd
+--- List
+---- Integer 1
+---- Integer 2
+--- List
+---- Integer 1
+---- Integer 2
+- Call
+-- Name print
+-- BinOpOr
+--- List
+--- List
+-- BinOpOr
+--- List
+--- List
+---- Integer 1
+---- Integer 2
+-- BinOpOr
+--- List
+---- Integer 1
+---- Integer 2
+--- List
+-- BinOpOr
+--- List
+---- Integer 1
+---- Integer 2
+--- List
+---- Integer 1
+---- Integer 2

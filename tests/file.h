@@ -3,13 +3,15 @@
 
 #include <windows.h>
 
+#include "utilities.h"
+
 
 typedef void (*MGWalkFilesCallback)(const char *filename);
 
 
 static int mgWalkFiles(const char *directory, MGWalkFilesCallback callback)
 {
-	char dir[MAX_PATH + 1], filename[MAX_PATH + 1];
+	char dir[MG_PATH_MAX + 1], filename[MG_PATH_MAX + 1];
 	WIN32_FIND_DATAA find;
 	HANDLE hFind;
 

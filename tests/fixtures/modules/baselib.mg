@@ -2,7 +2,7 @@
 import math
 
 func count_mismatches(a, b)
-	if (type(a) == "Tuple" or type(a) == "List") and (type(b) == "Tuple" or type(b) == "List")
+	if (type(a) == "tuple" or type(a) == "list") and (type(b) == "tuple" or type(b) == "list")
 		return math.sum(map(count_mismatches, a, b))
 	return a != b
 
@@ -20,7 +20,13 @@ test = [
 
 	(count_mismatches(filter(math.even, range(5)), range(0, 5, 2)), 0),
 	(count_mismatches(filter(math.odd, range(5)), range(1, 5, 2)), 0),
+
+	(count_mismatches(map(all, [[], [0], [1], [0, 0], [0, 1], [1, 0], [1, 1]]), [1, 0, 1, 0, 0, 0, 1]), 0),
+	(count_mismatches(map(any, [[], [0], [1], [0, 0], [0, 1], [1, 0], [1, 1]]), [0, 0, 1, 0, 1, 1, 1]), 0),
 ]
 
 for i, (actual, expected) in enumerate(test)
 	assert type(actual) == type(expected) and actual == expected, i + ": " + actual + " == " + expected
+
+assert (any([]), any([0]), any([1]), any([0, 0]), any([0, 1]), any([1, 0]), any([1, 1])) == (0, 0, 1, 0, 1, 1, 1)
+assert (all([]), all([0]), all([1]), all([0, 0]), all([0, 1]), all([1, 0]), all([1, 1])) == (1, 0, 1, 0, 0, 0, 1)

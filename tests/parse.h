@@ -251,7 +251,7 @@ static void _mgParserTest(const MGTestCase *test)
 
 static void mgRunParserTest(const char *in)
 {
-	char out[MAX_PATH + 1];
+	char out[MG_PATH_MAX + 1];
 	const char *files[2] = { in, out };
 
 	if (!mgStringEndsWith(in, ".mg"))

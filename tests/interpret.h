@@ -8,7 +8,7 @@
 #define _MG_ERROR_FILENAME "tests/_test.err"
 
 
-static void _mgRun(const char *in)
+static int _mgRun(const char *in)
 {
 #define _MG_COMMAND_FORMAT "modelgen \"%s\" > \"" _MG_OUTPUT_FILENAME "\" 2> \"" _MG_ERROR_FILENAME "\"", in
 
@@ -20,17 +20,19 @@ static void _mgRun(const char *in)
 
 #undef _MG_COMMAND_FORMAT
 
-	system(command);
+	int status = system(command);
 
 	free(command);
+
+	return status;
 }
 
 
 static void _mgInterpreterTest(const MGTestCase *test)
 {
-	const char *in = ((char**) test->data)[0];
-	const char *out = ((char**) test->data)[1];
-	const char *err = ((char**) test->data)[2];
+	const char *in = ((const char**) test->data)[0];
+	const char *out = ((const char**) test->data)[1];
+	const char *err = ((const char**) test->data)[2];
 
 	char *expectedOutput = NULL;
 	char *expectedError = NULL;
@@ -38,35 +40,7 @@ static void _mgInterpreterTest(const MGTestCase *test)
 	char *actualOutput = NULL;
 	char *actualError = NULL;
 
-	_mgRun(in);
-
-	if (mgFileExists(out))
-	{
-		if (!(expectedOutput = mgReadFile(out, NULL)))
-		{
-			printf("Error: Failed reading \"%s\"\n", out);
-			goto fail;
-		}
-	}
-	else
-	{
-		expectedOutput = (char*) malloc(1 * sizeof(char));
-		expectedOutput[0] = '\0';
-	}
-
-	if (mgFileExists(err))
-	{
-		if (!(expectedError = mgReadFile(err, NULL)))
-		{
-			printf("Error: Failed reading \"%s\"\n", err);
-			goto fail;
-		}
-	}
-	else
-	{
-		expectedError = (char*) malloc(1 * sizeof(char));
-		expectedError[0] = '\0';
-	}
+	int status = _mgRun(in);
 
 	if (!mgFileExists(_MG_OUTPUT_FILENAME) || !(actualOutput = mgReadFile(_MG_OUTPUT_FILENAME, NULL)))
 	{
@@ -80,34 +54,72 @@ static void _mgInterpreterTest(const MGTestCase *test)
 		goto fail;
 	}
 
-	int outputMatch = strcmp(expectedOutput, actualOutput);
-	int errorMatch = strcmp(expectedError, actualError);
-
-	if (outputMatch)
+	if (mgFileExists(out) || mgFileExists(err))
 	{
-		printf("Expected Output:\n");
-		mgInspectStringLines(expectedOutput);
-		putchar('\n');
+		if (mgFileExists(out))
+		{
+			if (!(expectedOutput = mgReadFile(out, NULL)))
+			{
+				printf("Error: Failed reading \"%s\"\n", out);
+				goto fail;
+			}
+		}
+		else
+		{
+			expectedOutput = (char*) malloc(1 * sizeof(char));
+			expectedOutput[0] = '\0';
+		}
 
-		printf("Actual Output:\n");
-		mgInspectStringLines(actualOutput);
-	}
+		if (mgFileExists(err))
+		{
+			if (!(expectedError = mgReadFile(err, NULL)))
+			{
+				printf("Error: Failed reading \"%s\"\n", err);
+				goto fail;
+			}
+		}
+		else
+		{
+			expectedError = (char*) malloc(1 * sizeof(char));
+			expectedError[0] = '\0';
+		}
 
-	if (errorMatch)
-	{
+		int outputMatch = strcmp(expectedOutput, actualOutput);
+		int errorMatch = strcmp(expectedError, actualError);
+
 		if (outputMatch)
+		{
+			printf("Expected Output:\n");
+			mgInspectStringLines(expectedOutput);
 			putchar('\n');
 
-		printf("Expected Error:\n");
-		mgInspectStringLines(expectedError);
-		putchar('\n');
+			printf("Actual Output:\n");
+			mgInspectStringLines(actualOutput);
+		}
 
-		printf("Actual Error:\n");
-		mgInspectStringLines(actualError);
+		if (errorMatch)
+		{
+			if (outputMatch)
+				putchar('\n');
+
+			printf("Expected Error:\n");
+			mgInspectStringLines(expectedError);
+			putchar('\n');
+
+			printf("Actual Error:\n");
+			mgInspectStringLines(actualError);
+		}
+
+		if (outputMatch || errorMatch)
+			goto fail;
 	}
+	else if (status)
+	{
+		printf("Error:\n");
+		mgInspectStringLines(actualError);
 
-	if (outputMatch || errorMatch)
 		goto fail;
+	}
 
 	goto pass;
 
@@ -127,11 +139,13 @@ pass:
 
 static void mgRunInterpreterTest(const char *in)
 {
-	char out[MAX_PATH + 1];
-	char err[MAX_PATH + 1];
+	char out[MG_PATH_MAX + 1];
+	char err[MG_PATH_MAX + 1];
 	const char *files[3] = { in, out, err };
 
 	if (!mgStringEndsWith(in, ".mg"))
+		return;
+	else if (strstr(in, "/syntax/"))
 		return;
 
 	strcpy(out, in);
@@ -140,10 +154,10 @@ static void mgRunInterpreterTest(const char *in)
 	strcpy(strrchr(err, '.'), ".err");
 
 	MGTestCase test;
-	test.name = out;
+	test.name = in;
 
 #if _WIN32
-	test.skip = (MGbool) (mgBasename(out)[0] == '_');
+	test.skip = mgBasename(in)[0] == '_';
 #else
 	test.skip = MG_TRUE;
 #endif
@@ -151,8 +165,7 @@ static void mgRunInterpreterTest(const char *in)
 	test.func = _mgInterpreterTest;
 	test.data = (void*) files;
 
-	if (mgFileExists(out) || mgFileExists(err))
-		mgRunTestCase(&test);
+	mgRunTestCase(&test);
 }
 
 
