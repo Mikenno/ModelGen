@@ -392,6 +392,8 @@ MGtribool mgAnyLess(const MGValue *lhs, const MGValue *rhs)
 		return lhs->data.i < rhs->data.f;
 	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
 		return lhs->data.f < rhs->data.f;
+	else if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_STRING))
+		return strcmp(lhs->data.str.s, rhs->data.str.s) < 0;
 	return MG_INDETERMINATE;
 }
 
@@ -408,6 +410,8 @@ MGtribool mgAnyLessEqual(const MGValue *lhs, const MGValue *rhs)
 		return lhs->data.i <= rhs->data.f;
 	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
 		return lhs->data.f <= rhs->data.f;
+	else if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_STRING))
+		return strcmp(lhs->data.str.s, rhs->data.str.s) <= 0;
 	return MG_INDETERMINATE;
 }
 
