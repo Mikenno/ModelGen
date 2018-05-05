@@ -26,7 +26,7 @@ typedef MGValue* (*MGCFunction)(MGInstance *instance, size_t argc, const MGValue
 typedef MGValue* (*MGBoundCFunction)(MGInstance *instance, const MGValue *value, size_t argc, const MGValue* const* argv);
 
 typedef void (*MGTypeCreate)(MGValue *value);
-typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value);
+typedef void (*MGTypeCopy)(MGValue *copy, const MGValue *value, MGbool shallow);
 typedef void (*MGTypeDestroy)(MGValue *value);
 
 typedef MGbool (*MGTypeTruthValue)(const MGValue *value);

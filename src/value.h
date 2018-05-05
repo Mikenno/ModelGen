@@ -49,7 +49,10 @@ extern MGValue *_mgNullValue;
 MGValue* mgCreateValue(MGType type);
 void mgDestroyValue(MGValue *value);
 
-MGValue* mgDeepCopyValue(const MGValue *value);
+MGValue* mgCopyValue(const MGValue *value, MGbool shallow);
+#define mgDeepCopyValue(value) mgCopyValue(value, MG_FALSE)
+#define mgShallowCopyValue(value) mgCopyValue(value, MG_TRUE)
+
 MGValue* mgReferenceValue(const MGValue *value);
 
 MGbool mgValueTruthValue(const MGValue *value);

@@ -52,7 +52,7 @@ void mgDestroyValue(MGValue *value)
 }
 
 
-MGValue* mgDeepCopyValue(const MGValue *value)
+MGValue* mgCopyValue(const MGValue *value, MGbool shallow)
 {
 	MG_ASSERT(value);
 	MG_ASSERT(value->type != MG_TYPE_MODULE);
@@ -65,7 +65,7 @@ MGValue* mgDeepCopyValue(const MGValue *value)
 
 	const MGTypeData *type = mgGetType(value->type);
 	if (type && type->copy)
-		type->copy(copy, value);
+		type->copy(copy, value, shallow);
 
 	return copy;
 }

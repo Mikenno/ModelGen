@@ -435,6 +435,24 @@ static MGValue* mg_string(MGInstance *instance, size_t argc, const MGValue* cons
 }
 
 
+static MGValue* mg_shallow_copy(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 0);
+
+	return mgShallowCopyValue(argv[0]);
+}
+
+
+static MGValue* mg_deep_copy(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 1, 1);
+	mgCheckArgumentTypes(instance, argc, argv, 0);
+
+	return mgDeepCopyValue(argv[0]);
+}
+
+
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	MG_ASSERT(instance);
@@ -547,6 +565,9 @@ MGValue* mgCreateBaseLib(void)
 	mgModuleSetCFunction(module, "int", mg_int);
 	mgModuleSetCFunction(module, "float", mg_float);
 	mgModuleSetCFunction(module, "string", mg_string);
+
+	mgModuleSetCFunction(module, "copy", mg_shallow_copy);
+	mgModuleSetCFunction(module, "deep_copy", mg_deep_copy);
 
 	mgModuleSetCFunction(module, "traceback", mg_traceback);
 

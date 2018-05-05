@@ -26,7 +26,7 @@ extern MGValue* mgMapAttributeGet(const MGValue *map, const char *key);
 extern MGbool mgMapAttributeSet(const MGValue *map, const char *key, MGValue *value);
 
 
-void mgAnyCopy(MGValue *copy, const MGValue *value)
+void mgAnyCopy(MGValue *copy, const MGValue *value, MGbool shallow)
 {
 	switch (copy->type)
 	{
@@ -39,8 +39,17 @@ void mgAnyCopy(MGValue *copy, const MGValue *value)
 		if (mgListLength(value))
 		{
 			_mgListCreate(MGValue*, copy->data.a, mgListCapacity(value));
-			for (size_t i = 0; i < mgListLength(value); ++i)
-				_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(_mgListGet(value->data.a, i)));
+
+			if (shallow)
+			{
+				for (size_t i = 0; i < mgListLength(value); ++i)
+					_mgListAdd(MGValue*, copy->data.a, mgReferenceValue(_mgListGet(value->data.a, i)));
+			}
+			else
+			{
+				for (size_t i = 0; i < mgListLength(value); ++i)
+					_mgListAdd(MGValue*, copy->data.a, mgDeepCopyValue(_mgListGet(value->data.a, i)));
+			}
 		}
 		else if (mgListCapacity(value))
 			_mgListInitialize(copy->data.a);
@@ -52,8 +61,17 @@ void mgAnyCopy(MGValue *copy, const MGValue *value)
 			mgCreateMapIterator(&iterator, value);
 
 			const MGValue *k, *v;
-			while (mgMapNext(&iterator, &k, &v))
-				mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
+
+			if (shallow)
+			{
+				while (mgMapNext(&iterator, &k, &v))
+					mgMapSet(copy, k->data.str.s, mgReferenceValue(v));
+			}
+			else
+			{
+				while (mgMapNext(&iterator, &k, &v))
+					mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
+			}
 
 			mgDestroyMapIterator(&iterator);
 		}
