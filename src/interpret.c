@@ -194,8 +194,7 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (!mgValueAttributeSet(collection, attributeNode->token->value.s, mgReferenceValue(values)))
-			mgDestroyValue(values);
+		_mgResolveAttributeSet(module, names, collection, attributeNode->token->value.s, mgReferenceValue(values));
 
 		mgDestroyValue(collection);
 	}
@@ -663,8 +662,7 @@ static MGValue* _mgVisitFunction(MGValue *module, MGNode *node)
 		MG_ASSERT(attributeNode->type == MG_NODE_NAME);
 		MG_ASSERT(attributeNode->token);
 
-		if (!mgValueAttributeSet(collection, attributeNode->token->value.s, mgReferenceValue(func)))
-			mgDestroyValue(func);
+		_mgResolveAttributeSet(module, nameNode, collection, attributeNode->token->value.s, mgReferenceValue(func));
 
 		mgDestroyValue(collection);
 	}
@@ -924,8 +922,7 @@ static inline MGValue* _mgVisitAugmentedAssignment(MGValue *module, MGNode *node
 		mgDestroyValue(lhsIndex);
 		break;
 	case MG_NODE_ATTRIBUTE:
-		if (!mgValueAttributeSet(lhsCollection, lhsAttributeNode->token->value.s, mgReferenceValue(value)))
-			mgDestroyValue(value);
+		_mgResolveAttributeSet(module, lhsNode, lhsCollection, lhsAttributeNode->token->value.s, mgReferenceValue(value));
 		mgDestroyValue(lhsCollection);
 		break;
 	default:
