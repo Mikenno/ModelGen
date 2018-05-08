@@ -1,6 +1,9 @@
 
 import math
 
+assert 1E-6 == 1.0E-6
+assert -1E-6 == -1.0E-6
+
 test = [
 	(reduce((func(a, b) return (b, a)[a > b]), range(1, 6)), 5),
 	(reduce((func(a, b) return (b, a)[a < b]), range(1, 6)), 1),
@@ -328,4 +331,4 @@ test = [
 ]
 
 for i, (actual, expected) in enumerate(test)
-	assert type(actual) == type(expected) and actual == expected, i + ": " + actual + " == " + expected
+	assert type(actual) == type(expected) and math.approximately(actual, expected, 1.0E-6), i + ": " + actual + " == " + expected

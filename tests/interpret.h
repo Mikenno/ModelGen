@@ -115,6 +115,9 @@ static void _mgInterpreterTest(const MGTestCase *test)
 	}
 	else if (status)
 	{
+		printf("Output:\n");
+		mgInspectStringLines(actualOutput);
+
 		printf("Error:\n");
 		mgInspectStringLines(actualError);
 

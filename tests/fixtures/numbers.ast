@@ -5,9 +5,9 @@ Module
 - Float .5
 - Float 10.
 
-- Integer 10E2
-- Integer 10E+2
-- Integer 1000E-2
+- Float 10E2
+- Float 10E+2
+- Float 1000E-2
 
 - Float 10.24E2
 - Float 10.24E+2
