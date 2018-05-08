@@ -8,6 +8,7 @@
 #include "module.h"
 #include "callable.h"
 #include "inspect.h"
+#include "error.h"
 #include "utilities.h"
 
 
@@ -16,33 +17,37 @@ extern MGNode* mgReferenceNode(const MGNode *node);
 extern MGValue* _mg_rangei(int start, int stop, int step);
 
 
-static inline void _mgFail(const char *file, int line, MGValue *module, MGNode *node, const char *format, ...)
+static MGNode *_mgCurrentNode = NULL;
+
+
+static void _mgPushFatalStackFrame(const MGValue *module, const MGNode *node)
 {
-	fflush(stdout);
+	if (node == NULL)
+		node = _mgCurrentNode;
 
-	fprintf(stderr, "%s:%d: ", file, line);
+	if (node)
+	{
+		// Warning: This frame is unreachable after the function returns, however this
+		// function should only be called when fatal errors occur
+		MGStackFrame *frame = (MGStackFrame*) malloc(sizeof(MGStackFrame));
+		mgCreateStackFrame(frame, mgReferenceValue(module));
 
-	if (module && module->data.module.filename)
-		fprintf(stderr, "%s:", module->data.module.filename);
+		frame->caller = node;
 
-	if (node && node->tokenBegin)
-		fprintf(stderr, "%u:%u: ", node->tokenBegin->begin.line, node->tokenBegin->begin.character);
-	else if (module && module->data.module.filename)
-		fputc(' ', stderr);
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	putc('\n', stderr);
-	fflush(stderr);
-
-	exit(1);
+		mgPushStackFrame(module->data.module.instance, frame);
+	}
 }
 
-#define MG_FAIL(...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
-#define _MG_FAIL(module, node, ...) _mgFail(__FILE__, __LINE__, module, node, __VA_ARGS__)
+
+#define mgInterpreterFatalError(module, node, format, ...) \
+	do { \
+		_mgPushFatalStackFrame(module, node); \
+		mgFatalError(format, __VA_ARGS__); \
+	} while (0)
+
+
+#define MG_FAIL(...) mgInterpreterFatalError(module, node, __VA_ARGS__)
+#define _MG_FAIL(module, node, ...) mgInterpreterFatalError(module, node, __VA_ARGS__)
 
 
 static const MGBinOpType _MG_AUG_TO_BIN_OP_TYPES[] = {
@@ -262,6 +267,8 @@ static MGValue* _mgVisitCall(MGValue *module, MGNode *node)
 	{
 		MG_ASSERT(nameNode->token);
 
+		_mgCurrentNode = node;
+
 		name = nameNode->token->value.s;
 		func = _mgGetValue(module, name);
 
@@ -382,6 +389,8 @@ static void _mgDelete(MGValue *module, MGNode *node)
 		MG_ASSERT(node->token);
 
 #if MG_DEBUG
+		_mgCurrentNode = node;
+
 		// Check if the name is defined
 		_mgGetValue(module, node->token->value.s);
 #endif
@@ -743,6 +752,8 @@ static inline MGValue* _mgVisitName(MGValue *module, MGNode *node)
 #endif
 {
 	MG_ASSERT(node->token);
+
+	_mgCurrentNode = node;
 
 	return mgReferenceValue(_mgGetValue(module, node->token->value.s));
 }
@@ -1138,7 +1149,8 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 				MGValue *value = mgModuleGet(importedModule, nameNode->token->value.s);
 
 				if (!value)
-					_MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", nameNode->token->value.s);
+					// _MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", nameNode->token->value.s);
+					_MG_FAIL(module, nameNode, "Error: Undefined name \"%s\"", nameNode->token->value.s);
 
 				if (aliasNode)
 					_mgSetValue(module, aliasNode->token->value.s, mgReferenceValue(value));
@@ -1185,7 +1197,7 @@ static MGValue* _mgVisitAssert(MGValue *module, MGNode *node)
 			mgDestroyValue(message);
 		}
 		else
-			MG_FAIL("Error: Assertion");
+			MG_FAIL("Error: Assertion", 0);
 	}
 
 	mgDestroyValue(expression);

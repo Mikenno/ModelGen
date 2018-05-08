@@ -455,28 +455,8 @@ static MGValue* mg_deep_copy(MGInstance *instance, size_t argc, const MGValue* c
 
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
-	MG_ASSERT(instance);
-	MG_ASSERT(instance->callStackTop);
-
-	mgCheckArgumentCount(instance, argc, 1, 1);
-
-	const MGStackFrame *frame = instance->callStackTop;
-	MG_ASSERT(frame);
-
-	while (frame->last)
-		frame = frame->last;
-
-	size_t depth = 0;
-
-	while (frame)
-	{
-		printf("%zu: ", depth);
-		mgInspectStackFrame(frame);
-		putchar('\n');
-
-		frame = frame->next;
-		++depth;
-	}
+	mgCheckArgumentCount(instance, argc, 0, 0);
+	mgTraceback(instance);
 
 	return MG_NULL_VALUE;
 }

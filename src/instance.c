@@ -16,6 +16,9 @@ extern MGValue* mgCreateBaseLib(void);
 extern MGValue* mgCreateMathLib(void);
 
 
+MGInstance *_mgLastInstance = NULL;
+
+
 struct {
 	const char *name;
 	MGValue* (*create)(void);
@@ -120,6 +123,8 @@ void mgCreateInstance(MGInstance *instance)
 	}
 
 	instance->base = mgMapGet(instance->staticModules, "base");
+
+	_mgLastInstance = instance;
 }
 
 
