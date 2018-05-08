@@ -97,6 +97,86 @@ func is_convex(polygon)
 	return true
 
 
+func triangle_inside(a, b, c, p)
+	ax, ay = c[0] - b[0], c[1] - b[1]
+	bx, by = a[0] - c[0], a[1] - c[1]
+	cx, cy = b[0] - a[0], b[1] - a[1]
+	apx, apy = p[0] - a[0], p[1] - a[1]
+
+	bpx, bpy = p[0] - b[0], p[1] - b[1]
+	cpx, cpy = p[0] - c[0], p[1] - c[1]
+
+	acbp = ax * bpy - ay * bpx
+	ccap = cx * apy - cy * apx
+	bccp = bx * cpy - by * cpx
+
+	return acbp >= 0.0 and bccp >= 0.0 and ccap >= 0.0
+
+func _area(polygon)
+	n = len(polygon)
+	a, p = 0, n - 1
+	for q in range(n)
+		a += polygon[p][0] * polygon[q][1] - polygon[q][0] * polygon[p][1]
+		p = q
+	return a * 0.5
+
+func ear_clipping(polygon)
+	n = len(polygon)
+	assert n > 2
+
+	func snip(u, v, w, n, vertices)
+		a, b, c = polygon[vertices[u]], polygon[vertices[v]], polygon[vertices[w]]
+		if math.epsilon > (((b[0] - a[0]) * (c[1] - a[1])) - ((b[1] - a[1]) * (c[0] - a[0])))
+			return false
+		for p in range(n)
+			if p == u or p == v or p == w
+				continue
+			p = polygon[vertices[p]]
+			if triangle_inside(a, b, c, p)
+				return false
+		return true
+
+	vertices = null
+	if _area(polygon) > 0
+		vertices = range(n)
+	else
+		vertices = range(n - 1, -1)
+
+	indices = []
+
+	nv = n
+	count = nv * 2
+	m, v = 0, nv - 1
+
+	while nv > 2
+		if (count -= 1) <= 0
+			break
+
+		u = v
+		u = nv <= u ? 0 : u
+		v = u + 1
+		v = nv <= v ? 0 : v
+		w = v + 1
+		w = nv <= w ? 0 : w
+
+		if snip(u, v, w, nv, vertices)
+			indices.add(vertices[u], vertices[v], vertices[w])
+			m += 1
+			s = v
+			t = v + 1
+			while t < nv
+				vertices[s] = vertices[t]
+				s += 1
+				t += 1
+			nv -= 1
+			count = nv * 2
+
+	return map(i -> (
+		polygon[indices[i]],
+		polygon[indices[i + 1]],
+		polygon[indices[i + 2]]),
+		range(0, len(indices), 3))
+
 func triangulate(polygon, center = (0, 0, 0), clockwise = false)
 	assert len(polygon) > 2
 	_triangles = []
@@ -112,7 +192,7 @@ func triangulate(polygon, center = (0, 0, 0), clockwise = false)
 			p2, p3 = polygon[(i + 1) % len(polygon)], polygon[(i + 2) % len(polygon)]
 			_triangles.add((p1, p2, p3))
 	else
-		assert false, "Unsupported"
+		_triangles = ear_clipping(polygon)
 	for i in range(len(_triangles))
 		assert len(_triangles[i]) == 3
 		for j in range(3)
