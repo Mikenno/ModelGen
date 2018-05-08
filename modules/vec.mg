@@ -1,16 +1,7 @@
 #!/usr/bin/env modelgen
 
-from math import max as _max, min as _min, sqrt
-
-# Check if y is a multiple of x
-func is_multiple(a, b)
-	return b % a == 0
-
-func sum(iterable)
-	result = 0
-	for x in iterable
-		result += x
-	return result
+from math import multiple as is_multiple
+from math import sum, max as _max, min as _min, sqrt
 
 func op_add(a, b) return a + b
 func op_sub(a, b) return a - b
@@ -19,7 +10,7 @@ func op_div(a, b) return a / b
 func op_mod(a, b) return a % b
 
 func _cast(v, n = 1)
-	if type(v) != "Tuple"
+	if type(v) != "tuple"
 		return (v,) * n
 	return v
 

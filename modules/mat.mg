@@ -5,10 +5,10 @@ from vec import _cast, mul as vec_mul, dot, length, normalize
 
 func vec_type(x)
 	t = type(x)
-	if t == "Tuple"
-		if type(x[0]) == "Tuple"
-			return "Matrix"
-		return "Vector"
+	if t == "tuple"
+		if type(x[0]) == "tuple"
+			return "mat"
+		return "vec"
 	return t
 
 func mat4(diagonal = 1)
@@ -59,19 +59,18 @@ func rotation(radians, axis)
 
 func mul(a, b)
 	ta, tb = vec_type(a), vec_type(b)
-	if ta == "Matrix" and tb == "Matrix"
+	if ta == "mat" and tb == "mat"
 		result = mat4()
 		for i in range(len(a[0]))
 			for j in range(len(a))
 				result[i][j] = dot(row(a, j), column(b, i))
 		return result
-	else if ta == "Vector" and tb == "Matrix"
-		print()
+	else if ta == "vec" and tb == "mat"
 		if len(a) == 3
 			a = a[0], a[1], a[2], 1
 			return (dot(a, b[0]), dot(a, b[1]), dot(a, b[2]))
 		return (dot(a, b[0]), dot(a, b[1]), dot(a, b[2]), dot(a, b[3]))
-	else if ta == "Matrix" and tb == "Vector"
+	else if ta == "mat" and tb == "vec"
 		if len(b) == 3
 			b = b[0], b[1], b[2], 1
 			return (
@@ -83,7 +82,7 @@ func mul(a, b)
 			(b[0] * a[0][1]) + (b[1] * a[1][1]) + (b[2] * a[2][1]) + (b[3] * a[3][1]),
 			(b[0] * a[0][2]) + (b[1] * a[1][2]) + (b[2] * a[2][2]) + (b[3] * a[3][2]),
 			(b[0] * a[0][3]) + (b[1] * a[1][3]) + (b[2] * a[2][3]) + (b[3] * a[3][3]))
-	else if ta == "Vector" and tb == "Vector"
+	else if ta == "vec" and tb == "vec"
 		return vec_mul(a, b)
 	print(a)
 	print(b)

@@ -1,7 +1,6 @@
 #!/usr/bin/env modelgen
 
 import math
-import list
 import vec
 import mat
 
@@ -15,7 +14,7 @@ func set_matrix(matrix)
 	matrix_stack[-1] = matrix
 
 func push()
-	list.add(matrix_stack, get_matrix())
+	matrix_stack.add(get_matrix())
 
 func pop()
 	assert len(matrix_stack) > 1
@@ -48,13 +47,13 @@ func triangles_to_points(triangles)
 	points = []
 	for triangle in triangles
 		assert len(triangle) == 3
-		list.add_from(points, triangle)
+		points.extend(triangle)
 	return points
 
 func quads_to_triangles(quads)
 	_triangles = []
 	for p1, p2, p3, p4 in quads
-		list.add_from(_triangles, make_quad(p1, p2, p3, p4))
+		_triangles.extend(make_quad(p1, p2, p3, p4))
 	return _triangles
 
 func translate_triangles(triangles, center)
@@ -103,15 +102,15 @@ func triangulate(polygon, center = (0, 0, 0), clockwise = false)
 	_triangles = []
 	if len(polygon) == 3
 		p1, p2, p3 = polygon
-		list.add(_triangles, (p1, p2, p3))
+		_triangles.add((p1, p2, p3))
 	else if len(polygon) == 4
 		p1, p2, p3, p4 = polygon
-		list.add(_triangles, (p1, p2, p4), (p2, p3, p4))
+		_triangles.add((p1, p2, p4), (p2, p3, p4))
 	else if is_convex(polygon)
 		p1 = polygon[0]
 		for i in range(len(polygon))
 			p2, p3 = polygon[(i + 1) % len(polygon)], polygon[(i + 2) % len(polygon)]
-			list.add(_triangles, (p1, p2, p3))
+			_triangles.add((p1, p2, p3))
 	else
 		assert false, "Unsupported"
 	for i in range(len(_triangles))
@@ -146,14 +145,14 @@ func make_oblique_pyramid(polygon, translation = (0, 1, 0), center = (0, 0, 0))
 		assert len(bottom[i]) == 3
 		for j in range(3)
 			bottom[i][j] = vec.sub(bottom[i][j], half_translation)
-		list.add(_triangles, bottom[i])
+		_triangles.add(bottom[i])
 	for i in range(len(polygon))
 		p2, p3 = polygon[(i + 1) % len(polygon)], polygon[(i + 2) % len(polygon)]
 		p2 = p2[0], 0, p2[1]
 		p3 = p3[0], 0, p3[1]
 		p2, p3 = vec.sub(p2, half_translation), vec.sub(p3, half_translation)
 		p2, p3 = vec.add(p2, center), vec.add(p3, center)
-		list.add(_triangles, (top, p2, p3))
+		_triangles.add((top, p2, p3))
 	return _triangles
 
 func make_pyramid(polygon, height, center = (0, 0, 0))
@@ -169,12 +168,12 @@ func make_oblique_frustum(top, bottom, translation = (0, 1, 0), center = (0, 0, 
 		assert len(_top[i]) == 3
 		for j in range(3)
 			_top[i][j] = vec.add(_top[i][j], half_translation)
-		list.add(_triangles, _top[i])
+		_triangles.add(_top[i])
 	for i in range(len(_bottom))
 		assert len(_bottom[i]) == 3
 		for j in range(3)
 			_bottom[i][j] = vec.sub(_bottom[i][j], half_translation)
-		list.add(_triangles, _bottom[i])
+		_triangles.add(_bottom[i])
 	for i in range(len(top))
 		p1, p4 = top[i], top[(i + 1) % len(top)]
 		p2, p3 = bottom[i], bottom[(i + 1) % len(bottom)]
@@ -184,7 +183,7 @@ func make_oblique_frustum(top, bottom, translation = (0, 1, 0), center = (0, 0, 
 		p4 = p4[0], 0, p4[1]
 		p1, p4 = vec.add(p1, half_translation), vec.add(p4, half_translation)
 		p2, p3 = vec.sub(p2, half_translation), vec.sub(p3, half_translation)
-		list.add_from(_triangles, make_quad(p1, p2, p3, p4, center))
+		_triangles.extend(make_quad(p1, p2, p3, p4, center))
 	return _triangles
 
 func make_frustum(top, bottom, height = 1, center = (0, 0, 0))
@@ -200,19 +199,19 @@ func make_oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0))
 		assert len(bottom[i]) == 3
 		for j in range(3)
 			bottom[i][j] = vec.sub(bottom[i][j], half_translation)
-		list.add(_triangles, bottom[i])
+		_triangles.add(bottom[i])
 	for i in range(len(top))
 		assert len(top[i]) == 3
 		for j in range(3)
 			top[i][j] = vec.add(top[i][j], half_translation)
-		list.add(_triangles, top[i])
+		_triangles.add(top[i])
 	for i in range(len(polygon))
 		p2, p3 = polygon[i], polygon[(i + 1) % len(polygon)]
 		p2 = p2[0], 0, p2[1]
 		p3 = p3[0], 0, p3[1]
 		p2, p3 = vec.sub(p2, half_translation), vec.sub(p3, half_translation)
 		p1, p4 = vec.add(p2, translation), vec.add(p3, translation)
-		list.add_from(_triangles, make_quad(p1, p2, p3, p4, center))
+		_triangles.extend(make_quad(p1, p2, p3, p4, center))
 	return _triangles
 
 func make_prism(polygon, height = 1, center = (0, 0, 0))
@@ -242,7 +241,7 @@ func make_circle(diameter = 1, center = (0, 0), segments = 8)
 	angle = math.rad(360 / segments)
 	polygon = []
 	for i in range(segments)
-		list.add(polygon, (x - math.cos(angle * i) * r, y + math.sin(angle * i) * r))
+		polygon.add((x - math.cos(angle * i) * r, y + math.sin(angle * i) * r))
 	return polygon
 
 
@@ -252,7 +251,7 @@ func make_ellipse(size = (1, 1), center = (0, 0), segments = 8)
 	angle = math.rad(360 / segments)
 	polygon = []
 	for i in range(segments)
-		list.add(polygon, (x - math.cos(angle * i) * w, y + math.sin(angle * i) * h))
+		polygon.add((x - math.cos(angle * i) * w, y + math.sin(angle * i) * h))
 	return polygon
 
 
@@ -270,9 +269,9 @@ func make_cube(size = (1, 1, 1), center = (0, 0, 0))
 func make_square_pyramid(size = (1, 1, 1), center = (0, 0, 0))
 	hw, hh, hl = vec.div(size, 2)
 	_triangles = []
-	list.add_from(_triangles, quads_to_triangles([
+	_triangles.extend(quads_to_triangles([
 		((-hw, -hh, hl), (-hw, -hh, -hl), (hw, -hh, -hl), (hw, -hh, hl))])) # Bottom
-	list.add_from(_triangles, [
+	_triangles.extend([
 		((-hw, -hh, hl), (hw, -hh, hl), (0, hh, 0)), # Front
 		((hw, -hh, -hl), (-hw, -hh, -hl), (0, hh, 0)), # Back
 		((hw, -hh, hl), (hw, -hh, -hl), (0, hh, 0)), # Left
@@ -302,11 +301,11 @@ func make_ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 
 			x2, y2, z2 = sc1 * rs0, rns0, ss1 * rs0
 			x3, y3, z3 = sc1 * rs1, rns1, ss1 * rs1
 			x4, y4, z4 = sc0 * rs1, rns1, ss0 * rs1
-			list.add(_triangles, (
+			_triangles.add((
 				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
 				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
 				(cx + x2 * hw, cy + y2 * hh, cz + z2 * hl)))
-			list.add(_triangles, (
+			_triangles.add((
 				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
 				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
 				(cx + x4 * hw, cy + y4 * hh, cz + z4 * hl)))
@@ -339,11 +338,11 @@ func make_semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), rings = 24 / 2, 
 			x2, y2, z2 = sc1 * rs0, rns0, ss1 * rs0
 			x3, y3, z3 = sc1 * rs1, rns1, ss1 * rs1
 			x4, y4, z4 = sc0 * rs1, rns1, ss0 * rs1
-			list.add(_triangles, (
+			_triangles.add((
 				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
 				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
 				(cx + x2 * hw, cy + y2 * hh, cz + z2 * hl)))
-			list.add(_triangles, (
+			_triangles.add((
 				(cx + x3 * hw, cy + y3 * hh, cz + z3 * hl),
 				(cx + x1 * hw, cy + y1 * hh, cz + z1 * hl),
 				(cx + x4 * hw, cy + y4 * hh, cz + z4 * hl)))
