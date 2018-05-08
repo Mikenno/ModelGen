@@ -102,7 +102,7 @@ char *mgIntToString(int i)
 
 char *mgFloatToString(float f)
 {
-	size_t len = (size_t) snprintf(NULL, 0, "%f", f);
+	size_t len = (size_t) snprintf(NULL, 0, "%G", f);
 	char *s = (char*) malloc((len + 1) * sizeof(char));
 	snprintf(s, len + 1, "%f", f);
 	s[len] = '\0';

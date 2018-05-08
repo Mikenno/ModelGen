@@ -61,10 +61,10 @@ static MGValue* _mg_rangef(float start, float stop, float step)
 {
 	float difference = stop - start;
 
-	if (_MG_FEQUAL(difference, 0.0f))
+	if (MG_FEQUAL(difference, 0.0f))
 		return mgCreateValueList(0);
 
-	if (_MG_FEQUAL(step, 0.0f))
+	if (MG_FEQUAL(step, 0.0f))
 		step = (float) ((difference > 0) - (difference < 0));
 
 	int length = (int) ceilf((stop - start) / step);
@@ -122,7 +122,7 @@ static MGValue* mg_range(MGInstance *instance, size_t argc, const MGValue* const
 	}
 
 	if (argc > 2)
-		if ((isInt && (range.i[2] == 0)) || (!isInt && _MG_FEQUAL(range.f[2], 0.0f)))
+		if ((isInt && (range.i[2] == 0)) || (!isInt && MG_FEQUAL(range.f[2], 0.0f)))
 			mgFatalError("Error: step cannot be 0");
 
 	return isInt ?

@@ -194,7 +194,7 @@ MGbool mgAnyTruthValue(const MGValue *value)
 	case MG_TYPE_INTEGER:
 		return value->data.i != 0;
 	case MG_TYPE_FLOAT:
-		return !_MG_FEQUAL(value->data.f, 0.0f);
+		return !MG_FEQUAL(value->data.f, 0.0f);
 	case MG_TYPE_STRING:
 		return mgStringLength(value) != 0;
 	case MG_TYPE_TUPLE:
@@ -399,7 +399,7 @@ MGtribool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 	else if ((lhs->type == MG_TYPE_INTEGER) && (rhs->type == MG_TYPE_FLOAT))
 		return lhs->data.i == rhs->data.f;
 	else if ((lhs->type == MG_TYPE_FLOAT) && (rhs->type == MG_TYPE_FLOAT))
-		return _MG_FEQUAL(lhs->data.f, rhs->data.f);
+		return MG_FEQUAL(lhs->data.f, rhs->data.f);
 	else if ((lhs->type == MG_TYPE_STRING) && (rhs->type == MG_TYPE_STRING))
 		return (lhs->data.str.s == rhs->data.str.s) || ((lhs->data.str.length == rhs->data.str.length) && !strcmp(lhs->data.str.s, rhs->data.str.s));
 	else if (((lhs->type == MG_TYPE_TUPLE) || (lhs->type == MG_TYPE_LIST)) && (lhs->type == rhs->type))

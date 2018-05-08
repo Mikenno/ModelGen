@@ -69,6 +69,18 @@ static MGValue* mg_rad(MGInstance *instance, size_t argc, const MGValue* const* 
 }
 
 
+static MGValue* mg_approximately(MGInstance *instance, size_t argc, const MGValue* const* argv)
+{
+	mgCheckArgumentCount(instance, argc, 2, 3);
+	mgCheckArgumentTypes(instance, argc, argv, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT, 2, MG_TYPE_INTEGER, MG_TYPE_FLOAT);
+
+	return mgCreateValueBoolean(MG_APPROXIMATELY(
+			(argv[0]->type == MG_TYPE_INTEGER) ? argv[0]->data.i : argv[0]->data.f,
+			(argv[1]->type == MG_TYPE_INTEGER) ? argv[1]->data.i : argv[1]->data.f,
+			(argc > 2) ? ((argv[2]->type == MG_TYPE_INTEGER) ? argv[2]->data.i : argv[2]->data.f) : MG_EPSILON));
+}
+
+
 static MGValue* mg_sign(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 1, 1);
@@ -96,7 +108,7 @@ static MGValue* mg_even(MGInstance *instance, size_t argc, const MGValue* const*
 	case MG_TYPE_INTEGER:
 		return mgCreateValueBoolean((argv[0]->data.i & 1) == 0);
 	case MG_TYPE_FLOAT:
-		return mgCreateValueBoolean(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 0.0f));
+		return mgCreateValueBoolean(MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 0.0f));
 	default:
 		return MG_NULL_VALUE;
 	}
@@ -113,7 +125,7 @@ static MGValue* mg_odd(MGInstance *instance, size_t argc, const MGValue* const* 
 	case MG_TYPE_INTEGER:
 		return mgCreateValueBoolean((argv[0]->data.i & 1) == 1);
 	case MG_TYPE_FLOAT:
-		return mgCreateValueBoolean(_MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 1.0f));
+		return mgCreateValueBoolean(MG_FEQUAL(fmodf(argv[0]->data.f, 2.0f), 1.0f));
 	default:
 		return MG_NULL_VALUE;
 	}
@@ -134,7 +146,7 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		case MG_TYPE_INTEGER:
 			return mgCreateValueBoolean((argv[1]->data.i % argv[0]->data.i) == 0);
 		case MG_TYPE_FLOAT:
-			return mgCreateValueBoolean(_MG_FEQUAL(fmodf(argv[1]->data.f, (float) argv[0]->data.i), 0.0f));
+			return mgCreateValueBoolean(MG_FEQUAL(fmodf(argv[1]->data.f, (float) argv[0]->data.i), 0.0f));
 		default:
 			return MG_NULL_VALUE;
 		}
@@ -142,9 +154,9 @@ static MGValue* mg_multiple(MGInstance *instance, size_t argc, const MGValue* co
 		switch (argv[1]->type)
 		{
 		case MG_TYPE_INTEGER:
-			return mgCreateValueBoolean(_MG_FEQUAL(fmodf((float) argv[1]->data.i, argv[0]->data.f), 0.0f));
+			return mgCreateValueBoolean(MG_FEQUAL(fmodf((float) argv[1]->data.i, argv[0]->data.f), 0.0f));
 		case MG_TYPE_FLOAT:
-			return mgCreateValueBoolean(_MG_FEQUAL(fmodf(argv[1]->data.f, argv[0]->data.f), 0.0f));
+			return mgCreateValueBoolean(MG_FEQUAL(fmodf(argv[1]->data.f, argv[0]->data.f), 0.0f));
 		default:
 			return MG_NULL_VALUE;
 		}
@@ -915,6 +927,7 @@ MGValue* mgCreateMathLib(void)
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_TYPE_MODULE);
 
+	mgModuleSetFloat(module, "epsilon", MG_EPSILON);
 	mgModuleSetFloat(module, "inf", INFINITY);
 	mgModuleSetFloat(module, "nan", NAN);
 	mgModuleSetFloat(module, "pi", _MG_PI);
@@ -927,6 +940,8 @@ MGValue* mgCreateMathLib(void)
 
 	mgModuleSetCFunction(module, "deg", mg_deg);
 	mgModuleSetCFunction(module, "rad", mg_rad);
+
+	mgModuleSetCFunction(module, "approximately", mg_approximately);
 
 	mgModuleSetCFunction(module, "sign", mg_sign);
 

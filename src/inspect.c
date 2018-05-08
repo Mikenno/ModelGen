@@ -269,7 +269,7 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		printf("%d", value->data.i);
 		break;
 	case MG_TYPE_FLOAT:
-		printf("%f", value->data.f);
+		printf("%G", value->data.f);
 		break;
 	case MG_TYPE_STRING:
 	{

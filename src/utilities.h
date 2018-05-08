@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <math.h>
+#include <float.h>
 
 #ifdef _WIN32
 #   define MG_PATH_MAX MAX_PATH
@@ -14,8 +15,9 @@
 
 #define _MG_INT_COUNT_DIGITS(x) ((int) floorf(log10f((float) (x))) + 1)
 
-#define _MG_EPSILON 1E-6f
-#define _MG_FEQUAL(x, y) ((((y) - _MG_EPSILON) < (x)) && ((x) < ((y) + _MG_EPSILON)))
+#define MG_EPSILON FLT_EPSILON
+#define MG_APPROXIMATELY(a, b, tolerance) (((a) >= (b) - (tolerance)) && ((a) <= (b) + (tolerance)))
+#define MG_FEQUAL(a, b) MG_APPROXIMATELY(a, b, MG_EPSILON)
 
 uint32_t mgNextPowerOfTwo(uint32_t x);
 

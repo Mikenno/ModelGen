@@ -425,6 +425,8 @@ decimal:
 
 		if ((*token->end.string == 'E') || (*token->end.string == 'e'))
 		{
+			token->type = MG_TOKEN_FLOAT;
+
 			_mgTokenNextCharacter(token);
 
 			if ((*token->end.string == '+') || (*token->end.string == '-'))
