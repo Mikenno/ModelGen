@@ -4,6 +4,8 @@
 
 #ifdef _WIN32
 #   include <windows.h>
+#else
+#   include <unistd.h>
 #endif
 
 #include "modelgen.h"
@@ -81,14 +83,25 @@ void mgCreateInstance(MGInstance *instance)
 
 	_mgListCreate(MGVertex, instance->vertices, 1 << 9);
 
-#ifdef _WIN32
 	char path[MG_PATH_MAX + 1];
 
+#ifdef _WIN32
 	if (GetCurrentDirectoryA(MG_PATH_MAX + 1, path))
 		_mgListAdd(char*, instance->path, mgStringDuplicate(path));
+#else
+	if (getcwd(path, MG_PATH_MAX + 1))
+		_mgListAdd(char*, instance->path, mgStringDuplicate(path));
+#endif
 
+#ifdef _WIN32
 	if (GetModuleFileNameA(NULL, path, MG_PATH_MAX + 1))
 	{
+#else
+	ssize_t len;
+	if ((len = readlink("/proc/self/exe", path, MG_PATH_MAX)) != -1)
+	{
+		path[len] = '\0';
+#endif
 		size_t dirnameEnd = mgDirnameEnd(path);
 
 		if (dirnameEnd)
@@ -106,7 +119,6 @@ void mgCreateInstance(MGInstance *instance)
 			}
 		}
 	}
-#endif
 
 	for (int i = 0; _mgStaticModules[i].name; ++i)
 	{

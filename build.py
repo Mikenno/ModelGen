@@ -10,7 +10,7 @@ import re
 from typing import List
 
 
-_cflags = ["-std=c99", "-Wall"]
+_cflags = ["-std=c99" if os.name == "nt" else "-std=gnu99", "-Wall"]
 _cflags.append("-DMG_ANSI_COLORS")
 # _cflags.append("-DMG_DEBUG_SHOW_RANGE")
 debug_cflags = _cflags + ["-DDEBUG", "-g", "-O0", "-Wno-unused-function", "-Wno-unused-variable", "-Wno-unused-but-set-variable"]
