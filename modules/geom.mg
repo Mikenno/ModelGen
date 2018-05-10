@@ -297,6 +297,9 @@ func make_oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0))
 func make_prism(polygon, height = 1, center = (0, 0, 0))
 	return make_oblique_prism(polygon, (0, height, 0), center)
 
+func make_cylinder(diameter, height, center = (0, 0, 0), segments = 8)
+	return make_prism(make_circle(diameter, (0, 0), segments), height, center)
+
 
 func make_triangle(size = (1, 1), center = (0, 0))
 	(hw, hh), (x, y) = vec.div(size, 2), center
@@ -359,20 +362,20 @@ func make_square_pyramid(size = (1, 1, 1), center = (0, 0, 0))
 	return translate_triangles(_triangles, center)
 
 
-func make_sphere(diameter = 1, center = (0, 0, 0), rings = 24, sectors = 24)
-	return make_ellipsoid((diameter, diameter, diameter), center, rings, sectors)
+func make_sphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
+	return make_ellipsoid((diameter, diameter, diameter), center, horizontal_segments, vertical_segments)
 
-func make_ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 24)
+func make_ellipsoid(size = (1, 1, 1), center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
 	hw, hh, hl = vec.div(size, 2)
 	cx, cy, cz = center
-	r, s = 1 / rings, 1 / sectors
+	s, r = 1 / horizontal_segments, 1 / vertical_segments
 	_triangles = []
-	for ir in range(rings)
+	for ir in range(vertical_segments)
 		rs0 = math.sin(math.pi * (ir + 0) * r)
 		rs1 = math.sin(math.pi * (ir + 1) * r)
 		rns0 = math.sin(-math.pi * 0.5 + math.pi * (ir + 0) * r)
 		rns1 = math.sin(-math.pi * 0.5 + math.pi * (ir + 1) * r)
-		for is in range(sectors)
+		for is in range(horizontal_segments)
 			sc0 = math.cos(math.tau * (is + 0) * s)
 			sc1 = math.cos(math.tau * (is + 1) * s)
 			ss0 = math.sin(math.tau * (is + 0) * s)
@@ -391,25 +394,25 @@ func make_ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 
 				(cx + x4 * hw, cy + y4 * hh, cz + z4 * hl)))
 	return _triangles
 
-func make_semisphere(diameter = 1, center = (0, 0, 0), rings = 24 / 2, sectors = 24)
-	return make_semiellipsoid((diameter, diameter / 2, diameter), center, rings, sectors)
+func make_semisphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24 / 2, vertical_segments = 24)
+	return make_semiellipsoid((diameter, diameter / 2, diameter), center, horizontal_segments, vertical_segments)
 
 make_hemisphere = make_semisphere
 
-func make_semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), rings = 24 / 2, sectors = 24)
+func make_semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), horizontal_segments = 24 / 2, vertical_segments = 24)
 	hw, hh, hl = size
 	hw, hl = hw / 2, hl / 2
 	cx, cy, cz = center
 	cy -= hh / 2
-	r, s = 1 / rings, 1 / sectors
+	s, r = 1 / horizontal_segments, 1 / vertical_segments
 	hr = r / 2
 	_triangles = []
-	for ir in range(rings)
+	for ir in range(vertical_segments)
 		rs0 = math.sin(math.pi / 2 * (ir + 0) * r)
 		rs1 = math.sin(math.pi / 2 * (ir + 1) * r)
 		rns0 = math.sin(math.pi * 0.5 + math.pi / 2 * (ir + 0) * r)
 		rns1 = math.sin(math.pi * 0.5 + math.pi / 2 * (ir + 1) * r)
-		for is in range(sectors)
+		for is in range(horizontal_segments)
 			sc0 = math.cos(math.tau * (is + 0) * s)
 			sc1 = math.cos(math.tau * (is + 1) * s)
 			ss0 = math.sin(math.tau * (is + 0) * s)
@@ -473,19 +476,19 @@ proc prism(polygon, height = 1, center = (0, 0, 0))
 	triangles(make_prism(polygon, height, center))
 
 proc cylinder(diameter, height, center = (0, 0, 0), segments = 8)
-	prism(make_circle(diameter, (0, 0), segments), height, center)
+	triangles(make_cylinder(diameter, height, center, segments))
 
 
-proc sphere(diameter = 1, center = (0, 0, 0), rings = 24, sectors = 24)
-	triangles(make_sphere(diameter, center, rings, sectors))
+proc sphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
+	triangles(make_sphere(diameter, center, horizontal_segments, vertical_segments))
 
-proc ellipsoid(size = (1, 1, 1), center = (0, 0, 0), rings = 24, sectors = 24)
-	triangles(make_ellipsoid(size, center, rings, sectors))
+proc ellipsoid(size = (1, 1, 1), center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
+	triangles(make_ellipsoid(size, center, horizontal_segments, vertical_segments))
 
-proc semisphere(diameter = 1, center = (0, 0, 0), rings = 24 / 2, sectors = 24)
-	triangles(make_semisphere(diameter, center, rings, sectors))
+proc semisphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24 / 2, vertical_segments = 24)
+	triangles(make_semisphere(diameter, center, horizontal_segments, vertical_segments))
 
 hemisphere = semisphere
 
-proc semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), rings = 24 / 2, sectors = 24)
-	triangles(make_semiellipsoid(size, center, rings, sectors))
+proc semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), horizontal_segments = 24 / 2, vertical_segments = 24)
+	triangles(make_semiellipsoid(size, center, horizontal_segments, vertical_segments))
