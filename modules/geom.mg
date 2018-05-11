@@ -331,6 +331,33 @@ func make_rectangle(size = (1, 1), center = (0, 0))
 		(x + hw, y - hh)]
 
 
+func _make_rectangle_x(size = (1, 1), center = (0, 0))
+	(hw, hh), (x, y) = vec.div(size, 2), center
+	return [
+		(0, x - hw, y - hh),
+		(0, x - hw, y + hh),
+		(0, x + hw, y + hh),
+		(0, x + hw, y - hh)]
+
+
+func _make_rectangle_y(size = (1, 1), center = (0, 0))
+	(hw, hh), (x, y) = vec.div(size, 2), center
+	return [
+		(x - hw, 0, y - hh),
+		(x - hw, 0, y + hh),
+		(x + hw, 0, y + hh),
+		(x + hw, 0, y - hh)]
+
+
+func _make_rectangle_z(size = (1, 1), center = (0, 0))
+	(hw, hh), (x, y) = vec.div(size, 2), center
+	return [
+		(x - hw, y - hh, 0),
+		(x - hw, y + hh, 0),
+		(x + hw, y + hh, 0),
+		(x + hw, y - hh, 0)]
+
+
 func make_circle(diameter = 1, center = (0, 0), segments = 8)
 	r, (x, y) = diameter / 2, center
 	assert segments > 2
