@@ -472,6 +472,40 @@ func make_semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), horizontal_segme
 	return _triangles
 
 
+func make_lathe(polygon, segments = 24, angle = math.tau, angle_start = 0, center = (0, 0, 0))
+	assert len(polygon) > 0
+	assert segments > 1
+	angle /= segments
+
+	_triangles = []
+	for i in range(segments)
+		for j in range(len(polygon) - 1)
+			x4, y4, z4 = polygon[j]
+			x2, y2, z2 = polygon[(j + 1) % len(polygon)]
+
+			z1 = math.sin(angle_start + angle * (i + 1)) * x4
+			x1 = math.cos(angle_start + angle * (i + 1)) * x4
+			y1 = y4
+
+			z3 = math.sin(angle_start + angle * i) * x2
+			x3 = math.cos(angle_start + angle * i) * x2
+			y3 = y2
+
+			z2 = math.sin(angle_start + angle * (i + 1)) * x2
+			x2 = math.cos(angle_start + angle * (i + 1)) * x2
+
+			z4 = math.sin(angle_start + angle * i) * x4
+			x4 = math.cos(angle_start + angle * i) * x4
+
+			_triangles.extend(make_quad(
+				(x1, y1, z1),
+				(x2, y2, z2),
+				(x3, y3, z3),
+				(x4, y4, z4)))
+
+	return translate_triangles(_triangles, center)
+
+
 proc triangle(p1, p2, p3, center = (0, 0, 0), clockwise = false)
 	if clockwise
 		p1, p2, p3 = flip_triangle(p1, p2, p3)
@@ -532,3 +566,7 @@ hemisphere = semisphere
 
 proc semiellipsoid(size = (1, 0.5, 1), center = (0, 0, 0), horizontal_segments = 24 / 2, vertical_segments = 24)
 	triangles(make_semiellipsoid(size, center, horizontal_segments, vertical_segments))
+
+
+proc lathe(polygon, segments = 24, angle = math.tau, angle_start = 0, center = (0, 0, 0))
+	triangles(make_lathe(polygon, segments, angle, angle_start, center))
