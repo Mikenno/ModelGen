@@ -56,15 +56,28 @@ func quads_to_triangles(quads)
 		_triangles.extend(make_quad(p1, p2, p3, p4))
 	return _triangles
 
-func translate_triangles(triangles, center)
+
+func translate_polygon(polygon, xyz)
+	for i in range(len(polygon))
+		polygon[i] = vec.add(polygon[i], xyz)
+	return polygon
+
+func translate_triangles(triangles, xyz)
 	for triangle in triangles
 		assert len(triangle) == 3
 		for i in range(3)
-			triangle[i] = vec.add(triangle[i], center)
+			triangle[i] = vec.add(triangle[i], xyz)
 	return triangles
 
 
-func get_bounds(triangles)
+func get_bounds(polygon)
+	assert len(polygon) > 0
+	min, max = polygon[0], polygon[0]
+	for p in polygon
+		min, max = vec.min(min, p), vec.max(max, p)
+	return vec.sub(max, min)
+
+func get_bounds_triangles(triangles)
 	assert len(triangles) > 0
 	min, max = triangles[0][0], triangles[0][0]
 	for triangle in triangles
