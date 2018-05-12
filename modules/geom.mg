@@ -376,13 +376,32 @@ func make_rectangle_z(size = (1, 1), center = (0, 0, 0))
 
 
 func make_circle(diameter = 1, center = (0, 0), segments = 8)
-	r, (x, y) = diameter / 2, center
 	assert segments > 2
+	r, (x, y) = diameter / 2, center
 	angle = math.rad(360 / segments)
 	polygon = []
 	for i in range(segments)
 		polygon.add((x - math.cos(angle * i) * r, y + math.sin(angle * i) * r))
 	return polygon
+
+
+func _make_circle(diameter = 1, center = (0, 0, 0), segments = 8, orientation = (0, 1, 2))
+	assert segments > 2
+	r = diameter / 2
+	angle = math.tau / segments
+	polygon = []
+	for i in range(segments)
+		polygon.add((math.cos(angle * i) * r, math.sin(-angle * i) * r))
+	return translate_triangles(orient_triangles(triangulate(polygon), orientation), center)
+
+func make_circle_x(diameter = 1, center = (0, 0, 0), segments = 8)
+	return _make_circle(diameter, center, segments, (1, 2, 0))
+
+func make_circle_y(diameter = 1, center = (0, 0, 0), segments = 8)
+	return _make_circle(diameter, center, segments, (0, 1, 2))
+
+func make_circle_z(diameter = 1, center = (0, 0, 0), segments = 8)
+	return _make_circle(diameter, center, segments, (2, 0, 1))
 
 
 func make_ellipse(size = (1, 1), center = (0, 0), segments = 8)
