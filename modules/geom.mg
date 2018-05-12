@@ -70,6 +70,15 @@ func translate_triangles(triangles, xyz)
 	return triangles
 
 
+func orient_triangles(triangles, orientation)
+	x, y, z = orientation
+	for triangle in triangles
+		assert len(triangle) == 3
+		for i in range(3)
+			triangle[i] = triangle[i][x], triangle[i][y], triangle[i][z]
+	return triangles
+
+
 func get_bounds(polygon)
 	assert len(polygon) > 0
 	min, max = polygon[0], polygon[0]
@@ -346,31 +355,24 @@ func make_rectangle(size = (1, 1), center = (0, 0))
 		(x + hw, y - hh)]
 
 
-func _make_rectangle_x(size = (1, 1), center = (0, 0))
-	(hw, hh), (x, y) = vec.div(size, 2), center
-	return [
-		(0, x - hw, y - hh),
-		(0, x - hw, y + hh),
-		(0, x + hw, y + hh),
-		(0, x + hw, y - hh)]
+func _make_rectangle(size = (1, 1), center = (0, 0, 0), orientation = (0, 1, 2))
+	(hw, hh), (x, y, z) = vec.div(size, 2), center
+	return translate_triangles(orient_triangles(triangulate([
+		(-hw, -hh),
+		(-hw, +hh),
+		(+hw, +hh),
+		(+hw, -hh)]),
+		orientation),
+		center)
 
+func make_rectangle_x(size = (1, 1), center = (0, 0, 0))
+	return _make_rectangle(size, center, (1, 2, 0))
 
-func _make_rectangle_y(size = (1, 1), center = (0, 0))
-	(hw, hh), (x, y) = vec.div(size, 2), center
-	return [
-		(x - hw, 0, y - hh),
-		(x - hw, 0, y + hh),
-		(x + hw, 0, y + hh),
-		(x + hw, 0, y - hh)]
+func make_rectangle_y(size = (1, 1), center = (0, 0, 0))
+	return _make_rectangle(size, center, (0, 1, 2))
 
-
-func _make_rectangle_z(size = (1, 1), center = (0, 0))
-	(hw, hh), (x, y) = vec.div(size, 2), center
-	return [
-		(x - hw, y - hh, 0),
-		(x - hw, y + hh, 0),
-		(x + hw, y + hh, 0),
-		(x + hw, y - hh, 0)]
+func make_rectangle_z(size = (1, 1), center = (0, 0, 0))
+	return _make_rectangle((size[1], size[0]), center, (2, 0, 1))
 
 
 func make_circle(diameter = 1, center = (0, 0), segments = 8)
