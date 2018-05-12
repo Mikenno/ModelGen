@@ -378,6 +378,35 @@ func make_ellipse(size = (1, 1), center = (0, 0), segments = 8)
 	return polygon
 
 
+func make_ring(outer_diameter = 1.0, inner_diameter = 0.5, center = (0, 0, 0), segments = 8)
+	assert segments > 2
+	outer_radius, inner_radius = outer_diameter / 2, inner_diameter / 2
+	x, y, z = center
+	angle = math.tau / segments
+
+	_triangles = []
+	for i in range(segments)
+		x1 = x + math.cos(angle * i) * outer_radius
+		z1 = z + math.sin(angle * i) * outer_radius
+
+		x2 = x + math.cos(angle * i) * inner_radius
+		z2 = z + math.sin(angle * i) * inner_radius
+
+		x3 = x + math.cos(angle * (i + 1)) * inner_radius
+		z3 = z + math.sin(angle * (i + 1)) * inner_radius
+
+		x4 = x + math.cos(angle * (i + 1)) * outer_radius
+		z4 = z + math.sin(angle * (i + 1)) * outer_radius
+
+		_triangles.extend(make_quad(
+			(x1, y, z1),
+			(x2, y, z2),
+			(x3, y, z3),
+			(x4, y, z4)))
+
+	return _triangles
+
+
 func make_cube(size = (1, 1, 1), center = (0, 0, 0))
 	hw, hh, hl = vec.div(size, 2)
 	return translate_triangles(quads_to_triangles([
@@ -520,6 +549,10 @@ proc triangles(triangles, center = (0, 0, 0), clockwise = false)
 
 proc quad(p1, p2, p3, p4, clockwise = false)
 	triangles(make_quad(p1, p2, p3, p4), clockwise)
+
+
+proc ring(outer_diameter = 1.0, inner_diameter = 0.5, center = (0, 0, 0), segments = 8, inverted = false)
+	triangles(make_ring(outer_diameter, inner_diameter, center, segments), inverted)
 
 
 proc cube(size = (1, 1, 1), center = (0, 0, 0), inverted = false)
