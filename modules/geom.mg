@@ -315,6 +315,20 @@ func make_cylinder(diameter = 1, height = 1, center = (0, 0, 0), segments = 8, c
 	return make_prism(make_circle(diameter, (0, 0), segments), height, center, closed)
 
 
+func make_tube(outer_diameter = 1.0, inner_diameter = 0.5, height = 1, center = (0, 0, 0), segments = 8)
+	assert segments > 2
+	x, y, z = center
+	hh = height / 2
+
+	_triangles = []
+	_triangles.extend(make_cylinder(outer_diameter, height, center, segments, false))
+	_triangles.extend(map(t -> flip_triangle(t[0], t[1], t[2]), make_cylinder(inner_diameter, height, center, segments, false)))
+	_triangles.extend(make_ring(outer_diameter, inner_diameter, (x, y + hh, z), segments))
+	_triangles.extend(map(t -> flip_triangle(t[0], t[1], t[2]), make_ring(outer_diameter, inner_diameter, (x, y - hh, z), segments)))
+
+	return _triangles
+
+
 func make_triangle(size = (1, 1), center = (0, 0))
 	(hw, hh), (x, y) = vec.div(size, 2), center
 	return [
@@ -585,6 +599,10 @@ proc prism(polygon, height = 1, center = (0, 0, 0), closed = true)
 
 proc cylinder(diameter = 1, height = 1, center = (0, 0, 0), segments = 8, closed = true)
 	triangles(make_cylinder(diameter, height, center, segments, closed))
+
+
+proc tube(outer_diameter = 1.0, inner_diameter = 0.5, height = 1, center = (0, 0, 0), segments = 8)
+	triangles(make_tube(outer_diameter, inner_diameter, height, center, segments))
 
 
 proc sphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
