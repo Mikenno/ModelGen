@@ -283,21 +283,22 @@ func make_frustum(top, bottom, height = 1, center = (0, 0, 0))
 	return make_oblique_frustum(top, bottom, (0, height, 0), center)
 
 
-func make_oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0))
+func make_oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0), closed = true)
 	assert len(polygon) > 2
 	_triangles = []
 	half_translation = vec.div(translation, 2)
-	bottom, top = triangulate(polygon, center, true), triangulate(polygon, center)
-	for i in range(len(bottom))
-		assert len(bottom[i]) == 3
-		for j in range(3)
-			bottom[i][j] = vec.sub(bottom[i][j], half_translation)
-		_triangles.add(bottom[i])
-	for i in range(len(top))
-		assert len(top[i]) == 3
-		for j in range(3)
-			top[i][j] = vec.add(top[i][j], half_translation)
-		_triangles.add(top[i])
+	if closed
+		bottom, top = triangulate(polygon, center, true), triangulate(polygon, center)
+		for i in range(len(bottom))
+			assert len(bottom[i]) == 3
+			for j in range(3)
+				bottom[i][j] = vec.sub(bottom[i][j], half_translation)
+			_triangles.add(bottom[i])
+		for i in range(len(top))
+			assert len(top[i]) == 3
+			for j in range(3)
+				top[i][j] = vec.add(top[i][j], half_translation)
+			_triangles.add(top[i])
 	for i in range(len(polygon))
 		p2, p3 = polygon[i], polygon[(i + 1) % len(polygon)]
 		p2 = p2[0], 0, p2[1]
@@ -307,11 +308,11 @@ func make_oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0))
 		_triangles.extend(make_quad(p1, p2, p3, p4, center))
 	return _triangles
 
-func make_prism(polygon, height = 1, center = (0, 0, 0))
-	return make_oblique_prism(polygon, (0, height, 0), center)
+func make_prism(polygon, height = 1, center = (0, 0, 0), closed = true)
+	return make_oblique_prism(polygon, (0, height, 0), center, closed)
 
-func make_cylinder(diameter, height, center = (0, 0, 0), segments = 8)
-	return make_prism(make_circle(diameter, (0, 0), segments), height, center)
+func make_cylinder(diameter = 1, height = 1, center = (0, 0, 0), segments = 8, closed = true)
+	return make_prism(make_circle(diameter, (0, 0), segments), height, center, closed)
 
 
 func make_triangle(size = (1, 1), center = (0, 0))
@@ -576,14 +577,14 @@ proc frustum(top, bottom, height = 1, center = (0, 0, 0))
 	triangles(make_frustum(top, bottom, height, center))
 
 
-proc oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0))
-	triangles(make_oblique_prism(polygon, translation, center))
+proc oblique_prism(polygon, translation = (0, 1, 0), center = (0, 0, 0), closed = true)
+	triangles(make_oblique_prism(polygon, translation, center, closed))
 
-proc prism(polygon, height = 1, center = (0, 0, 0))
-	triangles(make_prism(polygon, height, center))
+proc prism(polygon, height = 1, center = (0, 0, 0), closed = true)
+	triangles(make_prism(polygon, height, center, closed))
 
-proc cylinder(diameter, height, center = (0, 0, 0), segments = 8)
-	triangles(make_cylinder(diameter, height, center, segments))
+proc cylinder(diameter = 1, height = 1, center = (0, 0, 0), segments = 8, closed = true)
+	triangles(make_cylinder(diameter, height, center, segments, closed))
 
 
 proc sphere(diameter = 1, center = (0, 0, 0), horizontal_segments = 24, vertical_segments = 24)
