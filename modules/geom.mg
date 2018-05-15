@@ -454,6 +454,53 @@ func make_cube(size = (1, 1, 1), center = (0, 0, 0))
 		((hw, hh, hl), (hw, -hh, hl), (hw, -hh, -hl), (hw, hh, -hl))]), # Right
 		center)
 
+func make_cube2(size = (1, 1, 1), center = (0, 0, 0), segments = (1, 1, 1))
+	(w, h, l), (sx, sy, sz) = size, segments
+	(hw, hh, hl), (ssx, ssy, ssz) = vec.div(size, 2), vec.div(1, segments)
+	_triangles = []
+	for y in map(y -> y * ssy - hh, range(sy))
+		for z in map(z -> z * ssz - hl, range(sz))
+			_triangles.extend(make_quad(
+				(-hw, y + ssy, z),
+				(-hw, y, z),
+				(-hw, y, z + ssz),
+				(-hw, y + ssy, z + ssz),
+				center)) # Left
+			_triangles.extend(make_quad(
+				(hw, y + ssy, z + ssz),
+				(hw, y, z + ssz),
+				(hw, y, z),
+				(hw, y + ssy, z),
+				center)) # Right
+		for x in map(x -> x * ssx - hw, range(sx))
+			_triangles.extend(make_quad(
+				(x, y + ssy, hl),
+				(x, y, hl),
+				(x + ssx, y, hl),
+				(x + ssx, y + ssy, hl),
+				center)) # Front
+			_triangles.extend(make_quad(
+				(x + ssx, y + ssy, -hl),
+				(x + ssx, y, -hl),
+				(x, y, -hl),
+				(x, y + ssy, -hl),
+				center)) # Back
+	for x in map(x -> x * ssx - hw, range(sx))
+		for z in map(z -> z * ssz - hl, range(sz))
+			_triangles.extend(make_quad(
+				(x, hh, z),
+				(x, hh, z + ssz),
+				(x + ssx, hh, z + ssz),
+				(x + ssx, hh, z),
+				center)) # Top
+			_triangles.extend(make_quad(
+				(x + ssx, -hh, z),
+				(x + ssx, -hh, z + ssz),
+				(x, -hh, z + ssz),
+				(x, -hh, z),
+				center)) # Bottom
+	return _triangles
+
 func make_square_pyramid(size = (1, 1, 1), center = (0, 0, 0))
 	hw, hh, hl = vec.div(size, 2)
 	_triangles = []
@@ -593,6 +640,9 @@ proc ring(outer_diameter = 1.0, inner_diameter = 0.5, center = (0, 0, 0), segmen
 
 proc cube(size = (1, 1, 1), center = (0, 0, 0), inverted = false)
 	triangles(make_cube(size, center), inverted)
+
+proc cube2(size = (1, 1, 1), center = (0, 0, 0), segments = (1, 1, 1), inverted = false)
+	triangles(make_cube2(size, center, segments), inverted)
 
 proc square_pyramid(size = (1, 1, 1), center = (0, 0, 0), inverted = false)
 	triangles(make_square_pyramid(size, center), inverted)
