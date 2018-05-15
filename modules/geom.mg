@@ -3,6 +3,7 @@
 import math
 import vec
 import mat
+import modifiers
 
 
 matrix_stack = [mat.mat4(1)]
@@ -32,8 +33,13 @@ func rotate(radians, x, y, z)
 
 proc vertex(position, normal)
 	m = get_matrix()
+
 	position = mat.mul(m, position)
 	normal = mat.mul(mat.get_rotation(m), normal)
+
+	for modifier in modifiers._modifiers
+		position, normal = modifier(position, normal)
+
 	emit position[0], position[1], position[2], normal[0], normal[1], normal[2]
 
 
