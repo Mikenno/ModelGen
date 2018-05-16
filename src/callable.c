@@ -93,7 +93,11 @@ MGValue* mgCallEx(MGInstance *instance, MGStackFrame *frame, const MGValue *call
 					funcName = funcNameNode->token->value.s;
 				}
 
-				mgFatalError("Error: %s expected at most %zu arguments, received %zu", (funcName ? funcName : "<anonymous>"), _mgListLength(funcParametersNode->children), argc);
+				mgFatalError("Error: %s expected at most %zu argument%s, received %zu",
+				             funcName ? funcName : "<anonymous>",
+				             _mgListLength(funcParametersNode->children),
+				             (_mgListLength(funcParametersNode->children) == 1) ? "" : "s",
+				             argc);
 			}
 
 			for (size_t i = 0; i < _mgListLength(funcParametersNode->children); ++i)
