@@ -292,6 +292,28 @@ void mgTokenizeNext(MGToken *token)
 			token->type = MG_TOKEN_GREATER;
 			return;
 		}
+	case '&':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '&':
+			token->type = MG_TOKEN_AND;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_INVALID;
+			return;
+		}
+	case '|':
+		_mgTokenNextCharacter(token);
+		switch (*token->end.string) {
+		case '|':
+			token->type = MG_TOKEN_OR;
+			_mgTokenNextCharacter(token);
+			return;
+		default:
+			token->type = MG_TOKEN_INVALID;
+			return;
+		}
 	case '\0':
 		token->type = MG_TOKEN_EOF;
 		return;
