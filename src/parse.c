@@ -589,7 +589,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 		token = node->tokenEnd + 1;
 		_MG_TOKEN_SCAN_LINES(token);
 
-		if ((token->type != MG_TOKEN_EOF) && (start->begin.character < token->begin.character))
+		if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA) &&
+		    (start->begin.character < token->begin.character))
 		{
 			MGNode *block = mgCreateNode(token, MG_NODE_BLOCK);
 			block->token = NULL;
@@ -641,7 +642,8 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 
 			_MG_TOKEN_SCAN_LINES(token);
 
-			if ((token->type != MG_TOKEN_EOF) && (start->begin.character < token->begin.character))
+			if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA) &&
+			    (start->begin.character < token->begin.character))
 			{
 				MG_ASSERT(_mgListLength(_node->children) < 3);
 
