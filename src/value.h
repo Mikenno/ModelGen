@@ -1,7 +1,9 @@
 #ifndef MODELGEN_VALUE_H
 #define MODELGEN_VALUE_H
 
-#include "modelgen.h"
+#include "parse.h"
+#include "types.h"
+
 
 #define _MG_UNARY_OP_TYPES \
 	_MG_OP(POSITIVE, "+") \
@@ -10,13 +12,14 @@
 
 #define _MG_LONGEST_UNARY_OP_NAME_LENGTH 3
 
+extern const char* const _MG_UNARY_OP_NAMES[];
+
 typedef enum MGUnaryOpType {
 #define _MG_OP(op, name) MG_UNARY_OP_##op,
 	_MG_UNARY_OP_TYPES
 #undef _MG_OP
 } MGUnaryOpType;
 
-extern const char* const _MG_UNARY_OP_NAMES[];
 
 #define _MG_BIN_OP_TYPES \
 	_MG_OP(ADD, "+") \
@@ -34,13 +37,59 @@ extern const char* const _MG_UNARY_OP_NAMES[];
 
 #define _MG_LONGEST_BIN_OP_NAME_LENGTH 2
 
+extern const char* const _MG_BIN_OP_NAMES[];
+
 typedef enum MGBinOpType {
 #define _MG_OP(op, name) MG_BIN_OP_##op,
 	_MG_BIN_OP_TYPES
 #undef _MG_OP
 } MGBinOpType;
 
-extern const char* const _MG_BIN_OP_NAMES[];
+
+typedef enum MGStringUsage {
+	MG_STRING_USAGE_COPY,
+	MG_STRING_USAGE_KEEP,
+	MG_STRING_USAGE_STATIC
+} MGStringUsage;
+
+typedef _MGList(MGValue*) MGValueList;
+
+typedef _MGPair(char*, MGValue*) MGValueMapPair;
+typedef _MGList(MGValueMapPair) MGValueMap;
+
+typedef struct MGValue {
+	MGType type;
+	size_t refCount;
+	union {
+		int i;
+		float f;
+		struct {
+			char *s;
+			size_t length;
+			MGStringUsage usage;
+		} str;
+		MGCFunction cfunc;
+		struct {
+			MGBoundCFunction cfunc;
+			MGValue *bound;
+		} bcfunc;
+		MGValueList a;
+		MGValueMap m;
+		struct {
+			MGValue *module;
+			MGNode *node;
+			MGValue *locals;
+		} func;
+		struct {
+			MGInstance *instance;
+			MGParser parser;
+			char *filename;
+			MGValue *globals;
+			MGbool isStatic;
+		} module;
+	} data;
+} MGValue;
+
 
 extern MGValue *_mgNullValue;
 #define _MG_NULL_VALUE _mgNullValue

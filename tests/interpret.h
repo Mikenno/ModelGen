@@ -1,7 +1,13 @@
 #ifndef MODELGEN_TEST_INTERPRET_H
 #define MODELGEN_TEST_INTERPRET_H
 
+#ifdef _WIN32
+#   include <windows.h>
+#endif
+
 #include "inspect.h"
+#include "utilities.h"
+#include "debug.h"
 
 
 #define _MG_OUTPUT_FILENAME "tests/_test.out"

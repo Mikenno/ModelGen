@@ -1,13 +1,12 @@
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "inspect.h"
-#include "value.h"
-#include "module.h"
+#include "file.h"
 #include "utilities.h"
-#include "modelgen.h"
+#include "debug.h"
 
 
 #define _MG_FILENAME_PADDING 4

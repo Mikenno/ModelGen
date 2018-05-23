@@ -3,9 +3,9 @@
 
 #include "callable.h"
 #include "module.h"
+#include "frame.h"
 #include "error.h"
 #include "utilities.h"
-#include "modelgen.h"
 
 
 extern MGValue* _mgVisitNode(MGValue *module, MGNode *node);

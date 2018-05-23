@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "modelgen.h"
-
 typedef struct MGMapIterator {
 	MGValue *map;
 	MGValue *key;

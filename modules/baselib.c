@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "modelgen.h"
 #include "value.h"
 #include "module.h"
 #include "callable.h"
 #include "eval.h"
+#include "interpret.h"
 #include "inspect.h"
 #include "error.h"
 #include "utilities.h"
+#include "version.h"
 
 
 static MGValue* mg_print(MGInstance *instance, size_t argc, const MGValue* const* argv)

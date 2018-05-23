@@ -3,6 +3,7 @@
 
 import sys
 import os
+from os.path import join
 from itertools import repeat
 from subprocess import run
 import shutil
@@ -20,21 +21,21 @@ ldflags = ["-lm"]
 
 
 modelgen_dir = os.path.abspath(os.path.dirname(__file__))
-modelgen_src_dir = os.path.join(modelgen_dir, "src")
-modelgen_tests_dir = os.path.join(modelgen_dir, "tests")
-modelgen_modules_dir = os.path.join(modelgen_dir, "modules")
-modelgen_bin_dir = os.path.join(modelgen_dir, "bin")
+modelgen_src_dir = join(modelgen_dir, "src")
+modelgen_tests_dir = join(modelgen_dir, "tests")
+modelgen_modules_dir = join(modelgen_dir, "modules")
+modelgen_bin_dir = join(modelgen_dir, "bin")
 
 
 def src_to_obj(src, bin_dir, build_name=""):
 	relative = os.path.relpath(src, os.path.commonpath((src, bin_dir)))
-	obj = os.path.join(bin_dir, build_name, relative)
+	obj = join(bin_dir, build_name, relative)
 	return os.path.splitext(obj)[0] + ".o"
 
 
 def iter_files(dirname, filename_filter=lambda f: True):
 	for dirpath, dirnames, filenames in os.walk(dirname):
-		yield from filter(filename_filter, (os.path.join(dirpath, filename) for filename in sorted(filenames)))
+		yield from filter(filename_filter, (join(dirpath, filename) for filename in sorted(filenames)))
 
 
 def iter_c_files(*dirnames):
@@ -63,7 +64,7 @@ def resolve_include(filename: str, include_directories: List[str]):
 	assert len(include_directories) > 0
 	resolved_filename = filename
 	for include_directory in include_directories:
-		resolved_filename = os.path.join(include_directory, filename)
+		resolved_filename = join(include_directory, filename)
 		if os.path.isfile(resolved_filename):
 			return resolved_filename
 	raise FileNotFoundError(resolved_filename)
@@ -156,7 +157,7 @@ def link(out, objects, ldflags=ldflags):
 def build(name, bin_dir, entry, c_files, cflags=cflags, ldflags=ldflags, include_directories=[], *, clean_build=False):
 	assert os.path.isfile(entry)
 	_src_to_obj = lambda f: src_to_obj(f, bin_dir, "." + name)
-	out = os.path.join(bin_dir, name) + (".exe" if os.name == "nt" else "")
+	out = join(bin_dir, name) + (".exe" if os.name == "nt" else "")
 	print("Building:", os.path.relpath(out), flush=True)
 	if clean_build:
 		clean(bin_dir)
@@ -175,7 +176,7 @@ build_configurations = {
 	"debug": {
 		"name": "modelgen-debug",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
+		"entry": join(modelgen_src_dir, "modelgen.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
@@ -184,7 +185,7 @@ build_configurations = {
 	"debug-x64": {
 		"name": "modelgen-debug-x64",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
+		"entry": join(modelgen_src_dir, "modelgen.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
@@ -193,7 +194,7 @@ build_configurations = {
 	"release": {
 		"name": "modelgen-release",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
+		"entry": join(modelgen_src_dir, "modelgen.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags,
 		"ldflags": ldflags,
@@ -202,7 +203,7 @@ build_configurations = {
 	"release-x64": {
 		"name": "modelgen-release-x64",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_src_dir, "modelgen.c"),
+		"entry": join(modelgen_src_dir, "modelgen.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
 		"cflags": release_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
@@ -211,7 +212,7 @@ build_configurations = {
 	"test": {
 		"name": "modelgen-test",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_tests_dir, "test.c"),
+		"entry": join(modelgen_tests_dir, "test.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
@@ -220,7 +221,7 @@ build_configurations = {
 	"test-x64": {
 		"name": "modelgen-test-x64",
 		"bin_dir": modelgen_bin_dir,
-		"entry": os.path.join(modelgen_tests_dir, "test.c"),
+		"entry": join(modelgen_tests_dir, "test.c"),
 		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
@@ -253,7 +254,7 @@ if __name__ == "__main__":
 			bin_filename = build_config(arg)
 			bin_basename = os.path.basename(bin_filename)
 			if "debug" in bin_basename or "release" in bin_basename:
-				shutil.copyfile(bin_filename, os.path.join(os.path.dirname(bin_filename), os.path.basename(os.path.abspath(modelgen_dir)).lower() + os.path.splitext(bin_filename)[1]))
+				shutil.copyfile(bin_filename, join(os.path.dirname(bin_filename), os.path.basename(os.path.abspath(modelgen_dir)).lower() + os.path.splitext(bin_filename)[1]))
 
 	if bin_filename is not None:
 		try:

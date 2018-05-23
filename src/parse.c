@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "modelgen.h"
+#include "parse.h"
 #include "inspect.h"
 #include "error.h"
 
@@ -27,7 +27,7 @@
 static const int _MG_OPERATOR_PRECEDENCE_TYPE_COUNT[_MG_OPERATOR_PRECEDENCE_LEVELS] = { 7, 1, 1, 2, 4, 2, 4, 1 };
 
 static const MGTokenType _MG_OPERATOR_PRECEDENCE_TYPES[_MG_OPERATOR_PRECEDENCE_LEVELS][_MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL] = {
-	/* Highest Precedence */
+	/* Lowest Precedence */
 	{ MG_TOKEN_ASSIGN, MG_TOKEN_ADD_ASSIGN, MG_TOKEN_SUB_ASSIGN, MG_TOKEN_MUL_ASSIGN, MG_TOKEN_DIV_ASSIGN, MG_TOKEN_INT_DIV_ASSIGN, MG_TOKEN_MOD_ASSIGN },
 	/* Range */
 	{ MG_TOKEN_OR },
@@ -37,7 +37,7 @@ static const MGTokenType _MG_OPERATOR_PRECEDENCE_TYPES[_MG_OPERATOR_PRECEDENCE_L
 	{ MG_TOKEN_ADD, MG_TOKEN_SUB },
 	{ MG_TOKEN_MUL, MG_TOKEN_DIV, MG_TOKEN_INT_DIV, MG_TOKEN_MOD },
 	{ MG_TOKEN_COALESCE }
-	/* Lowest Precedence */
+	/* Highest Precedence */
 };
 
 static const MGNodeType _MG_BIN_OP_NODE_TYPES[_MG_OPERATOR_PRECEDENCE_LEVELS][_MG_OPERATOR_PRECEDENCE_LONGEST_LEVEL] = {

@@ -3,10 +3,10 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "modelgen.h"
 #include "value.h"
 #include "module.h"
 #include "utilities.h"
+#include "debug.h"
 
 
 MGValue* mgCreateValueModule(void)

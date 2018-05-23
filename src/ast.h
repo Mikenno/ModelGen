@@ -1,6 +1,9 @@
 #ifndef MODELGEN_AST_H
 #define MODELGEN_AST_H
 
+#include "tokens.h"
+#include "collections.h"
+
 #define _MG_NODES \
 	_MG_N(INVALID, "Invalid") \
 	_MG_N(NOP, "NoOperation") \
@@ -61,9 +64,9 @@
 	_MG_N(AS, "As") \
 	_MG_N(ASSERT, "Assert")
 
-
 #define _MG_LONGEST_NODE_NAME_LENGTH 20
 
+extern const char* const _MG_NODE_NAMES[];
 
 typedef enum MGNodeType {
 #define _MG_N(node, name) MG_NODE_##node,
@@ -71,7 +74,16 @@ typedef enum MGNodeType {
 #undef _MG_N
 } MGNodeType;
 
+typedef struct MGNode MGNode;
 
-extern const char* const _MG_NODE_NAMES[];
+typedef struct MGNode {
+	MGNodeType type;
+	size_t refCount;
+	MGToken *token;
+	MGToken *tokenBegin;
+	MGToken *tokenEnd;
+	MGNode *parent;
+	_MGList(MGNode*) children;
+} MGNode;
 
 #endif

@@ -1,8 +1,8 @@
 #ifndef MODELGEN_CALLABLE_H
 #define MODELGEN_CALLABLE_H
 
-#include "modelgen.h"
 #include "value.h"
+#include "frame.h"
 
 #define mgIsCallable(value) ((value->type == MG_TYPE_CFUNCTION) || (value->type == MG_TYPE_BOUND_CFUNCTION) || (value->type == MG_TYPE_PROCEDURE) || (value->type == MG_TYPE_FUNCTION))
 

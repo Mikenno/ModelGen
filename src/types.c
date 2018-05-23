@@ -1,13 +1,13 @@
 
 #include <stdio.h>
 
-#include "modelgen.h"
 #include "types.h"
 #include "value.h"
 #include "module.h"
 #include "callable.h"
 #include "error.h"
 #include "utilities.h"
+#include "debug.h"
 
 
 extern MGNode* mgReferenceNode(const MGNode *node);

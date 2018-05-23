@@ -4,7 +4,9 @@
 #include <stdarg.h>
 
 #include "error.h"
-#include "debug.h"
+#include "types.h"
+#include "value.h"
+#include "frame.h"
 
 
 void mgTraceback(const MGInstance *instance)

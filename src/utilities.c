@@ -118,54 +118,6 @@ char *mgFloatToString(float f)
 }
 
 
-int mgFileExists(const char *filename)
-{
-#ifdef _WIN32
-	DWORD dwAttrib = GetFileAttributesA(filename);
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES)
-	   && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
-#else
-	return access(filename, F_OK) != -1;
-#endif
-}
-
-
-const char* mgBasename(const char *filename)
-{
-	const char* basename1 = strrchr(filename, '/');
-	const char* basename2 = strrchr(filename, '\\');
-
-	return ((basename1 != basename2) ? ((basename1 > basename2) ? (basename1 + 1) : (basename2 + 1)) : filename);
-}
-
-
-size_t mgDirnameEnd(const char *filename)
-{
-	const char *slash = strrchr(filename, '/');
-	const char *backslash = strrchr(filename, '\\');
-
-	if (slash && backslash && (backslash > slash))
-		slash = backslash;
-	else if (!slash)
-		slash = backslash;
-
-	return slash ? (slash - filename) : 0;
-}
-
-
-char* mgDirname(char *dirname, const char *filename)
-{
-	const size_t end = mgDirnameEnd(filename);
-
-	if (end)
-		strncpy(dirname, filename, end);
-
-	dirname[end] = '\0';
-
-	return dirname;
-}
-
-
 static const char escapes[] = { 'a', 'b', 't', 'n', 'v', 'f', 'r' };
 
 

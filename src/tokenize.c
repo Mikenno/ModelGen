@@ -3,7 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "modelgen.h"
+#include "tokenize.h"
+#include "file.h"
 #include "utilities.h"
 
 

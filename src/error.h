@@ -1,7 +1,9 @@
 #ifndef MODELGEN_ERROR_H
 #define MODELGEN_ERROR_H
 
-#include "modelgen.h"
+#include "instance.h"
+#include "error.h"
+#include "debug.h"
 
 extern MGInstance *_mgLastInstance;
 

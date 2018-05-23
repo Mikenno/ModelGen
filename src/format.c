@@ -1,5 +1,6 @@
 
 #include "format.h"
+#include "debug.h"
 
 
 void mgExportOBJ(MGInstance *instance, FILE *file)

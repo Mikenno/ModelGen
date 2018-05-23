@@ -1,12 +1,14 @@
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "modelgen.h"
 #include "module.h"
 #include "inspect.h"
 #include "format.h"
+#include "debug.h"
+#include "version.h"
 
 #ifdef _WIN32
 #   include <stdint.h>

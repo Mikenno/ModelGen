@@ -2,6 +2,7 @@
 #include "eval.h"
 #include "value.h"
 #include "module.h"
+#include "debug.h"
 
 
 extern MGValue* _mgVisitNode(MGValue *module, MGNode *node);

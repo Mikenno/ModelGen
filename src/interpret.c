@@ -3,11 +3,11 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "modelgen.h"
+#include "interpret.h"
+#include "parse.h"
 #include "value.h"
 #include "module.h"
 #include "callable.h"
-#include "inspect.h"
 #include "error.h"
 #include "utilities.h"
 

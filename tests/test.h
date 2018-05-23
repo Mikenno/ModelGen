@@ -2,13 +2,11 @@
 #define MODELGEN_TEST_TEST_H
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include <time.h>
 
-#include "modelgen.h"
-#include "utilities.h"
-
+#include "types.h"
 #include "file.h"
 
 

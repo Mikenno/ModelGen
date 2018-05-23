@@ -19,6 +19,10 @@ typedef enum MGType {
 typedef char MGbool;
 typedef MGbool MGtribool;
 
+#define MG_INDETERMINATE (MGbool) (-1)
+#define MG_FALSE (MGbool) 0
+#define MG_TRUE (MGbool) 1
+
 typedef struct MGInstance MGInstance;
 typedef struct MGValue MGValue;
 

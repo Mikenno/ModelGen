@@ -3,7 +3,12 @@
 
 #include <stdio.h>
 
-#include "modelgen.h"
+#include "tokens.h"
+#include "ast.h"
+#include "value.h"
+#include "module.h"
+#include "frame.h"
+#include "instance.h"
 
 void mgInspectToken(const MGToken *token);
 void mgInspectNode(const MGNode *node);

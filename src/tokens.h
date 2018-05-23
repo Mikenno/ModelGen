@@ -64,9 +64,9 @@
 	_MG_T(INT_DIV_ASSIGN, "//=") \
 	_MG_T(MOD_ASSIGN, "%=") \
 
-
 #define _MG_LONGEST_TOKEN_NAME_LENGTH 11
 
+extern const char* const _MG_TOKEN_NAMES[];
 
 typedef enum MGTokenType {
 #define _MG_T(token, name) MG_TOKEN_##token,
@@ -74,7 +74,23 @@ typedef enum MGTokenType {
 #undef _MG_T
 } MGTokenType;
 
-
-extern const char* const _MG_TOKEN_NAMES[];
+typedef struct MGToken {
+	MGTokenType type;
+	struct {
+		const char *string;
+		unsigned int line;
+		unsigned int character;
+	} begin;
+	struct {
+		const char *string;
+		unsigned int line;
+		unsigned int character;
+	} end;
+	union {
+		int i;
+		float f;
+		char *s;
+	} value;
+} MGToken;
 
 #endif
