@@ -1,6 +1,6 @@
 
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
 #include "error.h"
 
 
@@ -82,7 +82,7 @@ MGValue* mgReferenceValue(const MGValue *value)
 }
 
 
-MGValue *mgValueConvert(const MGValue *value, MGType type)
+MGValue* mgValueConvert(const MGValue *value, MGType type)
 {
 	if (value->type == type)
 		return mgReferenceValue(value);

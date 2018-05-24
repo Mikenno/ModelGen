@@ -1,10 +1,13 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/composite.h"
+#include "types/module.h"
 #include "callable.h"
 #include "eval.h"
 #include "interpret.h"

@@ -104,7 +104,7 @@ MGValue* mgCopyValue(const MGValue *value, MGbool shallow);
 
 MGValue* mgReferenceValue(const MGValue *value);
 
-MGValue *mgValueConvert(const MGValue *value, MGType type);
+MGValue* mgValueConvert(const MGValue *value, MGType type);
 
 MGbool mgValueTruthValue(const MGValue *value);
 

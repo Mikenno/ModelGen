@@ -2,7 +2,6 @@
 #include <stdarg.h>
 
 #include "callable.h"
-#include "module.h"
 #include "frame.h"
 #include "error.h"
 #include "utilities.h"

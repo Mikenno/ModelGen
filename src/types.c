@@ -1,9 +1,11 @@
 
+#include <string.h>
 #include <stdio.h>
 
 #include "types.h"
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/composite.h"
 #include "callable.h"
 #include "error.h"
 #include "utilities.h"
@@ -64,12 +66,12 @@ void mgAnyCopy(MGValue *copy, const MGValue *value, MGbool shallow)
 
 			if (shallow)
 			{
-				while (mgMapNext(&iterator, &k, &v))
+				while (mgMapIteratorNext(&iterator, &k, &v))
 					mgMapSet(copy, k->data.str.s, mgReferenceValue(v));
 			}
 			else
 			{
-				while (mgMapNext(&iterator, &k, &v))
+				while (mgMapIteratorNext(&iterator, &k, &v))
 					mgMapSet(copy, k->data.str.s, mgDeepCopyValue(v));
 			}
 
@@ -276,7 +278,7 @@ char* mgAnyToString(const MGValue *value)
 		mgCreateMapIterator(&iterator, value);
 
 		const MGValue *k, *v;
-		while (mgMapNext(&iterator, &k, &v))
+		while (mgMapIteratorNext(&iterator, &k, &v))
 		{
 			const MGValue *values[2] = { k, v };
 
@@ -424,7 +426,7 @@ MGtribool mgAnyEqual(const MGValue *lhs, const MGValue *rhs)
 		mgCreateMapIterator(&iterator, lhs);
 
 		const MGValue *k, *v, *v2;
-		while (mgMapNext(&iterator, &k, &v))
+		while (mgMapIteratorNext(&iterator, &k, &v))
 		{
 			v2 = mgMapGet(rhs, k->data.str.s);
 

@@ -1,6 +1,9 @@
 
+#include <string.h>
+
 #include "value.h"
-#include "module.h"
+#include "primitive.h"
+#include "composite.h"
 #include "callable.h"
 #include "error.h"
 

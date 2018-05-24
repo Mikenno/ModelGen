@@ -4,7 +4,8 @@
 
 #include "instance.h"
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/module.h"
 #include "interpret.h"
 #include "file.h"
 #include "utilities.h"

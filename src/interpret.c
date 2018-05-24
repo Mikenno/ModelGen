@@ -6,7 +6,9 @@
 #include "interpret.h"
 #include "parse.h"
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/composite.h"
+#include "types/module.h"
 #include "callable.h"
 #include "error.h"
 #include "utilities.h"
@@ -1170,7 +1172,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 			mgCreateMapIterator(&iterator, importedModule->data.module.globals);
 
 			const MGValue *k, *v;
-			while (mgMapNext(&iterator, &k, &v))
+			while (mgMapIteratorNext(&iterator, &k, &v))
 				_mgSetValue(module, k->data.str.s, mgReferenceValue(v));
 
 			mgDestroyMapIterator(&iterator);

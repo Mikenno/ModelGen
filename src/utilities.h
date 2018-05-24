@@ -26,8 +26,8 @@ char* mgStringDuplicateFixed(const char *str, size_t count);
 char* mgStringRepeat(char *destination, const char *source, size_t length, size_t times);
 char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times);
 
-char *mgIntToString(int i);
-char *mgFloatToString(float f);
+char* mgIntToString(int i);
+char* mgFloatToString(float f);
 
 unsigned int mgInlineRepresentationLength(const char *str, const char *end);
 char* mgInlineRepresentation(char *destination, const char *source, const char *end);

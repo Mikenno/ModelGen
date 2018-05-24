@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include "frame.h"
 #include "debug.h"
 

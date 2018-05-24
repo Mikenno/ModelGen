@@ -2,7 +2,7 @@
 #define MODELGEN_STACK_FRAME_H
 
 #include "value.h"
-#include "module.h"
+#include "types/composite.h"
 
 #define _MG_STACK_FRAME_STATES \
 	_MG_SFS(ACTIVE, "Active") \

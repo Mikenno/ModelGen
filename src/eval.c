@@ -1,7 +1,7 @@
 
 #include "eval.h"
 #include "value.h"
-#include "module.h"
+#include "types/module.h"
 #include "debug.h"
 
 

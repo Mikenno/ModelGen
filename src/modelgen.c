@@ -4,7 +4,8 @@
 #include <stdio.h>
 
 #include "modelgen.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/composite.h"
 #include "inspect.h"
 #include "format.h"
 #include "debug.h"

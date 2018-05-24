@@ -1,10 +1,13 @@
 
+#include <string.h>
 #include <stdarg.h>
 #include <math.h>
 #include <limits.h>
 
 #include "value.h"
-#include "module.h"
+#include "types/primitive.h"
+#include "types/composite.h"
+#include "types/module.h"
 #include "callable.h"
 #include "error.h"
 #include "utilities.h"

@@ -90,7 +90,7 @@ char* mgStringRepeatDuplicate(const char *str, size_t length, size_t times)
 }
 
 
-char *mgIntToString(int i)
+char* mgIntToString(int i)
 {
 	size_t len = (size_t) snprintf(NULL, 0, "%d", i);
 	char *s = (char*) malloc((len + 1) * sizeof(char));
@@ -100,7 +100,7 @@ char *mgIntToString(int i)
 }
 
 
-char *mgFloatToString(float f)
+char* mgFloatToString(float f)
 {
 	size_t len = (size_t) snprintf(NULL, 0, "%G", f);
 	char *s = (char*) malloc((len + 1) * sizeof(char));
