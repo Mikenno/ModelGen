@@ -82,7 +82,7 @@ def get_includes(filename: str, include_directories=[]):
 	return [resolve_include(include, include_directories) for include in sorted(includes)]
 
 
-def has_changed(src, obj=None, include_directories=[]):
+def has_changed(src, obj=None, include_directories=None):
 	assert os.path.exists(src)
 
 	last_modified = os.path.getmtime(src)
@@ -93,6 +93,9 @@ def has_changed(src, obj=None, include_directories=[]):
 		if last_modified >= obj_last_modified:
 			return True
 		last_modified = obj_last_modified
+
+	if not include_directories:
+		return False
 
 	checked_files = set()
 
@@ -133,7 +136,7 @@ def gcc(*args):
 		exit(result.returncode)
 
 
-def compile(src, obj, cflags=cflags, include_directories=[]):
+def compile(src, obj, cflags=cflags, include_directories=None):
 	assert os.path.isfile(src)
 	if has_changed(src, obj, include_directories):
 		print(f"Compiling: {os.path.relpath(src)} -> {os.path.relpath(obj)}", flush=True)
@@ -154,92 +157,153 @@ def link(out, objects, ldflags=ldflags):
 		gcc(*objects, *ldflags, "-o", out)
 
 
-def build(name, bin_dir, entry, c_files, cflags=cflags, ldflags=ldflags, include_directories=[], *, clean_build=False):
-	assert os.path.isfile(entry)
+def get_object_files(name, bin_dir, entry, c_files, dependencies):
+	_src_to_obj = lambda f: src_to_obj(f, bin_dir, "." + name)
+	objects = []
+	if entry:
+		assert os.path.isfile(entry)
+		objects.append(_src_to_obj(entry))
+	objects.extend(_src_to_obj(f) for f in c_files if not has_entry_point(f))
+	if dependencies:
+		for dependency in dependencies:
+			config = build_configurations[dependency]
+			objects.extend(get_object_files(config["name"], config["bin_dir"], None, config["c_files"], config.get("dependencies")))
+	return list(set(objects))
+
+
+def build(name, bin_dir, entry, c_files, cflags=cflags, ldflags=ldflags, include_directories=None, dependencies=None, *, clean_build=False):
 	_src_to_obj = lambda f: src_to_obj(f, bin_dir, "." + name)
 	out = join(bin_dir, name) + (".exe" if os.name == "nt" else "")
-	print("Building:", os.path.relpath(out), flush=True)
 	if clean_build:
 		clean(bin_dir)
-	entry_obj = _src_to_obj(entry)
-	compile(entry, entry_obj, cflags, include_directories)
+	if dependencies:
+		for dependency in dependencies:
+			config = build_configurations[dependency]
+			build_config(config, as_dependency=True)
+	print("Building:", os.path.relpath(out) if entry else name, flush=True)
 	c_files = [f for f in c_files if not has_entry_point(f)]
 	for src in c_files:
 		compile(src, _src_to_obj(src), cflags, include_directories)
-	link(out, [entry_obj, *(_src_to_obj(src) for src in c_files)], ldflags)
-	assert os.path.isfile(out)
-	print("Finished:", os.path.relpath(out), flush=True)
-	return out
+	if entry:
+		assert os.path.isfile(entry)
+		entry_obj = _src_to_obj(entry)
+		compile(entry, entry_obj, cflags, include_directories)
+		objects = get_object_files(name, bin_dir, entry, c_files, dependencies)
+		link(out, objects, ldflags)
+		assert os.path.isfile(out)
+	print("Finished:", os.path.relpath(out) if entry else name, flush=True)
+	return out if entry else None
 
 
 build_configurations = {
+	"modules-debug": {
+		"name": "modelgen-modules-debug",
+		"bin_dir": modelgen_bin_dir,
+		"c_files": get_c_files(modelgen_modules_dir),
+		"cflags": debug_cflags,
+		"ldflags": ldflags,
+		"include_directories": [modelgen_src_dir],
+	},
+	"modules-debug-x64": {
+		"name": "modelgen-modules-debug-x64",
+		"bin_dir": modelgen_bin_dir,
+		"c_files": get_c_files(modelgen_modules_dir),
+		"cflags": debug_cflags + ["-m64"],
+		"ldflags": ldflags + ["-m64"],
+		"include_directories": [modelgen_src_dir],
+	},
+	"modules": {
+		"name": "modelgen-modules",
+		"bin_dir": modelgen_bin_dir,
+		"c_files": get_c_files(modelgen_modules_dir),
+		"cflags": release_cflags,
+		"ldflags": ldflags,
+		"include_directories": [modelgen_src_dir],
+	},
+	"modules-x64": {
+		"name": "modelgen-modules-x64",
+		"bin_dir": modelgen_bin_dir,
+		"c_files": get_c_files(modelgen_modules_dir),
+		"cflags": release_cflags + ["-m64"],
+		"ldflags": ldflags + ["-m64"],
+		"include_directories": [modelgen_src_dir],
+	},
 	"debug": {
 		"name": "modelgen-debug",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_src_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["modules-debug"],
 	},
 	"debug-x64": {
 		"name": "modelgen-debug-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_src_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["modules-debug-x64"],
 	},
 	"release": {
 		"name": "modelgen-release",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_src_dir),
 		"cflags": release_cflags,
 		"ldflags": ldflags,
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["modules"],
 	},
 	"release-x64": {
 		"name": "modelgen-release-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_src_dir, "modelgen.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_src_dir),
 		"cflags": release_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["modules-x64"],
 	},
 	"test": {
 		"name": "modelgen-test",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_tests_dir, "test.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_tests_dir),
 		"cflags": debug_cflags,
 		"ldflags": ldflags,
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["debug"],
 	},
 	"test-x64": {
 		"name": "modelgen-test-x64",
 		"bin_dir": modelgen_bin_dir,
 		"entry": join(modelgen_tests_dir, "test.c"),
-		"c_files": get_c_files(modelgen_src_dir, modelgen_tests_dir, modelgen_modules_dir),
+		"c_files": get_c_files(modelgen_tests_dir),
 		"cflags": debug_cflags + ["-m64"],
 		"ldflags": ldflags + ["-m64"],
 		"include_directories": [modelgen_src_dir],
+		"dependencies": ["debug-x64"],
 	},
 }
 
 
-def build_config(name):
-	config = build_configurations[name]
+def build_config(config, *, as_dependency=False, clean_build=False):
+	if isinstance(config, str):
+		config = build_configurations[config]
 	return build(
 		config["name"],
 		config["bin_dir"],
-		config["entry"],
+		None if as_dependency else config.get("entry", None),
 		config["c_files"],
 		config.get("cflags", cflags),
 		config.get("ldflags", ldflags),
-		config.get("include_directories", []))
+		config.get("include_directories", None),
+		config.get("dependencies", None),
+		clean_build=clean_build)
 
 
 if __name__ == "__main__":
