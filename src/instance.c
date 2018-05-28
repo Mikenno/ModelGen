@@ -202,25 +202,27 @@ static inline MGValue* _mgModuleLoadFile(MGInstance *instance, const char *filen
 	MG_ASSERT(filename);
 	MG_ASSERT(name);
 
-	MGValue *module = mgMapGet(instance->modules, name);
+	const MGValue *module = mgMapGet(instance->modules, name);
 
 	if (module == NULL)
 	{
-		module = mgCreateValueModule();
+		MGValue *_module = mgCreateValueModule();
 
-		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
+		mgMapMerge(_module->data.module.globals, instance->uniforms, MG_TRUE);
 
-		module->data.module.instance = instance;
-		module->data.module.filename = mgStringDuplicate(filename);
+		_module->data.module.instance = instance;
+		_module->data.module.filename = mgStringDuplicate(filename);
 
-		if (mgParseFile(&module->data.module.parser, filename))
-			mgMapSet(instance->modules, name, module);
+		if (mgParseFile(&_module->data.module.parser, filename))
+			mgMapSet(instance->modules, name, _module);
 		else
 		{
 			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
-			mgDestroyValue(module);
-			module = NULL;
+			mgDestroyValue(_module);
+			_module = NULL;
 		}
+
+		module = _module;
 	}
 
 	MG_ASSERT(module);
@@ -235,24 +237,26 @@ static inline MGValue* _mgModuleLoadFileHandle(MGInstance *instance, FILE *file,
 	MG_ASSERT(file);
 	MG_ASSERT(name);
 
-	MGValue *module = mgMapGet(instance->modules, name);
+	const MGValue *module = mgMapGet(instance->modules, name);
 
 	if (module == NULL)
 	{
-		module = mgCreateValueModule();
+		MGValue *_module = mgCreateValueModule();
 
-		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
+		mgMapMerge(_module->data.module.globals, instance->uniforms, MG_TRUE);
 
-		module->data.module.instance = instance;
+		_module->data.module.instance = instance;
 
-		if (mgParseFileHandle(&module->data.module.parser, file))
-			mgMapSet(instance->modules, name, module);
+		if (mgParseFileHandle(&_module->data.module.parser, file))
+			mgMapSet(instance->modules, name, _module);
 		else
 		{
 			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
-			mgDestroyValue(module);
-			module = NULL;
+			mgDestroyValue(_module);
+			_module = NULL;
 		}
+
+		module = _module;
 	}
 
 	MG_ASSERT(module);
@@ -267,24 +271,26 @@ static inline MGValue* _mgModuleLoadString(MGInstance *instance, const char *str
 	MG_ASSERT(string);
 	MG_ASSERT(name);
 
-	MGValue *module = mgMapGet(instance->modules, name);
+	const MGValue *module = mgMapGet(instance->modules, name);
 
 	if (module == NULL)
 	{
-		module = mgCreateValueModule();
+		MGValue *_module = mgCreateValueModule();
 
-		mgMapMerge(module->data.module.globals, instance->uniforms, MG_TRUE);
+		mgMapMerge(_module->data.module.globals, instance->uniforms, MG_TRUE);
 
-		module->data.module.instance = instance;
+		_module->data.module.instance = instance;
 
-		if (mgParseString(&module->data.module.parser, string))
-			mgMapSet(instance->modules, name, module);
+		if (mgParseString(&_module->data.module.parser, string))
+			mgMapSet(instance->modules, name, _module);
 		else
 		{
 			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
-			mgDestroyValue(module);
-			module = NULL;
+			mgDestroyValue(_module);
+			_module = NULL;
 		}
+
+		module = _module;
 	}
 
 	MG_ASSERT(module);
@@ -317,7 +323,7 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *nam
 	MG_ASSERT(instance);
 	MG_ASSERT(name);
 
-	MGValue *module = mgMapGet(instance->modules, name);
+	const MGValue *module = mgMapGet(instance->modules, name);
 
 	if (module == NULL)
 	{
@@ -337,21 +343,21 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *nam
 
 			if (mgFileExists(filename))
 			{
-				module = mgCreateValueModule();
+				MGValue *_module = mgCreateValueModule();
 
-				module->data.module.instance = instance;
-				module->data.module.filename = mgStringDuplicate(filename);
+				_module->data.module.instance = instance;
+				_module->data.module.filename = mgStringDuplicate(filename);
 
-				if (mgParseFile(&module->data.module.parser, filename))
+				if (mgParseFile(&_module->data.module.parser, filename))
 				{
-					mgMapSet(instance->modules, name, module);
-					_mgRunModule(instance, module);
-					return module;
+					mgMapSet(instance->modules, name, _module);
+					_mgRunModule(instance, _module);
+					return _module;
 				}
 				else
 				{
 					fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
-					mgDestroyValue(module);
+					mgDestroyValue(_module);
 					return NULL;
 				}
 			}
@@ -362,7 +368,6 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *nam
 		if (module == NULL)
 		{
 			fprintf(stderr, "Error: Failed loading module \"%s\"\n", name);
-			mgDestroyValue(module);
 			return NULL;
 		}
 	}

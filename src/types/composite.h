@@ -54,7 +54,7 @@ MGValue* mgListShallowCopy(const MGValue *list);
 #define mgListItems(list) _mgListItems((list)->data.a)
 
 #define mgListSet(list, index, value) _mgListSet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index), value)
-#define mgListGet(list, index) _mgListGet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index))
+#define mgListGet(list, index) ((const MGValue*) _mgListGet((list)->data.a, _mgListIndexRelativeToAbsolute((list)->data.a, index)))
 
 
 void _mgCreateMap(MGValueMap *map, size_t capacity);
@@ -64,7 +64,7 @@ void _mgMapClear(MGValueMap *map);
 #define _mgMapRemove(map, key) _mgMapSet(map, key, NULL)
 
 void _mgMapSet(MGValueMap *map, const char *key, MGValue *value);
-MGValue* _mgMapGet(const MGValueMap *map, const char *key);
+const MGValue* _mgMapGet(const MGValueMap *map, const char *key);
 
 
 MGValue* mgCreateValueMap(size_t capacity);
@@ -73,7 +73,7 @@ MGValue* mgCreateValueMap(size_t capacity);
 #define mgMapRemove(map, key) _mgMapRemove(&(map)->data.m, key)
 
 #define mgMapSet(map, key, value) _mgMapSet(&(map)->data.m, key, value)
-#define mgMapGet(map, key) _mgMapGet(&(map)->data.m, key)
+#define mgMapGet(map, key) ((const MGValue*) _mgMapGet(&(map)->data.m, key))
 
 #define mgMapSize(map) _mgMapSize((map)->data.m)
 

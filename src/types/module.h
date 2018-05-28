@@ -7,7 +7,7 @@
 MGValue* mgCreateValueModule(void);
 
 void mgModuleSet(MGValue *module, const char *name, MGValue *value);
-MGValue* mgModuleGet(MGValue *module, const char *name);
+const MGValue* mgModuleGet(const MGValue *module, const char *name);
 
 #define mgModuleSetInteger(module, name, i) mgModuleSet(module, name, mgCreateValueInteger(i))
 #define mgModuleSetFloat(module, name, f) mgModuleSet(module, name, mgCreateValueFloat(f))

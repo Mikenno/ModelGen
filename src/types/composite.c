@@ -243,7 +243,7 @@ void _mgMapSet(MGValueMap *map, const char *key, MGValue *value)
 }
 
 
-MGValue* _mgMapGet(const MGValueMap *map, const char *key)
+const MGValue* _mgMapGet(const MGValueMap *map, const char *key)
 {
 	MG_ASSERT(map);
 	MG_ASSERT(key);

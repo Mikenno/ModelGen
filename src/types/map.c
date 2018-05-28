@@ -38,7 +38,7 @@ MGValue* mgMapSubscriptGet(const MGValue *map, const MGValue *key)
 	if (key->type != MG_TYPE_STRING)
 		return NULL;
 
-	MGValue *value = mgMapGet(map, key->data.str.s);
+	const MGValue *value = mgMapGet(map, key->data.str.s);
 	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
 }
 
@@ -60,7 +60,7 @@ static MGValue* mg_map_pop(MGInstance *instance, const MGValue *map, size_t argc
 	mgCheckArgumentTypes(instance, argc, argv, 1, MG_TYPE_STRING);
 
 	const MGValue *key = argv[0];
-	MGValue *item = mgMapGet(map, key->data.str.s);
+	MGValue *item = (MGValue*) mgMapGet(map, key->data.str.s);
 
 	if (item == NULL)
 		return MG_NULL_VALUE;
@@ -177,7 +177,7 @@ MGValue* mgMapAttributeGet(const MGValue *map, const char *key)
 	else if (!strcmp("pairs", key))
 		return mgCreateValueBoundCFunction(mg_map_pairs, mgReferenceValue(map));
 
-	MGValue *value = mgMapGet(map, key);
+	const MGValue *value = mgMapGet(map, key);
 	return value ? mgReferenceValue(value) : MG_NULL_VALUE;
 }
 

@@ -11,7 +11,7 @@ typedef struct MGInstance {
 	_MGList(char*) path;
 	MGValue *modules;
 	MGValue *staticModules;
-	MGValue *base;
+	const MGValue *base;
 	MGValue *uniforms;
 	_MGList(MGVertex) vertices;
 	struct {
@@ -29,5 +29,11 @@ void mgDestroyInstance(MGInstance *instance);
 
 void mgPushStackFrame(MGInstance *instance, MGStackFrame *frame);
 void mgPopStackFrame(MGInstance *instance, MGStackFrame *frame);
+
+void mgRunFile(MGInstance *instance, const char *filename, const char *name);
+void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name);
+void mgRunString(MGInstance *instance, const char *string, const char *name);
+
+MGValue* mgImportModule(MGInstance *instance, const char *name);
 
 #endif

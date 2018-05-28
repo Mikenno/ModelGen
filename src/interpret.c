@@ -103,7 +103,7 @@ const MGValue* _mgGetValue(MGValue *module, const char *name)
 	MG_ASSERT(module->data.module.instance->callStackTop->locals);
 	MG_ASSERT(name);
 
-	MGValue *value = mgMapGet(module->data.module.instance->callStackTop->locals, name);
+	const MGValue *value = mgMapGet(module->data.module.instance->callStackTop->locals, name);
 
 	if (!value)
 		value = mgModuleGet(module, name);
@@ -1154,7 +1154,7 @@ static MGValue* _mgVisitImport(MGValue *module, MGNode *node)
 				MG_ASSERT(nameNode->type == MG_NODE_NAME);
 				MG_ASSERT(nameNode->token);
 
-				MGValue *value = mgModuleGet(importedModule, nameNode->token->value.s);
+				const MGValue *value = mgModuleGet(importedModule, nameNode->token->value.s);
 
 				if (!value)
 					// _MG_FAIL(module, NULL, "Error: Undefined name \"%s\"", nameNode->token->value.s);
