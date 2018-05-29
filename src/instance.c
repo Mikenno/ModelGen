@@ -6,6 +6,7 @@
 #include "value.h"
 #include "types/primitive.h"
 #include "types/module.h"
+#include "callable.h"
 #include "interpret.h"
 #include "file.h"
 #include "utilities.h"
@@ -378,6 +379,24 @@ static inline MGValue* _mgImportModuleFile(MGInstance *instance, const char *nam
 }
 
 
+static inline void _mgCallMain(MGInstance *instance, MGValue *module)
+{
+	const MGValue *entry = mgModuleGet(module, "main");
+
+	if (entry)
+	{
+		MGStackFrame frame;
+		mgCreateStackFrameEx(&frame, mgReferenceValue(module), mgReferenceValue(module->data.module.globals));
+		mgPushStackFrame(instance, &frame);
+
+		mgCall(instance, entry, 0, NULL);
+
+		mgPopStackFrame(instance, &frame);
+		mgDestroyStackFrame(&frame);
+	}
+}
+
+
 void mgRunFile(MGInstance *instance, const char *filename, const char *name)
 {
 	MG_ASSERT(instance);
@@ -386,6 +405,7 @@ void mgRunFile(MGInstance *instance, const char *filename, const char *name)
 	char *_name = NULL;
 	MGValue *module = _mgModuleLoadFile(instance, filename, name ? name : (_name = _mgFilenameToImportName(filename)));
 	_mgRunModule(instance, module);
+	_mgCallMain(instance, module);
 	mgDestroyValue(module);
 	free(_name);
 }
@@ -399,6 +419,7 @@ void mgRunFileHandle(MGInstance *instance, FILE *file, const char *name)
 
 	MGValue *module = _mgModuleLoadFileHandle(instance, file, name);
 	_mgRunModule(instance, module);
+	_mgCallMain(instance, module);
 	mgDestroyValue(module);
 }
 
@@ -411,6 +432,7 @@ void mgRunString(MGInstance *instance, const char *string, const char *name)
 
 	MGValue *module = _mgModuleLoadString(instance, string, name);
 	_mgRunModule(instance, module);
+	_mgCallMain(instance, module);
 	mgDestroyValue(module);
 }
 
