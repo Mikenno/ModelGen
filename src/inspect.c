@@ -309,14 +309,24 @@ static void _mgInspectValue(const MGValue *value, unsigned int depth, _MGInspect
 		putchar('}');
 		break;
 	case MG_TYPE_CFUNCTION:
-		printf("%p", value->data.cfunc);
+		printf("cfunc %p()", value->data.cfunc);
 		break;
 	case MG_TYPE_BOUND_CFUNCTION:
-		printf("%p bound to %p", value->data.bcfunc.cfunc, value->data.bcfunc.bound);
+		printf("cfunc %p() bound to %s %p", value->data.bcfunc.cfunc, mgGetTypeName(value->data.bcfunc.bound->type), value->data.bcfunc.bound);
 		break;
 	case MG_TYPE_PROCEDURE:
 	case MG_TYPE_FUNCTION:
-		printf("%p", value->data.func.node);
+		if (value->data.func.node)
+		{
+			const MGNode *funcNode = value->data.func.node;
+			const MGNode *nameNode = _mgListGet(funcNode->children, 0);
+
+			if (nameNode->type == MG_NODE_NAME)
+				printf("%s %s(%zu)", mgGetTypeName(value->type), nameNode->token->value.s, _mgListLength(_mgListGet(funcNode->children, 1)->children));
+			else
+				printf("%s %p(%zu)", mgGetTypeName(value->type), funcNode, _mgListLength(_mgListGet(funcNode->children, 1)->children));
+		}
+
 		if (value->data.func.locals && mgListLength(value->data.func.locals))
 		{
 			putchar(' ');
