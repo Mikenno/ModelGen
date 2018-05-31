@@ -803,7 +803,7 @@ static MGNode* _mgParseSubexpression(MGParser *parser, MGToken *token)
 			++token;
 			_MG_TOKEN_SCAN_LINE(token);
 
-			if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_NEWLINE))
+			if ((token->type != MG_TOKEN_EOF) && (token->type != MG_TOKEN_NEWLINE) && (token->type != MG_TOKEN_RPAREN) && (token->type != MG_TOKEN_RSQUARE) && (token->type != MG_TOKEN_COMMA))
 				_mgAddChild(node, _mgParseExpression(parser, token, MG_TRUE));
 		}
 

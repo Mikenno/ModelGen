@@ -379,10 +379,16 @@ static inline MGValue* _mgVisitReturn(MGValue *module, MGNode *node)
 
 	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
-	frame->state = MG_STACK_FRAME_STATE_RETURN;
+	if (frame->value)
+	{
+		mgDestroyValue(frame->value);
+		frame->value = NULL;
+	}
 
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
+
+	frame->state = MG_STACK_FRAME_STATE_RETURN;
 
 	return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 }
@@ -575,10 +581,16 @@ static inline MGValue* _mgVisitBreak(MGValue *module, MGNode *node)
 
 	MGStackFrame *frame = module->data.module.instance->callStackTop;
 
-	frame->state = MG_STACK_FRAME_STATE_BREAK;
+	if (frame->value)
+	{
+		mgDestroyValue(frame->value);
+		frame->value = NULL;
+	}
 
 	if (_mgListLength(node->children) > 0)
 		frame->value = _mgVisitNode(module, _mgListGet(node->children, 0));
+
+	frame->state = MG_STACK_FRAME_STATE_BREAK;
 
 	return frame->value ? mgReferenceValue(frame->value) : MG_NULL_VALUE;
 }
