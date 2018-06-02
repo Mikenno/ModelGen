@@ -219,7 +219,7 @@ static void _mgResolveAssignment(MGValue *module, MGNode *names, MGValue *values
 }
 
 
-static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
+static MGValue* _mgVisitBlock(MGValue *module, MGNode *node)
 {
 	MG_ASSERT(module);
 	MG_ASSERT(module->type == MG_TYPE_MODULE);
@@ -241,18 +241,6 @@ static MGValue* _mgVisitChildren(MGValue *module, MGNode *node)
 	}
 
 	return value ? value : MG_NULL_VALUE;
-}
-
-
-#if defined(__GNUC__)
-static inline __attribute__((always_inline)) MGValue* _mgVisitModule(MGValue *module, MGNode *node)
-#elif defined(_MSC_VER)
-static __forceinline MGValue* _mgVisitModule(MGValue *module, MGNode *node)
-#else
-static inline MGValue* _mgVisitModule(MGValue *module, MGNode *node)
-#endif
-{
-	return _mgVisitChildren(module, node);
 }
 
 
@@ -1233,9 +1221,8 @@ MGValue* _mgVisitNode(MGValue *module, MGNode *node)
 	switch (node->type)
 	{
 	case MG_NODE_MODULE:
-		return _mgVisitModule(module, node);
 	case MG_NODE_BLOCK:
-		return _mgVisitChildren(module, node);
+		return _mgVisitBlock(module, node);
 	case MG_NODE_NAME:
 		return _mgVisitName(module, node);
 	case MG_NODE_INTEGER:

@@ -460,6 +460,7 @@ static MGValue* mg_deep_copy(MGInstance *instance, size_t argc, const MGValue* c
 static MGValue* mg_traceback(MGInstance *instance, size_t argc, const MGValue* const* argv)
 {
 	mgCheckArgumentCount(instance, argc, 0, 0);
+
 	mgTraceback(instance);
 
 	return MG_NULL_VALUE;
