@@ -18,13 +18,13 @@ inline uint32_t mgNextPowerOfTwo(uint32_t x)
 	MG_ASSERT(x <= ((UINT32_MAX / 2) + 1));
 
 	--x;
-	x |= x >> 1;
-	x |= x >> 2;
-	x |= x >> 4;
-	x |= x >> 8;
-	x |= x >> 16;
+	x |= x >> 1u;
+	x |= x >> 2u;
+	x |= x >> 4u;
+	x |= x >> 8u;
+	x |= x >> 16u;
 
-	return x + 1;
+	return x + 1u;
 }
 
 
